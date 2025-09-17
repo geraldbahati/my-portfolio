@@ -11,15 +11,21 @@ import Link from "next/link";
 import { SignUpButton } from "@clerk/nextjs";
 import { SignInButton } from "@clerk/nextjs";
 import { UserButton } from "@clerk/nextjs";
+import GridPattern from "@/components/ui/shadcn-io/grid-pattern";
 
 export default function Home() {
   return (
-    <>
-      <header className="sticky top-0 z-10 bg-background p-4 border-b-2 border-slate-200 dark:border-slate-800 flex flex-row justify-between items-center">
+    <div className="relative min-h-screen pointer-events-none">
+      <GridPattern
+        className="absolute inset-0 pointer-events-auto"
+        width={36}
+        height={36}
+      />
+      <header className="relative z-10 bg-background/80 backdrop-blur-sm p-4 border-b-2 border-slate-200 dark:border-slate-800 flex flex-row justify-between items-center pointer-events-auto">
         Convex + Next.js + Clerk
         <UserButton />
       </header>
-      <main className="p-8 flex flex-col gap-8">
+      <main className="relative z-10 p-8 flex flex-col gap-8 pointer-events-auto">
         <h1 className="text-4xl font-bold text-center">
           Convex + Next.js + Clerk
         </h1>
@@ -30,7 +36,7 @@ export default function Home() {
           <SignInForm />
         </Unauthenticated>
       </main>
-    </>
+    </div>
   );
 }
 
