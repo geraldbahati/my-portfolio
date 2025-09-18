@@ -219,7 +219,7 @@ export default function GridPattern({
         ref={svgRef}
         aria-hidden="true"
         className={cn(
-          "absolute inset-0 h-full w-full fill-gray-400/30 stroke-gray-400/30",
+          "absolute inset-0 h-full w-full fill-muted-foreground/20 stroke-muted-foreground/20",
           className,
         )}
         {...props}
@@ -232,7 +232,7 @@ export default function GridPattern({
       ref={svgRef}
       aria-hidden="true"
       className={cn(
-        "absolute inset-0 h-full w-full fill-gray-400/30 stroke-gray-400/30",
+        "absolute inset-0 h-full w-full fill-muted-foreground/20 stroke-muted-foreground/20",
         className,
       )}
       onMouseMove={handleMouseMove}
@@ -276,7 +276,7 @@ export default function GridPattern({
           width={width - 1}
           height={height - 1}
           fill="none"
-          stroke="rgb(59, 130, 246)"
+          className="stroke-primary"
           strokeWidth={2}
           opacity={0.9}
           pointerEvents="none"
@@ -306,7 +306,7 @@ export default function GridPattern({
               width={width - 1}
               height={height - 1}
               fill="none"
-              stroke="rgb(96, 165, 250)"
+              className="stroke-primary/60"
               strokeWidth={1.5}
               initial={{ opacity: 0.7 }}
               animate={{
