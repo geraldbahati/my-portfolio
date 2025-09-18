@@ -15,6 +15,7 @@ interface HighlightSquare {
   y: number;
   id: string;
   timestamp: number;
+  isCenter?: boolean; // Track if this is the center cell
 }
 
 interface GridPatternProps {
@@ -25,6 +26,9 @@ interface GridPatternProps {
   squares?: Array<[number, number]>;
   strokeDasharray?: string;
   className?: string;
+  gridClassName?: string;
+  surroundingCells?: number; // Number of surrounding cells to highlight
+  surroundingRadius?: number; // Max radius for surrounding cells
   [key: string]: unknown;
 }
 
@@ -36,6 +40,9 @@ export default function GridPattern({
   strokeDasharray = "0",
   squares,
   className,
+  gridClassName = "stroke-current/30",
+  surroundingCells = 6, // Default number of surrounding cells
+  surroundingRadius = 2, // Default radius
   ...props
 }: GridPatternProps) {
   const [highlightSquares, setHighlightSquares] = useState<HighlightSquare[]>(
@@ -49,10 +56,56 @@ export default function GridPattern({
   const lastGridCell = useRef<{ x: number; y: number } | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const cleanupTimeoutRef = useRef<NodeJS.Timeout>(null);
-  const skipCounter = useRef(0);
   const moveTimeoutRef = useRef<NodeJS.Timeout>(null);
 
-  // Direct mouse movement handling - with selective trail creation
+  // Generate random surrounding cells
+  const generateSurroundingCells = useCallback(
+    (centerX: number, centerY: number): Array<{ x: number; y: number }> => {
+      const cells: Array<{ x: number; y: number }> = [];
+      const usedPositions = new Set<string>();
+
+      // Add the center cell
+      usedPositions.add(`${centerX}-${centerY}`);
+
+      // Generate random surrounding cells
+      let attempts = 0;
+      while (
+        cells.length < surroundingCells &&
+        attempts < surroundingCells * 3
+      ) {
+        // Random offset within radius
+        const offsetX =
+          Math.floor(Math.random() * (surroundingRadius * 2 + 1)) -
+          surroundingRadius;
+        const offsetY =
+          Math.floor(Math.random() * (surroundingRadius * 2 + 1)) -
+          surroundingRadius;
+
+        // Skip center cell
+        if (offsetX === 0 && offsetY === 0) {
+          attempts++;
+          continue;
+        }
+
+        const newX = centerX + offsetX;
+        const newY = centerY + offsetY;
+        const key = `${newX}-${newY}`;
+
+        // Check if position is already used
+        if (!usedPositions.has(key)) {
+          cells.push({ x: newX, y: newY });
+          usedPositions.add(key);
+        }
+
+        attempts++;
+      }
+
+      return cells;
+    },
+    [surroundingCells, surroundingRadius],
+  );
+
+  // Mouse movement handling with surrounding cells
   const handleMouseMove = useCallback(
     (e: React.MouseEvent<SVGSVGElement>) => {
       if (!svgRef.current) return;
@@ -78,86 +131,134 @@ export default function GridPattern({
           clearTimeout(moveTimeoutRef.current);
         }
 
-        // Start fade after mouse stops for 100ms
+        // Start fade after mouse stops
         moveTimeoutRef.current = setTimeout(() => {
           setIsMoving(false);
 
-          // Add current cell to trail so it fades out naturally
+          // Add current cluster to trail so it fades out naturally
           if (lastGridCell.current) {
             const timestamp = Date.now();
-            const fadeSquare: HighlightSquare = {
-              x: lastGridCell.current.x,
-              y: lastGridCell.current.y,
-              id: `fade-${lastGridCell.current.x}-${lastGridCell.current.y}-${timestamp}`,
-              timestamp,
-            };
 
-            setHighlightSquares((prev) => [...prev, fadeSquare]);
+            // Add center cell
+            const fadeSquares: HighlightSquare[] = [
+              {
+                x: lastGridCell.current.x,
+                y: lastGridCell.current.y,
+                id: `fade-center-${lastGridCell.current.x}-${lastGridCell.current.y}-${timestamp}`,
+                timestamp,
+                isCenter: true,
+              },
+            ];
+
+            // Add surrounding cells from current state
+            const surroundingPositions = generateSurroundingCells(
+              lastGridCell.current.x,
+              lastGridCell.current.y,
+            );
+
+            surroundingPositions.forEach((pos, index) => {
+              fadeSquares.push({
+                x: pos.x,
+                y: pos.y,
+                id: `fade-surround-${pos.x}-${pos.y}-${timestamp}-${index}`,
+                timestamp,
+                isCenter: false,
+              });
+            });
+
+            setHighlightSquares((prev) => [...prev, ...fadeSquares]);
           }
 
           setCurrentCell(null);
         }, 100);
 
         if (!isSameCell) {
-          // Only update current cell when actually moving to a new cell
+          // Update current cell
           setCurrentCell({ x: gridX, y: gridY });
 
-          skipCounter.current++;
+          // Generate new cluster of highlights
+          const timestamp = Date.now();
+          const newSquares: HighlightSquare[] = [];
 
-          // Only add to trail every 2-3 cells for breaks in the line
-          const shouldAddToTrail = skipCounter.current % 3 !== 1;
+          // Add center cell
+          newSquares.push({
+            x: gridX,
+            y: gridY,
+            id: `center-${gridX}-${gridY}-${timestamp}`,
+            timestamp,
+            isCenter: true,
+          });
 
-          if (shouldAddToTrail) {
-            const timestamp = Date.now();
-            const newSquare: HighlightSquare = {
-              x: gridX,
-              y: gridY,
-              id: `${gridX}-${gridY}-${timestamp}`,
+          // Add random surrounding cells
+          const surroundingPositions = generateSurroundingCells(gridX, gridY);
+          surroundingPositions.forEach((pos, index) => {
+            newSquares.push({
+              x: pos.x,
+              y: pos.y,
+              id: `surround-${pos.x}-${pos.y}-${timestamp}-${index}`,
               timestamp,
-            };
-
-            setHighlightSquares((prev) => {
-              // Keep only recent highlights to prevent memory buildup
-              const recent = prev.filter((s) => timestamp - s.timestamp < 1500);
-              return [...recent, newSquare];
+              isCenter: false,
             });
-          }
+          });
+
+          setHighlightSquares((prev) => {
+            // Keep only recent highlights
+            const recent = prev.filter((s) => timestamp - s.timestamp < 800);
+            return [...recent, ...newSquares];
+          });
 
           lastGridCell.current = { x: gridX, y: gridY };
         }
       }
     },
-    [width, height],
+    [width, height, generateSurroundingCells],
   );
 
   const handleMouseLeave = useCallback(() => {
-    // Add current cell to trail before clearing
+    // Add current cluster to trail before clearing
     if (currentCell && isMoving) {
       const timestamp = Date.now();
-      const fadeSquare: HighlightSquare = {
-        x: currentCell.x,
-        y: currentCell.y,
-        id: `fade-${currentCell.x}-${currentCell.y}-${timestamp}`,
-        timestamp,
-      };
+      const fadeSquares: HighlightSquare[] = [
+        {
+          x: currentCell.x,
+          y: currentCell.y,
+          id: `fade-leave-center-${currentCell.x}-${currentCell.y}-${timestamp}`,
+          timestamp,
+          isCenter: true,
+        },
+      ];
 
-      setHighlightSquares((prev) => [...prev, fadeSquare]);
+      // Add surrounding cells
+      const surroundingPositions = generateSurroundingCells(
+        currentCell.x,
+        currentCell.y,
+      );
+      surroundingPositions.forEach((pos, index) => {
+        fadeSquares.push({
+          x: pos.x,
+          y: pos.y,
+          id: `fade-leave-surround-${pos.x}-${pos.y}-${timestamp}-${index}`,
+          timestamp,
+          isCenter: false,
+        });
+      });
+
+      setHighlightSquares((prev) => [...prev, ...fadeSquares]);
     }
 
     setCurrentCell(null);
     setIsMoving(false);
-    skipCounter.current = 0;
     if (moveTimeoutRef.current) {
       clearTimeout(moveTimeoutRef.current);
     }
-  }, [currentCell, isMoving]);
+  }, [currentCell, isMoving, generateSurroundingCells]);
 
-  // Cleanup old squares less frequently
+  // Cleanup old squares
   useEffect(() => {
     const cleanup = () => {
       const now = Date.now();
       setHighlightSquares((prev) =>
-        prev.filter((square) => now - square.timestamp < 1500),
+        prev.filter((square) => now - square.timestamp < 800),
       );
     };
 
@@ -200,28 +301,21 @@ export default function GridPattern({
   // Memoize static squares
   const staticSquares = useMemo(() => squares || [], [squares]);
 
-  // Group highlights by cell for efficient lookup
-  const highlightMap = useMemo(() => {
-    const map = new Map<string, HighlightSquare>();
-    highlightSquares.forEach((square) => {
-      const key = `${square.x}-${square.y}`;
-      const existing = map.get(key);
-      if (!existing || square.timestamp > existing.timestamp) {
-        map.set(key, square);
-      }
-    });
-    return map;
-  }, [highlightSquares]);
+  // Get current active cells (center + surrounding) for instant highlight
+  const currentActiveCells = useMemo(() => {
+    if (!currentCell || !isMoving) return [];
+
+    const cells = [currentCell];
+    const surrounding = generateSurroundingCells(currentCell.x, currentCell.y);
+    return [...cells, ...surrounding];
+  }, [currentCell, isMoving, generateSurroundingCells]);
 
   if (!dimensions) {
     return (
       <svg
         ref={svgRef}
         aria-hidden="true"
-        className={cn(
-          "absolute inset-0 h-full w-full fill-muted-foreground/20 stroke-muted-foreground/20",
-          className,
-        )}
+        className={cn("absolute inset-0 h-full w-full", className)}
         {...props}
       />
     );
@@ -231,16 +325,13 @@ export default function GridPattern({
     <svg
       ref={svgRef}
       aria-hidden="true"
-      className={cn(
-        "absolute inset-0 h-full w-full fill-muted-foreground/20 stroke-muted-foreground/20",
-        className,
-      )}
+      className={cn("absolute inset-0 h-full w-full", className)}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       {...props}
     >
       <defs>
-        {/* Use pattern for base grid - much more efficient than individual rects */}
+        {/* Use pattern for base grid */}
         <pattern
           id="grid-pattern"
           width={width}
@@ -252,15 +343,14 @@ export default function GridPattern({
           <path
             d={`M.5 ${height}V.5H${width}`}
             fill="none"
-            stroke="currentColor"
+            className={gridClassName}
             strokeWidth="0.5"
             strokeDasharray={strokeDasharray}
-            opacity="0.3"
           />
         </pattern>
       </defs>
 
-      {/* Base grid using pattern - single element instead of thousands */}
+      {/* Base grid using pattern */}
       <rect
         width="100%"
         height="100%"
@@ -268,32 +358,35 @@ export default function GridPattern({
         fill="url(#grid-pattern)"
       />
 
-      {/* Instant highlight for current cell - only when moving */}
-      {currentCell && isMoving && (
-        <rect
-          x={currentCell.x * width + 0.5}
-          y={currentCell.y * height + 0.5}
-          width={width - 1}
-          height={height - 1}
-          fill="none"
-          className="stroke-primary"
-          strokeWidth={2}
-          opacity={0.9}
-          pointerEvents="none"
-        />
-      )}
+      {/* Instant highlight for current cluster - only when moving */}
+      {isMoving &&
+        currentActiveCells.map((cell, index) => (
+          <rect
+            key={`active-${cell.x}-${cell.y}-${index}`}
+            x={cell.x * width + 0.5}
+            y={cell.y * height + 0.5}
+            width={width - 1}
+            height={height - 1}
+            fill="none"
+            className="stroke-primary"
+            strokeWidth={index === 0 ? 2 : 1.5} // Center cell has thicker stroke
+            opacity={index === 0 ? 0.9 : 0.7} // Center cell more opaque
+            pointerEvents="none"
+          />
+        ))}
 
-      {/* Animated trail highlights - more visible with breaks */}
+      {/* Animated trail highlights */}
       <AnimatePresence mode="popLayout">
-        {Array.from(highlightMap.values()).map((square) => {
+        {highlightSquares.map((square) => {
           const now = Date.now();
-          const age = Math.min(1, (now - square.timestamp) / 1500);
+          const age = Math.min(1, (now - square.timestamp) / 800);
 
-          // Don't render if this is the current cell (avoid double highlight)
+          // Skip if this is part of current active cells
           if (
-            currentCell &&
-            square.x === currentCell.x &&
-            square.y === currentCell.y
+            isMoving &&
+            currentActiveCells.some(
+              (cell) => cell.x === square.x && cell.y === square.y,
+            )
           ) {
             return null;
           }
@@ -306,16 +399,28 @@ export default function GridPattern({
               width={width - 1}
               height={height - 1}
               fill="none"
-              className="stroke-primary/60"
-              strokeWidth={1.5}
-              initial={{ opacity: 0.7 }}
-              animate={{
-                opacity: Math.max(0, 0.6 * (1 - age)),
-                strokeWidth: Math.max(0.5, 1.5 * (1 - age)),
+              className={
+                square.isCenter ? "stroke-primary/70" : "stroke-primary/50"
+              }
+              strokeWidth={square.isCenter ? 1.5 : 1}
+              initial={{
+                opacity: square.isCenter ? 0.8 : 0.6,
+                scale: 0.8,
               }}
-              exit={{ opacity: 0 }}
+              animate={{
+                opacity: Math.max(0, (square.isCenter ? 0.7 : 0.5) * (1 - age)),
+                strokeWidth: Math.max(
+                  0.5,
+                  (square.isCenter ? 1.5 : 1) * (1 - age),
+                ),
+                scale: 1 + age * 0.2, // Gentle scale out effect
+              }}
+              exit={{
+                opacity: 0,
+                scale: 1.3,
+              }}
               transition={{
-                duration: 0.8,
+                duration: 0.4,
                 ease: [0.4, 0, 0.6, 1],
               }}
             />
