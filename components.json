@@ -18,5 +18,7 @@
     "lib": "@/lib",
     "hooks": "@/hooks"
   },
-  "registries": {}
+  "registries": {
+    "@smoothui": "https://smoothui.dev/r/{name}.json"
+  }
 }
