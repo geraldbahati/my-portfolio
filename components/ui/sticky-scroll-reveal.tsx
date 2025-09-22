@@ -1,112 +1,467 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
-import { useMotionValueEvent, useScroll } from "motion/react";
-import { motion } from "motion/react";
-import { cn } from "@/lib/utils";
 
-export const StickyScroll = ({
-  content,
+import React, { useRef, useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import Image from "next/image";
+
+export const StickyScrollReveal = ({
+  sections,
   contentClassName,
+  containerClassName,
 }: {
-  content: {
+  sections: {
+    label?: string;
     title: string;
-    description: string;
-    content?: React.ReactNode | any;
+    description?: string;
+    bullets?: string[];
+    content?: React.ReactNode;
+    image?: string;
   }[];
   contentClassName?: string;
+  containerClassName?: string;
 }) => {
-  const [activeCard, setActiveCard] = React.useState(0);
-  const ref = useRef<any>(null);
-  const { scrollYProgress } = useScroll({
-    // uncomment line 22 and comment line 23 if you DONT want the overflow container and want to have it change on the entire page scroll
-    // target: ref
-    container: ref,
-    offset: ["start start", "end start"],
-  });
-  const cardLength = content.length;
+  const [activeSection, setActiveSection] = useState(0);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+  const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  useMotionValueEvent(scrollYProgress, "change", (latest) => {
-    const cardsBreakpoints = content.map((_, index) => index / cardLength);
-    const closestBreakpointIndex = cardsBreakpoints.reduce(
-      (acc, breakpoint, index) => {
-        const distance = Math.abs(latest - breakpoint);
-        if (distance < Math.abs(latest - cardsBreakpoints[acc])) {
-          return index;
-        }
-        return acc;
-      },
-      0,
-    );
-    setActiveCard(closestBreakpointIndex);
-  });
-
-  const backgroundColors = [
-    "#0f172a", // slate-900
-    "#000000", // black
-    "#171717", // neutral-900
-  ];
-  const linearGradients = [
-    "linear-gradient(to bottom right, #06b6d4, #10b981)", // cyan-500 to emerald-500
-    "linear-gradient(to bottom right, #ec4899, #6366f1)", // pink-500 to indigo-500
-    "linear-gradient(to bottom right, #f97316, #eab308)", // orange-500 to yellow-500
-  ];
-
-  const [backgroundGradient, setBackgroundGradient] = useState(
-    linearGradients[0],
-  );
-
+  // Detect mobile/desktop
   useEffect(() => {
-    setBackgroundGradient(linearGradients[activeCard % linearGradients.length]);
-  }, [activeCard]);
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024); // lg breakpoint
+    };
 
-  return (
-    <motion.div
-      animate={{
-        backgroundColor: backgroundColors[activeCard % backgroundColors.length],
-      }}
-      className="relative flex h-[30rem] justify-center space-x-10 overflow-y-auto rounded-md p-10"
-      ref={ref}
-    >
-      <div className="div relative flex items-start px-4">
-        <div className="max-w-2xl">
-          {content.map((item, index) => (
-            <div key={item.title + index} className="my-20">
-              <motion.h2
-                initial={{
-                  opacity: 0,
-                }}
-                animate={{
-                  opacity: activeCard === index ? 1 : 0.3,
-                }}
-                className="text-2xl font-bold text-slate-100"
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // Track which section is in view and scroll progress
+  useEffect(() => {
+    const handleScroll = () => {
+      // Calculate overall scroll progress through all sections
+      const windowHeight = window.innerHeight;
+
+      // Find which section we're in and the progress through it
+      sectionRefs.current.forEach((ref, index) => {
+        if (!ref) return;
+
+        const rect = ref.getBoundingClientRect();
+        const sectionTop = rect.top;
+        const sectionHeight = rect.height;
+
+        // Check if this section is the active one
+        if (
+          sectionTop <= windowHeight * 0.5 &&
+          sectionTop > -sectionHeight + windowHeight * 0.5
+        ) {
+          // Calculate progress through this specific section (0 to 1)
+          const progress = 1 - sectionTop / (windowHeight * 0.5);
+          const clampedProgress = Math.max(0, Math.min(1, progress));
+
+          // Only update if this is a different section or progress changed significantly
+          if (index !== activeSection) {
+            setActiveSection(index);
+            setScrollProgress(0); // Reset progress when entering new section
+          } else {
+            setScrollProgress(clampedProgress);
+          }
+        }
+      });
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    handleScroll(); // Initial check
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [activeSection]);
+
+  // Track section intersections for more reliable section detection
+  useEffect(() => {
+    const currentSections = sectionRefs.current;
+    const observers = currentSections.map((ref, index) => {
+      if (!ref) return null;
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
+              setActiveSection(index);
+            }
+          });
+        },
+        {
+          threshold: [0.5],
+          rootMargin: "-20% 0px -20% 0px",
+        },
+      );
+
+      observer.observe(ref);
+      return observer;
+    });
+
+    return () => {
+      observers.forEach((observer, index) => {
+        if (observer && currentSections[index]) {
+          observer.unobserve(currentSections[index]!);
+        }
+      });
+    };
+  }, [sections.length]);
+
+  // Mobile Layout - Image above content
+  if (isMobile) {
+    return (
+      <div className={`relative ${containerClassName || ""}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          {sections.map((section, index) => (
+            <div
+              key={`section-mobile-${index}`}
+              ref={(el) => {
+                sectionRefs.current[index] = el;
+              }}
+              className="min-h-screen flex flex-col justify-center py-16"
+            >
+              {/* Image Section for Mobile */}
+              <motion.div
+                className="mb-12"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: false, amount: 0.3 }}
+                transition={{ duration: 0.6 }}
               >
-                {item.title}
-              </motion.h2>
-              <motion.p
-                initial={{
-                  opacity: 0,
-                }}
-                animate={{
-                  opacity: activeCard === index ? 1 : 0.3,
-                }}
-                className="text-kg mt-10 max-w-sm text-slate-300"
+                <div
+                  className={`relative w-full rounded-2xl overflow-hidden shadow-xl ${contentClassName || ""}`}
+                  style={{
+                    aspectRatio: "1/1",
+                    maxWidth: "500px",
+                    margin: "0 auto",
+                  }}
+                >
+                  {section.content ? (
+                    section.content
+                  ) : section.image ? (
+                    <Image
+                      src={section.image}
+                      alt={section.title}
+                      fill
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                      <span className="text-gray-600 text-lg font-medium text-center px-4">
+                        {section.title}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+
+              {/* Content Section for Mobile */}
+              <motion.div
+                className="w-full"
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: false, amount: 0.3 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
               >
-                {item.description}
-              </motion.p>
+                {section.label && (
+                  <motion.div
+                    className="mb-6"
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: false }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <span className="inline-block text-sm font-medium uppercase tracking-[0.2em] text-orange-500">
+                      {section.label}
+                    </span>
+                    <motion.div
+                      className="mt-3 h-[1px] bg-orange-500/30"
+                      initial={{ width: 0 }}
+                      whileInView={{ width: 120 }}
+                      viewport={{ once: false }}
+                      transition={{ duration: 0.5, delay: 0.2 }}
+                    />
+                  </motion.div>
+                )}
+
+                <motion.h2
+                  className="text-4xl sm:text-5xl font-bold mb-8 tracking-tight text-black"
+                  style={{ lineHeight: "1" }}
+                >
+                  {section.title}
+                </motion.h2>
+
+                {section.description && (
+                  <motion.p className="text-base mb-8 max-w-lg leading-relaxed text-gray-700">
+                    {section.description}
+                  </motion.p>
+                )}
+
+                {section.bullets && (
+                  <ul className="space-y-3">
+                    {section.bullets.map((bullet, bulletIndex) => (
+                      <motion.li
+                        key={`bullet-mobile-${bulletIndex}`}
+                        className="flex items-start"
+                        initial={{ opacity: 0, x: -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: false }}
+                        transition={{
+                          duration: 0.5,
+                          delay: 0.3 + bulletIndex * 0.05,
+                        }}
+                      >
+                        <svg
+                          className="w-4 h-4 mt-1.5 mr-3 flex-shrink-0 text-black"
+                          fill="currentColor"
+                          viewBox="0 0 16 16"
+                        >
+                          <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
+                        </svg>
+                        <span className="text-base text-gray-700">
+                          {bullet}
+                        </span>
+                      </motion.li>
+                    ))}
+                  </ul>
+                )}
+              </motion.div>
             </div>
           ))}
-          <div className="h-40" />
         </div>
       </div>
-      <div
-        style={{ background: backgroundGradient }}
-        className={cn(
-          "sticky top-10 hidden h-60 w-80 overflow-hidden rounded-md bg-white lg:block",
-          contentClassName,
-        )}
-      >
-        {content[activeCard].content ?? null}
+    );
+  }
+
+  // Desktop Layout - Original sticky scroll design
+  return (
+    <div className={`relative ${containerClassName || ""}`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative lg:flex lg:gap-16">
+          {/* Left content - scrolls naturally */}
+          <div className="lg:w-1/2">
+            {sections.map((section, index) => (
+              <div
+                key={`section-${index}`}
+                ref={(el) => {
+                  sectionRefs.current[index] = el;
+                }}
+                className="min-h-screen flex items-center py-16"
+              >
+                <motion.div
+                  className="w-full"
+                  initial={{ opacity: 0, y: 50 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: false, amount: 0.3 }}
+                  transition={{ duration: 0.6 }}
+                >
+                  {section.label && (
+                    <motion.div
+                      className="mb-8"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{
+                        opacity: activeSection === index ? 1 : 0.3,
+                        x: activeSection === index ? 0 : -20,
+                      }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <span className="inline-block text-sm font-medium uppercase tracking-[0.2em] text-orange-500">
+                        {section.label}
+                      </span>
+                      <motion.div
+                        className="mt-3 h-[1px] bg-orange-500/30"
+                        initial={{ width: 0 }}
+                        animate={{ width: activeSection === index ? 120 : 0 }}
+                        transition={{ duration: 0.5 }}
+                      />
+                    </motion.div>
+                  )}
+
+                  <motion.h2
+                    className={`text-6xl lg:text-7xl font-bold mb-12 tracking-tight transition-colors duration-500 ${
+                      activeSection === index ? "text-black" : "text-gray-400"
+                    }`}
+                    style={{ lineHeight: "0.9" }}
+                  >
+                    {section.title}
+                  </motion.h2>
+
+                  {section.description && (
+                    <motion.p
+                      className={`text-base mb-12 max-w-lg leading-relaxed transition-colors duration-500 ${
+                        activeSection === index
+                          ? "text-gray-700"
+                          : "text-gray-400"
+                      }`}
+                    >
+                      {section.description}
+                    </motion.p>
+                  )}
+
+                  {section.bullets && (
+                    <ul className="space-y-4">
+                      {section.bullets.map((bullet, bulletIndex) => (
+                        <motion.li
+                          key={`bullet-${bulletIndex}`}
+                          className="flex items-start"
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{
+                            opacity: activeSection === index ? 1 : 0.4,
+                            x: activeSection === index ? 0 : -10,
+                          }}
+                          transition={{
+                            duration: 0.5,
+                            delay: bulletIndex * 0.05,
+                          }}
+                        >
+                          <svg
+                            className={`w-4 h-4 mt-1.5 mr-4 flex-shrink-0 transition-all duration-300 ${
+                              activeSection === index
+                                ? "text-black"
+                                : "text-gray-400"
+                            }`}
+                            fill="currentColor"
+                            viewBox="0 0 16 16"
+                          >
+                            <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
+                          </svg>
+                          <span
+                            className={`text-base transition-colors duration-300 ${
+                              activeSection === index
+                                ? "text-gray-700"
+                                : "text-gray-400"
+                            }`}
+                          >
+                            {bullet}
+                          </span>
+                        </motion.li>
+                      ))}
+                    </ul>
+                  )}
+                </motion.div>
+              </div>
+            ))}
+          </div>
+
+          {/* Right sticky images with horizontal slide transition */}
+          <div className="hidden lg:block lg:w-1/2">
+            {/* Height wrapper that creates the scroll track - reduced height so images scroll away with last section */}
+            <div
+              className="relative"
+              style={{
+                height: `${(sections.length - 0.25) * 100}vh`,
+              }}
+            >
+              {/* Spacer to push sticky element down so it starts centered with first content */}
+              <div style={{ height: "calc(50vh - 300px)" }} />
+
+              {/* Sticky container */}
+              <div
+                className="w-full mx-auto"
+                style={{
+                  position: "sticky",
+                  top: "calc(50vh - 300px)",
+                  width: "600px",
+                  height: "600px",
+                }}
+              >
+                {/* Image container with clip path for slide effect */}
+                <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl">
+                  {sections.map((section, index) => {
+                    const isActive = activeSection === index;
+                    const isPrevious = activeSection === index + 1;
+
+                    // Calculate clip path based on scroll progress
+                    let clipPath = "inset(0 0 100% 0)"; // Hidden by default
+
+                    if (index === 0) {
+                      // First image doesn't slide in, it's always fully visible when active
+                      if (
+                        isActive ||
+                        (activeSection === 1 && scrollProgress < 1)
+                      ) {
+                        clipPath = "inset(0 0 0 0)"; // Fully visible
+                      }
+                      // When transitioning to second image, first image slides out
+                      if (activeSection === 1 && scrollProgress < 1) {
+                        const progress = scrollProgress;
+                        clipPath = `inset(0 0 ${progress * 100}% 0)`;
+                      }
+                    } else {
+                      // All other images use the slide transition
+                      if (isActive) {
+                        // Current image slides in from bottom
+                        const progress = scrollProgress;
+                        clipPath = `inset(${100 - progress * 100}% 0 0 0)`;
+                      } else if (isPrevious && scrollProgress < 1) {
+                        // Previous image slides out to top
+                        const progress = scrollProgress;
+                        clipPath = `inset(0 0 ${progress * 100}% 0)`;
+                      } else if (index < activeSection) {
+                        // Images that have been passed are fully visible but below current
+                        clipPath = "inset(0 0 0 0)";
+                      }
+                    }
+
+                    return (
+                      <div
+                        key={`image-${index}`}
+                        className={`absolute inset-0 w-full h-full ${contentClassName || ""}`}
+                        style={{
+                          clipPath: clipPath,
+                          zIndex:
+                            index === 0 && (isActive || isPrevious)
+                              ? 25
+                              : isActive
+                                ? 20
+                                : isPrevious
+                                  ? 10
+                                  : index < activeSection
+                                    ? 5
+                                    : 1,
+                          transition: "none", // No transition for immediate response to scroll
+                        }}
+                      >
+                        {section.content ? (
+                          section.content
+                        ) : section.image ? (
+                          <div className="w-full h-full">
+                            <Image
+                              src={section.image}
+                              alt={section.title}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                            <span className="text-gray-600 text-xl font-medium">
+                              {section.title}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                  {/* Progress indicator */}
+                  <div className="absolute bottom-4 left-4 right-4 h-1 bg-black/10 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-orange-500 transition-all duration-100"
+                      style={{
+                        width: `${((activeSection + scrollProgress) / sections.length) * 100}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </motion.div>
+    </div>
   );
 };

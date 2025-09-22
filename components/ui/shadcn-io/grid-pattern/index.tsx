@@ -6,6 +6,7 @@ import React, {
   useRef,
   useCallback,
   useMemo,
+  useId,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -15,7 +16,7 @@ interface HighlightSquare {
   y: number;
   id: string;
   timestamp: number;
-  isCenter?: boolean; // Track if this is the center cell
+  isCenter?: boolean;
 }
 
 interface GridPatternProps {
@@ -27,8 +28,9 @@ interface GridPatternProps {
   strokeDasharray?: string;
   className?: string;
   gridClassName?: string;
-  surroundingCells?: number; // Number of surrounding cells to highlight
-  surroundingRadius?: number; // Max radius for surrounding cells
+  surroundingCells?: number;
+  surroundingRadius?: number;
+  style?: React.CSSProperties; // Add style prop support
   [key: string]: unknown;
 }
 
@@ -41,8 +43,9 @@ export default function GridPattern({
   squares,
   className,
   gridClassName = "stroke-current/30",
-  surroundingCells = 6, // Default number of surrounding cells
-  surroundingRadius = 2, // Default radius
+  surroundingCells = 6,
+  surroundingRadius = 2,
+  style, // Accept style prop
   ...props
 }: GridPatternProps) {
   const [highlightSquares, setHighlightSquares] = useState<HighlightSquare[]>(
@@ -53,10 +56,16 @@ export default function GridPattern({
     y: number;
   } | null>(null);
   const [isMoving, setIsMoving] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const lastGridCell = useRef<{ x: number; y: number } | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const cleanupTimeoutRef = useRef<NodeJS.Timeout>(null);
   const moveTimeoutRef = useRef<NodeJS.Timeout>(null);
+
+  // Ensure component is mounted before rendering interactive elements
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Generate random surrounding cells
   const generateSurroundingCells = useCallback(
@@ -64,16 +73,13 @@ export default function GridPattern({
       const cells: Array<{ x: number; y: number }> = [];
       const usedPositions = new Set<string>();
 
-      // Add the center cell
       usedPositions.add(`${centerX}-${centerY}`);
 
-      // Generate random surrounding cells
       let attempts = 0;
       while (
         cells.length < surroundingCells &&
         attempts < surroundingCells * 3
       ) {
-        // Random offset within radius
         const offsetX =
           Math.floor(Math.random() * (surroundingRadius * 2 + 1)) -
           surroundingRadius;
@@ -81,7 +87,6 @@ export default function GridPattern({
           Math.floor(Math.random() * (surroundingRadius * 2 + 1)) -
           surroundingRadius;
 
-        // Skip center cell
         if (offsetX === 0 && offsetY === 0) {
           attempts++;
           continue;
@@ -91,7 +96,6 @@ export default function GridPattern({
         const newY = centerY + offsetY;
         const key = `${newX}-${newY}`;
 
-        // Check if position is already used
         if (!usedPositions.has(key)) {
           cells.push({ x: newX, y: newY });
           usedPositions.add(key);
@@ -105,9 +109,9 @@ export default function GridPattern({
     [surroundingCells, surroundingRadius],
   );
 
-  // Mouse movement handling with surrounding cells
+  // Enhanced mouse movement handling for better interaction through layers
   const handleMouseMove = useCallback(
-    (e: React.MouseEvent<SVGSVGElement>) => {
+    (e: MouseEvent) => {
       if (!svgRef.current) return;
 
       const rect = svgRef.current.getBoundingClientRect();
@@ -123,23 +127,18 @@ export default function GridPattern({
           lastGridCell.current.x === gridX &&
           lastGridCell.current.y === gridY;
 
-        // Set moving state
         setIsMoving(true);
 
-        // Clear existing timeout and set new one
         if (moveTimeoutRef.current) {
           clearTimeout(moveTimeoutRef.current);
         }
 
-        // Start fade after mouse stops
         moveTimeoutRef.current = setTimeout(() => {
           setIsMoving(false);
 
-          // Add current cluster to trail so it fades out naturally
           if (lastGridCell.current) {
             const timestamp = Date.now();
 
-            // Add center cell
             const fadeSquares: HighlightSquare[] = [
               {
                 x: lastGridCell.current.x,
@@ -150,7 +149,6 @@ export default function GridPattern({
               },
             ];
 
-            // Add surrounding cells from current state
             const surroundingPositions = generateSurroundingCells(
               lastGridCell.current.x,
               lastGridCell.current.y,
@@ -160,7 +158,7 @@ export default function GridPattern({
               fadeSquares.push({
                 x: pos.x,
                 y: pos.y,
-                id: `fade-surround-${pos.x}-${pos.y}-${timestamp}-${index}`,
+                id: `fade-surround-${pos.x}-${pos.y}-${timestamp}-${index}-${Math.random().toString(36).substr(2, 9)}`,
                 timestamp,
                 isCenter: false,
               });
@@ -173,14 +171,11 @@ export default function GridPattern({
         }, 100);
 
         if (!isSameCell) {
-          // Update current cell
           setCurrentCell({ x: gridX, y: gridY });
 
-          // Generate new cluster of highlights
           const timestamp = Date.now();
           const newSquares: HighlightSquare[] = [];
 
-          // Add center cell
           newSquares.push({
             x: gridX,
             y: gridY,
@@ -189,20 +184,18 @@ export default function GridPattern({
             isCenter: true,
           });
 
-          // Add random surrounding cells
           const surroundingPositions = generateSurroundingCells(gridX, gridY);
           surroundingPositions.forEach((pos, index) => {
             newSquares.push({
               x: pos.x,
               y: pos.y,
-              id: `surround-${pos.x}-${pos.y}-${timestamp}-${index}`,
+              id: `surround-${pos.x}-${pos.y}-${timestamp}-${index}-${Math.random().toString(36).substr(2, 9)}`,
               timestamp,
               isCenter: false,
             });
           });
 
           setHighlightSquares((prev) => {
-            // Keep only recent highlights
             const recent = prev.filter((s) => timestamp - s.timestamp < 800);
             return [...recent, ...newSquares];
           });
@@ -215,7 +208,6 @@ export default function GridPattern({
   );
 
   const handleMouseLeave = useCallback(() => {
-    // Add current cluster to trail before clearing
     if (currentCell && isMoving) {
       const timestamp = Date.now();
       const fadeSquares: HighlightSquare[] = [
@@ -228,7 +220,6 @@ export default function GridPattern({
         },
       ];
 
-      // Add surrounding cells
       const surroundingPositions = generateSurroundingCells(
         currentCell.x,
         currentCell.y,
@@ -237,7 +228,7 @@ export default function GridPattern({
         fadeSquares.push({
           x: pos.x,
           y: pos.y,
-          id: `fade-leave-surround-${pos.x}-${pos.y}-${timestamp}-${index}`,
+          id: `fade-leave-surround-${pos.x}-${pos.y}-${timestamp}-${index}-${Math.random().toString(36).substr(2, 9)}`,
           timestamp,
           isCenter: false,
         });
@@ -252,6 +243,31 @@ export default function GridPattern({
       clearTimeout(moveTimeoutRef.current);
     }
   }, [currentCell, isMoving, generateSurroundingCells]);
+
+  // Use document-level mouse tracking for better interaction through layers
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+
+    // Use window-level mouse tracking to catch events through layers
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      handleMouseMove(e);
+    };
+
+    const handleSvgMouseLeave = () => {
+      handleMouseLeave();
+    };
+
+    window.addEventListener("mousemove", handleGlobalMouseMove);
+    svg.addEventListener("mouseleave", handleSvgMouseLeave);
+
+    return () => {
+      window.removeEventListener("mousemove", handleGlobalMouseMove);
+      if (svg) {
+        svg.removeEventListener("mouseleave", handleSvgMouseLeave);
+      }
+    };
+  }, [handleMouseMove, handleMouseLeave]);
 
   // Cleanup old squares
   useEffect(() => {
@@ -269,39 +285,8 @@ export default function GridPattern({
     };
   }, []);
 
-  // Memoize dimensions calculation
-  const [dimensions, setDimensions] = useState<{
-    cols: number;
-    rows: number;
-  } | null>(null);
-
-  useEffect(() => {
-    const calculateDimensions = () => {
-      const cols = Math.ceil(window.innerWidth / width) + 2;
-      const rows = Math.ceil(window.innerHeight / height) + 2;
-      setDimensions({ cols, rows });
-    };
-
-    calculateDimensions();
-
-    // Debounce resize
-    let resizeTimeout: NodeJS.Timeout;
-    const handleResize = () => {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(calculateDimensions, 150);
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      clearTimeout(resizeTimeout);
-    };
-  }, [width, height]);
-
-  // Memoize static squares
   const staticSquares = useMemo(() => squares || [], [squares]);
 
-  // Get current active cells (center + surrounding) for instant highlight
   const currentActiveCells = useMemo(() => {
     if (!currentCell || !isMoving) return [];
 
@@ -310,30 +295,20 @@ export default function GridPattern({
     return [...cells, ...surrounding];
   }, [currentCell, isMoving, generateSurroundingCells]);
 
-  if (!dimensions) {
-    return (
-      <svg
-        ref={svgRef}
-        aria-hidden="true"
-        className={cn("absolute inset-0 h-full w-full", className)}
-        {...props}
-      />
-    );
-  }
+  // Generate a stable ID using useId to avoid hydration mismatches
+  const patternId = useId();
 
   return (
     <svg
       ref={svgRef}
       aria-hidden="true"
       className={cn("absolute inset-0 h-full w-full", className)}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
+      style={style} // Apply style prop
       {...props}
     >
       <defs>
-        {/* Use pattern for base grid */}
         <pattern
-          id="grid-pattern"
+          id={patternId}
           width={width}
           height={height}
           patternUnits="userSpaceOnUse"
@@ -350,16 +325,16 @@ export default function GridPattern({
         </pattern>
       </defs>
 
-      {/* Base grid using pattern */}
       <rect
         width="100%"
         height="100%"
         strokeWidth={0}
-        fill="url(#grid-pattern)"
+        fill={`url(#${patternId})`}
       />
 
-      {/* Instant highlight for current cluster - only when moving */}
-      {isMoving &&
+      {/* Instant highlight for current cluster */}
+      {mounted &&
+        isMoving &&
         currentActiveCells.map((cell, index) => (
           <rect
             key={`active-${cell.x}-${cell.y}-${index}`}
@@ -369,63 +344,66 @@ export default function GridPattern({
             height={height - 1}
             fill="none"
             className="stroke-primary"
-            strokeWidth={index === 0 ? 2 : 1.5} // Center cell has thicker stroke
-            opacity={index === 0 ? 0.9 : 0.7} // Center cell more opaque
+            strokeWidth={index === 0 ? 2 : 1.5}
+            opacity={index === 0 ? 0.9 : 0.7}
             pointerEvents="none"
           />
         ))}
 
       {/* Animated trail highlights */}
       <AnimatePresence mode="popLayout">
-        {highlightSquares.map((square) => {
-          const now = Date.now();
-          const age = Math.min(1, (now - square.timestamp) / 800);
+        {mounted &&
+          highlightSquares.map((square) => {
+            const now = Date.now();
+            const age = Math.min(1, (now - square.timestamp) / 800);
 
-          // Skip if this is part of current active cells
-          if (
-            isMoving &&
-            currentActiveCells.some(
-              (cell) => cell.x === square.x && cell.y === square.y,
-            )
-          ) {
-            return null;
-          }
+            if (
+              isMoving &&
+              currentActiveCells.some(
+                (cell) => cell.x === square.x && cell.y === square.y,
+              )
+            ) {
+              return null;
+            }
 
-          return (
-            <motion.rect
-              key={square.id}
-              x={square.x * width + 0.5}
-              y={square.y * height + 0.5}
-              width={width - 1}
-              height={height - 1}
-              fill="none"
-              className={
-                square.isCenter ? "stroke-primary/70" : "stroke-primary/50"
-              }
-              strokeWidth={square.isCenter ? 1.5 : 1}
-              initial={{
-                opacity: square.isCenter ? 0.8 : 0.6,
-                scale: 0.8,
-              }}
-              animate={{
-                opacity: Math.max(0, (square.isCenter ? 0.7 : 0.5) * (1 - age)),
-                strokeWidth: Math.max(
-                  0.5,
-                  (square.isCenter ? 1.5 : 1) * (1 - age),
-                ),
-                scale: 1 + age * 0.2, // Gentle scale out effect
-              }}
-              exit={{
-                opacity: 0,
-                scale: 1.3,
-              }}
-              transition={{
-                duration: 0.4,
-                ease: [0.4, 0, 0.6, 1],
-              }}
-            />
-          );
-        })}
+            return (
+              <motion.rect
+                key={square.id}
+                x={square.x * width + 0.5}
+                y={square.y * height + 0.5}
+                width={width - 1}
+                height={height - 1}
+                fill="none"
+                className={
+                  square.isCenter ? "stroke-primary/70" : "stroke-primary/50"
+                }
+                strokeWidth={square.isCenter ? 1.5 : 1}
+                initial={{
+                  opacity: square.isCenter ? 0.8 : 0.6,
+                  scale: 0.8,
+                }}
+                animate={{
+                  opacity: Math.max(
+                    0,
+                    (square.isCenter ? 0.7 : 0.5) * (1 - age),
+                  ),
+                  strokeWidth: Math.max(
+                    0.5,
+                    (square.isCenter ? 1.5 : 1) * (1 - age),
+                  ),
+                  scale: 1 + age * 0.2,
+                }}
+                exit={{
+                  opacity: 0,
+                  scale: 1.3,
+                }}
+                transition={{
+                  duration: 0.4,
+                  ease: [0.4, 0, 0.6, 1],
+                }}
+              />
+            );
+          })}
       </AnimatePresence>
 
       {/* Static overlay squares */}
