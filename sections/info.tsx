@@ -147,7 +147,7 @@ export default function InfoSection() {
         <div className="w-full px-8 flex items-center justify-center min-h-[30vh]">
           <div className="max-w-7xl mx-auto">
             <motion.p
-              className="text-3xl md:text-4xl lg:text-5xl leading-none tracking-tight indent-8 md:indent-80 lg:indent-96"
+              className="text-3xl md:text-4xl lg:text-[51.2px] leading-none tracking-tight indent-8 md:indent-80 lg:indent-96"
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: false, amount: 0.3 }}

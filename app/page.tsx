@@ -1,6 +1,7 @@
 import HeroSection from "@/sections/hero";
 import BioSection from "@/sections/bio";
 import InfoSection from "@/sections/info";
+import ProjectsSectionPinned from "@/sections/horizontal-scroll-portfolio";
 
 export default function Home() {
   return (
@@ -11,6 +12,7 @@ export default function Home() {
       </div>
       {/* InfoSection outside the black container */}
       <InfoSection />
+      <ProjectsSectionPinned />
     </>
   );
 }
