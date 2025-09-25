@@ -43,7 +43,7 @@ function SocialSidebar() {
 interface FaqsAccordionProps {
   faqs?: Array<{
     question: string;
-    answer: string;
+    answer: string | React.ReactNode;
   }>;
 }
 
@@ -51,8 +51,67 @@ function FaqsAccordion({
   faqs = [
     {
       question: "HOW DOES THE COLLABORATION WITH YOU WORK?",
-      answer:
-        "Our collaboration process begins with understanding your unique needs and goals. We start with a comprehensive consultation to define project scope, timeline, and deliverables. Throughout the project, we maintain transparent communication with regular updates and feedback sessions.",
+      answer: (
+        <div className="space-y-3 text-foreground-muted">
+          <ul className="space-y-3">
+            <li className="flex items-start">
+              <span className="text-primary mr-3 mt-1">•</span>
+              <div>
+                <strong className="text-white">Enquiries & Contact:</strong>
+                <span className="block mt-1">
+                  By phone, contact form or WhatsApp – with specific ideas or to
+                  arrange an appointment for a consultation
+                </span>
+              </div>
+            </li>
+            <li className="flex items-start">
+              <span className="text-primary mr-3 mt-1">•</span>
+              <div>
+                <strong className="text-white">Personal meeting:</strong>
+                <span className="block mt-1">
+                  Discussion of ideas, goals and review of the collaboration
+                </span>
+              </div>
+            </li>
+            <li className="flex items-start">
+              <span className="text-primary mr-3 mt-1">•</span>
+              <div>
+                <strong className="text-white">Analysis:</strong>
+                <span className="block mt-1">
+                  Assessment of the status quo and identification of potential
+                </span>
+              </div>
+            </li>
+            <li className="flex items-start">
+              <span className="text-primary mr-3 mt-1">•</span>
+              <div>
+                <strong className="text-white">Offer creation:</strong>
+                <span className="block mt-1">
+                  Creation of an individual offer based on the findings
+                </span>
+              </div>
+            </li>
+            <li className="flex items-start">
+              <span className="text-primary mr-3 mt-1">•</span>
+              <div>
+                <strong className="text-white">Concept & Design:</strong>
+                <span className="block mt-1">
+                  Determination of the appropriate strategy and selection of
+                  suitable instruments
+                </span>
+              </div>
+            </li>
+            <li className="flex items-start">
+              <span className="text-primary mr-3 mt-1">•</span>
+              <div>
+                <strong className="text-white">
+                  Implementation, maintenance and reporting
+                </strong>
+              </div>
+            </li>
+          </ul>
+        </div>
+      ),
     },
     {
       question: "WHY SHOULD PEOPLE WORK WITH YOU?",
@@ -152,9 +211,13 @@ function FaqsAccordion({
                   transition={{ duration: 0.3, delay: 0.05 }}
                   className="pb-6"
                 >
-                  <p className="text-gray-400 text-base leading-relaxed max-w-3xl">
-                    {faq.answer}
-                  </p>
+                  <div className="text-gray-400 text-base leading-relaxed max-w-3xl">
+                    {typeof faq.answer === "string" ? (
+                      <p>{faq.answer}</p>
+                    ) : (
+                      faq.answer
+                    )}
+                  </div>
                 </motion.div>
               </motion.div>
             )}

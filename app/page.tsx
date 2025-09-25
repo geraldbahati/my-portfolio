@@ -3,6 +3,7 @@ import BioSection from "@/sections/bio";
 import InfoSection from "@/sections/info";
 import ProjectsSectionPinned from "@/sections/horizontal-scroll-portfolio";
 import ExpertiseFaqSection from "@/sections/faq";
+import ContactSection from "@/sections/contact";
 
 export default function Home() {
   return (
@@ -15,6 +16,7 @@ export default function Home() {
       <InfoSection />
       <ProjectsSectionPinned />
       <ExpertiseFaqSection />
+      <ContactSection />
     </>
   );
 }
