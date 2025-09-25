@@ -4,6 +4,7 @@ import "./globals.css";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Footer } from "@/components/footer";
+import { Navbar } from "@/components/navbar";
 
 const syne = Syne({
   subsets: ["latin"],
@@ -30,9 +31,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${syne.variable} ${jetbrainsMono.variable} antialiased`}>
+      <body
+        className={`${syne.variable} ${jetbrainsMono.variable} antialiased`}
+      >
         <ClerkProvider dynamic>
           <ConvexClientProvider>
+            <Navbar />
             {children}
             <Footer />
           </ConvexClientProvider>
