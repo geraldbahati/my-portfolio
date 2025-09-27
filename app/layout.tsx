@@ -32,7 +32,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${syne.variable} ${jetbrainsMono.variable} antialiased`}
+        className={`${syne.variable} ${jetbrainsMono.variable} antialiased bg-background`}
       >
         <ClerkProvider dynamic>
           <ConvexClientProvider>

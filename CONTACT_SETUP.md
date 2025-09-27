@@ -6,11 +6,12 @@ This guide explains how to set up and configure the contact form for your portfo
 
 The contact form is built with:
 - **Next.js 15** with App Router
-- **Convex** for backend functionality
+- **Convex** for backend functionality and database storage
 - **Resend** for email delivery
 - **React Hook Form** + **Zod** for validation
 - **Shadcn/ui** components for UI
 - **Rate limiting** for spam protection
+- **Database schema** for submission tracking and analytics
 
 ## Required Environment Variables
 
@@ -107,6 +108,12 @@ The contact form starts in production mode (`testMode: false`). To test during d
 - Client components only where needed
 - Optimized bundle size
 - No layout shift
+
+### ✅ Database & Analytics
+- All submissions stored in Convex database
+- Email delivery tracking with status updates
+- Contact submission analytics and statistics
+- Query functions for viewing submissions and stats
 
 ## Rate Limiting
 

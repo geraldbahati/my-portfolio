@@ -3,6 +3,7 @@
 import { motion } from "motion/react";
 import { useCallback, useState } from "react";
 import { TextScramble } from "@/components/ui/text-scramble";
+import { Separator } from "@/components/ui/separator";
 
 interface FooterProps {
   brand?: {
@@ -107,8 +108,8 @@ export function Footer({
   return (
     <footer className="bg-black text-white">
       {/* Separator line */}
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="border-t border-gray-800"></div>
+      <div className="flex justify-center pt-24 pb-4">
+        <Separator className="bg-white/50 max-w-7xl" />
       </div>
 
       {/* Main content */}

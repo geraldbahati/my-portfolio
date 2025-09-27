@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { contactSchema, type ContactFormData } from "@/lib/validators/contactSchema";
+import { type ContactFormData, contactSchema } from "@/lib/validators/contactSchema";
 import { api } from "@/convex/_generated/api";
 
 interface ContactFormProps {
@@ -56,11 +56,25 @@ export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
     setSubmitStatus({ type: null, message: "" });
 
     try {
+      // Get client IP (simplified approach)
+      let clientIP: string | undefined;
+      try {
+        const response = await fetch('/api/get-ip');
+        if (response.ok) {
+          const ipData = await response.json();
+          clientIP = ipData.ip;
+        }
+      } catch {
+        // Fallback if IP detection fails
+        clientIP = undefined;
+      }
+
       const result = await submitContactForm({
         name: data.name,
         email: data.email,
         message: data.message,
         privacyConsent: data.privacyConsent,
+        clientIP,
       });
 
       if (result.success) {
@@ -86,7 +100,14 @@ export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="space-y-6"
+      noValidate
+      itemScope
+      itemType="https://schema.org/ContactForm"
+      aria-label="Project inquiry contact form"
+    >
       {/* Status message with aria-live region */}
       {submitStatus.type && (
         <div
@@ -124,7 +145,8 @@ export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
           autoComplete="name"
           aria-invalid={errors.name ? "true" : "false"}
           aria-describedby={errors.name ? "name-error" : undefined}
-          className={`w-full ${errors.name ? "border-red-500 focus:border-red-500" : ""}`}
+          className={`w-full border-black focus:border-black ${errors.name ? "border-red-500 focus:border-red-500" : ""}`}
+          itemProp="name"
           {...register("name")}
         />
         {errors.name && (
@@ -146,7 +168,8 @@ export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
           autoComplete="email"
           aria-invalid={errors.email ? "true" : "false"}
           aria-describedby={errors.email ? "email-error" : undefined}
-          className={`w-full ${errors.email ? "border-red-500 focus:border-red-500" : ""}`}
+          className={`w-full border-black focus:border-black ${errors.email ? "border-red-500 focus:border-red-500" : ""}`}
+          itemProp="email"
           {...register("email")}
         />
         {errors.email && (
@@ -167,7 +190,8 @@ export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
           rows={5}
           aria-invalid={errors.message ? "true" : "false"}
           aria-describedby={errors.message ? "message-error" : undefined}
-          className={`w-full resize-none ${errors.message ? "border-red-500 focus:border-red-500" : ""}`}
+          className={`w-full resize-none border-black focus:border-black ${errors.message ? "border-red-500 focus:border-red-500" : ""}`}
+          itemProp="text"
           {...register("message")}
         />
         {errors.message && (
@@ -183,10 +207,18 @@ export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
           <Checkbox
             id="privacy-consent"
             checked={privacyConsent}
-            onCheckedChange={(checked) => setValue("privacyConsent", checked as boolean)}
+            onCheckedChange={(checked) =>
+              setValue("privacyConsent", checked as boolean)
+            }
             aria-invalid={errors.privacyConsent ? "true" : "false"}
-            aria-describedby={errors.privacyConsent ? "privacy-error" : "privacy-description"}
-            className={errors.privacyConsent ? "border-red-500" : ""}
+            aria-describedby={
+              errors.privacyConsent ? "privacy-error" : "privacy-description"
+            }
+            className={
+              errors.privacyConsent
+                ? "border-red-500 my-1"
+                : "border-black my-1"
+            }
           />
           <div className="space-y-1">
             <label
@@ -199,11 +231,12 @@ export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
                 className="text-blue-600 hover:text-blue-800 underline"
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Read privacy policy (opens in new tab)"
               >
                 privacy policy
               </a>{" "}
-              and consent to my data being temporarily stored for the purpose of processing this
-              request.
+              and consent to my data being temporarily stored for the purpose of
+              processing this request.
             </label>
             <p id="privacy-description" className="sr-only">
               Required: You must agree to the privacy policy to submit this form

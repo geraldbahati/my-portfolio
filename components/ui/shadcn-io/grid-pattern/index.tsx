@@ -31,6 +31,7 @@ interface GridPatternProps {
   surroundingCells?: number;
   surroundingRadius?: number;
   style?: React.CSSProperties; // Add style prop support
+  disableInteraction?: boolean; // Add prop to disable hover effects
   [key: string]: unknown;
 }
 
@@ -46,6 +47,7 @@ export default function GridPattern({
   surroundingCells = 6,
   surroundingRadius = 2,
   style, // Accept style prop
+  disableInteraction = false, // Default to false (interaction enabled)
   ...props
 }: GridPatternProps) {
   const [highlightSquares, setHighlightSquares] = useState<HighlightSquare[]>(
@@ -113,6 +115,15 @@ export default function GridPattern({
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
       if (!svgRef.current) return;
+
+      // Check if mouse is over an element that should block grid interaction
+      const elementUnderMouse = document.elementFromPoint(e.clientX, e.clientY);
+      if (elementUnderMouse?.closest('.grid-interaction-blocked')) {
+        // If mouse is over a blocked area, clear current state and return
+        setCurrentCell(null);
+        setIsMoving(false);
+        return;
+      }
 
       const rect = svgRef.current.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
@@ -247,7 +258,7 @@ export default function GridPattern({
   // Use document-level mouse tracking for better interaction through layers
   useEffect(() => {
     const svg = svgRef.current;
-    if (!svg) return;
+    if (!svg || disableInteraction) return;
 
     // Use window-level mouse tracking to catch events through layers
     const handleGlobalMouseMove = (e: MouseEvent) => {
@@ -267,7 +278,7 @@ export default function GridPattern({
         svg.removeEventListener("mouseleave", handleSvgMouseLeave);
       }
     };
-  }, [handleMouseMove, handleMouseLeave]);
+  }, [handleMouseMove, handleMouseLeave, disableInteraction]);
 
   // Cleanup old squares
   useEffect(() => {
@@ -333,7 +344,8 @@ export default function GridPattern({
       />
 
       {/* Instant highlight for current cluster */}
-      {mounted &&
+      {!disableInteraction &&
+        mounted &&
         isMoving &&
         currentActiveCells.map((cell, index) => (
           <rect
@@ -351,60 +363,62 @@ export default function GridPattern({
         ))}
 
       {/* Animated trail highlights */}
-      <AnimatePresence mode="popLayout">
-        {mounted &&
-          highlightSquares.map((square) => {
-            const now = Date.now();
-            const age = Math.min(1, (now - square.timestamp) / 800);
+      {!disableInteraction && (
+        <AnimatePresence mode="popLayout">
+          {mounted &&
+            highlightSquares.map((square) => {
+              const now = Date.now();
+              const age = Math.min(1, (now - square.timestamp) / 800);
 
-            if (
-              isMoving &&
-              currentActiveCells.some(
-                (cell) => cell.x === square.x && cell.y === square.y,
-              )
-            ) {
-              return null;
-            }
+              if (
+                isMoving &&
+                currentActiveCells.some(
+                  (cell) => cell.x === square.x && cell.y === square.y,
+                )
+              ) {
+                return null;
+              }
 
-            return (
-              <motion.rect
-                key={square.id}
-                x={square.x * width + 0.5}
-                y={square.y * height + 0.5}
-                width={width - 1}
-                height={height - 1}
-                fill="none"
-                className={
-                  square.isCenter ? "stroke-primary/70" : "stroke-primary/50"
-                }
-                strokeWidth={square.isCenter ? 1.5 : 1}
-                initial={{
-                  opacity: square.isCenter ? 0.8 : 0.6,
-                  scale: 0.8,
-                }}
-                animate={{
-                  opacity: Math.max(
-                    0,
-                    (square.isCenter ? 0.7 : 0.5) * (1 - age),
-                  ),
-                  strokeWidth: Math.max(
-                    0.5,
-                    (square.isCenter ? 1.5 : 1) * (1 - age),
-                  ),
-                  scale: 1 + age * 0.2,
-                }}
-                exit={{
-                  opacity: 0,
-                  scale: 1.3,
-                }}
-                transition={{
-                  duration: 0.4,
-                  ease: [0.4, 0, 0.6, 1],
-                }}
-              />
-            );
-          })}
-      </AnimatePresence>
+              return (
+                <motion.rect
+                  key={square.id}
+                  x={square.x * width + 0.5}
+                  y={square.y * height + 0.5}
+                  width={width - 1}
+                  height={height - 1}
+                  fill="none"
+                  className={
+                    square.isCenter ? "stroke-primary/70" : "stroke-primary/50"
+                  }
+                  strokeWidth={square.isCenter ? 1.5 : 1}
+                  initial={{
+                    opacity: square.isCenter ? 0.8 : 0.6,
+                    scale: 0.8,
+                  }}
+                  animate={{
+                    opacity: Math.max(
+                      0,
+                      (square.isCenter ? 0.7 : 0.5) * (1 - age),
+                    ),
+                    strokeWidth: Math.max(
+                      0.5,
+                      (square.isCenter ? 1.5 : 1) * (1 - age),
+                    ),
+                    scale: 1 + age * 0.2,
+                  }}
+                  exit={{
+                    opacity: 0,
+                    scale: 1.3,
+                  }}
+                  transition={{
+                    duration: 0.4,
+                    ease: [0.4, 0, 0.6, 1],
+                  }}
+                />
+              );
+            })}
+        </AnimatePresence>
+      )}
 
       {/* Static overlay squares */}
       {staticSquares.length > 0 && (

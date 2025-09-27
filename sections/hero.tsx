@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState, memo, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
 
 // Lazy load heavy components
@@ -250,7 +250,7 @@ export default function HeroSection() {
                   custom={ANIMATION_DELAYS.TITLE}
                   variants={itemVariants}
                 >
-                  <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-thin leading-[0.9] sm:leading-none tracking-tight pointer-events-auto">
+                  <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-thin leading-[0.9] sm:leading-none tracking-tight grid-interaction-blocked pointer-events-auto">
                     <motion.span
                       className="inline-block font-medium"
                       initial={{ opacity: 0, x: -20 }}
@@ -310,7 +310,7 @@ export default function HeroSection() {
                       ease: [0.22, 1, 0.36, 1],
                     }}
                   >
-                    <p className="text-sm sm:text-base lg:text-lg text-muted-foreground font-light leading-relaxed tracking-wide pointer-events-auto">
+                    <p className="text-sm sm:text-base lg:text-lg text-muted-foreground font-light leading-relaxed tracking-wide grid-interaction-blocked pointer-events-auto">
                       Design meets Performance – creative web design and digital
                       marketing delivered precisely.
                     </p>
