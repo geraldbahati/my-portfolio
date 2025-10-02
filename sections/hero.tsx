@@ -194,7 +194,10 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <section className="relative min-h-screen overflow-hidden" role="banner">
+    <section
+      className="relative min-h-screen overflow-hidden bg-black"
+      role="banner"
+    >
       {/* Grid Pattern Background */}
       <GridPattern
         className="absolute inset-0 opacity-80"

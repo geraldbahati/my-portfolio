@@ -54,7 +54,8 @@ export default function ContactSection({ className = '' }: ContactSectionProps) 
 
   return (
     <section
-      className={`h-[60vh] relative flex items-center justify-center p-8 bg-black ${className}`}
+      data-section-id="ContactSection"
+      className={`h-[60vh] relative flex items-center justify-center p-8 ${className}`}
       aria-label="Contact call-to-action section"
     >
       <div className="absolute inset-0 w-full h-full z-0">

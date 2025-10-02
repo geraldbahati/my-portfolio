@@ -1,12 +1,10 @@
 "use client";
 
-import { memo, useRef } from "react";
+import { memo } from "react";
 import {
   motion,
-  MotionValue,
-  useInView,
-  useScroll,
   useTransform,
+  MotionValue,
 } from "framer-motion";
 import { CutoutMaskImage } from "@/components/ui/cutout-image-mask";
 
@@ -35,30 +33,38 @@ const Word = memo(
 
 Word.displayName = "Word";
 
-// Main Bio Section Component
-export default function BioSection() {
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
+/**
+ * Bio Section Component optimized for overlay usage
+ *
+ * This component is designed to work with the scroll-triggered overlay effect.
+ *
+ * Key design decisions:
+ * - Uses h-screen (exactly 100vh) instead of min-h-screen to ensure consistent height
+ * - This allows precise bottom-to-bottom alignment with viewport on scroll completion
+ * - When scroll animation completes (y=0vh):
+ *   - Section top aligns with viewport top
+ *   - Section bottom aligns with viewport bottom
+ * - overflow-y-auto allows internal scrolling if content exceeds viewport height
+ * - Accepts scroll progress from parent to synchronize all internal animations
+ */
+interface BioOverlayProps {
+  scrollProgress: MotionValue<number>;
+}
 
-  // Track section visibility
-  const isInView = useInView(sectionRef, { once: false, margin: "-20%" });
-
-  // Scroll progress for the entire section
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start end", "end start"],
-  });
-
-  // Scroll progress specifically for content animations
-  const { scrollYProgress: contentProgress } = useScroll({
-    target: contentRef,
-    offset: ["start 0.9", "start 0.1"],
-  });
+export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
+  // Transform scroll progress to control content animations
+  // Content animations trigger as bio slides into view (last 60% of scroll)
+  const contentProgress = useTransform(scrollProgress, [0.4, 1], [0, 1]);
 
   // Transform values for the cutout image
+  // Image scales and moves as bio section slides up
   const imageScale = useTransform(contentProgress, [0, 0.5], [0.6, 1]);
   const imageOpacity = useTransform(contentProgress, [0, 0.2], [0, 1]);
   const imageY = useTransform(contentProgress, [0, 0.5], [100, 0]);
+
+  // CTA button visibility based on scroll progress
+  const ctaOpacity = useTransform(contentProgress, [0.7, 1], [0, 1]);
+  const ctaY = useTransform(contentProgress, [0.7, 1], [20, 0]);
 
   // Text content
   const tagline = "What I can do for you";
@@ -72,15 +78,12 @@ export default function BioSection() {
   const totalWords = taglineWords.length + mainWords.length + 1; // +1 for "(01)"
 
   return (
-    <section
-      ref={sectionRef}
-      className="relative min-h-screen items-center justify-center flex bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-t-[2rem] sm:rounded-t-[3rem] lg:rounded-t-[4rem]"
-    >
+    <section className="relative h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-t-[2rem] sm:rounded-t-[3rem] lg:rounded-t-[4rem] overflow-y-auto">
       {/* Subtle background elements */}
       <motion.div
         className="absolute inset-0 overflow-hidden pointer-events-none"
         style={{
-          opacity: useTransform(scrollYProgress, [0, 0.5, 1], [0.3, 1, 0.3]),
+          opacity: useTransform(scrollProgress, [0, 0.5, 1], [0.3, 1, 1]),
         }}
       >
         <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-purple-100/20 to-transparent rounded-full blur-3xl" />
@@ -88,10 +91,7 @@ export default function BioSection() {
       </motion.div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div
-          ref={contentRef}
-          className="grid lg:grid-cols-[210px_1fr] gap-12 lg:gap-24 items-center"
-        >
+        <div className="grid lg:grid-cols-[210px_1fr] gap-12 lg:gap-24 items-center">
           {/* Left: Animated Cutout Mask Image */}
           <motion.div
             className="flex justify-center lg:justify-start"
@@ -167,9 +167,10 @@ export default function BioSection() {
 
             {/* CTA Button - appears after text */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: 0.8, duration: 0.6 }}
+              style={{
+                opacity: ctaOpacity,
+                y: ctaY,
+              }}
             >
               <motion.button
                 className="group inline-flex items-center gap-3 text-sm font-medium tracking-wider uppercase text-gray-900 transition-colors hover:text-gray-600"

@@ -1,9 +1,9 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 import Image from "next/image";
-import { Linkedin, Twitter, Instagram, Facebook, Globe } from "lucide-react";
+import { Facebook, Globe, Instagram, Linkedin, Twitter } from "lucide-react";
 
 // Social Links Component
 function SocialSidebar() {
@@ -231,7 +231,10 @@ function FaqsAccordion({
 // Main Section Component
 export default function ExpertiseFaqSection() {
   return (
-    <section className="min-h-screen bg-black text-white relative">
+    <section
+      data-section-id="ExpertiseFaqSection"
+      className="min-h-screen text-white relative"
+    >
       {/* FAQ Section Header */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}

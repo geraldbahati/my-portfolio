@@ -139,14 +139,15 @@ export default function ProjectsSectionPinned() {
       {/* Pinned Section - Both Header and Horizontal Scroll */}
       <section
         ref={sectionRef}
-        className="relative bg-gray-50"
+        data-section-id="ProjectsSectionPinned"
+        className="relative"
         style={{ height: calculateSectionHeight() }}
       >
         {/* Sticky Container */}
         <div className="sticky top-0 h-screen overflow-hidden">
           {/* Header Section - Now Pinned */}
           <motion.div
-            className="absolute top-0 left-0 right-0 z-40 bg-gray-50 pt-16"
+            className="absolute top-0 left-0 right-0 z-40 pt-16"
             initial={{ opacity: 0, y: 32 }}
             animate={
               isHeaderVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 32 }
@@ -164,7 +165,7 @@ export default function ProjectsSectionPinned() {
                   }
                   transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
                 >
-                  <h1 className="text-4xl lg:text-5xl font-medium leading-tight text-gray-900 tracking-tight">
+                  <h1 className="text-4xl lg:text-5xl font-medium leading-tight tracking-tight" style={{ color: 'var(--page-text-auto, #000000)' }}>
                     Website Creations and Client Projects
                   </h1>
                 </motion.div>
@@ -178,7 +179,7 @@ export default function ProjectsSectionPinned() {
                   }
                   transition={{ duration: 0.5, ease: "easeOut", delay: 0.2 }}
                 >
-                  <p className="text-gray-600 text-base leading-relaxed">
+                  <p className="text-base leading-relaxed" style={{ color: 'var(--page-text-auto, #666666)', opacity: 0.8 }}>
                     Get to know me, my work style and my values through an
                     insight into my projects that stand for quality, structure
                     and sustainable solutions.
@@ -214,10 +215,10 @@ export default function ProjectsSectionPinned() {
                 {/* End Message */}
                 <div className="w-[90vw] md:w-[600px] lg:w-[800px] flex-shrink-0 flex items-center justify-center">
                   <div className="text-center">
-                    <h3 className="text-3xl font-light text-gray-600 mb-4">
+                    <h3 className="text-3xl font-light mb-4" style={{ color: 'var(--page-text-auto, #666666)', opacity: 0.8 }}>
                       More Projects Coming Soon
                     </h3>
-                    <p className="text-gray-500">
+                    <p style={{ color: 'var(--page-text-auto, #999999)', opacity: 0.6 }}>
                       Continue scrolling to explore more content
                     </p>
                   </div>
@@ -228,7 +229,7 @@ export default function ProjectsSectionPinned() {
 
           {/* Navigation Hints */}
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-center">
-            <p className="text-sm text-gray-500 mb-2">
+            <p className="text-sm mb-2" style={{ color: 'var(--page-text-auto, #666666)', opacity: 0.7 }}>
               {scrollProgress < 0.1
                 ? "Scroll down to explore"
                 : scrollProgress > 0.9
@@ -237,7 +238,8 @@ export default function ProjectsSectionPinned() {
             </p>
             <div className="animate-bounce">
               <svg
-                className="w-6 h-6 mx-auto text-gray-400"
+                className="w-6 h-6 mx-auto"
+                style={{ color: 'var(--page-text-auto, #999999)', opacity: 0.6 }}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -254,7 +256,7 @@ export default function ProjectsSectionPinned() {
 
           {/* Navigation Hints */}
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-center">
-            <p className="text-sm text-gray-500 mb-2">
+            <p className="text-sm mb-2" style={{ color: 'var(--page-text-auto, #666666)', opacity: 0.7 }}>
               {scrollProgress < 0.1
                 ? "Scroll down to explore"
                 : scrollProgress > 0.9
@@ -263,7 +265,8 @@ export default function ProjectsSectionPinned() {
             </p>
             <div className="animate-bounce">
               <svg
-                className="w-6 h-6 mx-auto text-gray-400"
+                className="w-6 h-6 mx-auto"
+                style={{ color: 'var(--page-text-auto, #999999)', opacity: 0.6 }}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
