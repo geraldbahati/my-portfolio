@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 
@@ -359,7 +359,7 @@ export const StickyScrollReveal = ({
               <div style={{ height: "calc(50vh - 300px)" }} />
 
               {/* Sticky container */}
-              <div
+              <motion.div
                 className="w-full mx-auto"
                 style={{
                   position: "sticky",
@@ -367,6 +367,10 @@ export const StickyScrollReveal = ({
                   width: "600px",
                   height: "600px",
                 }}
+                initial={{ opacity: 0, y: 350 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 1.4, ease: [0.25, 0.1, 0.25, 1] }}
               >
                 {/* Image container with clip path for slide effect */}
                 <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl">
@@ -457,7 +461,7 @@ export const StickyScrollReveal = ({
                     />
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </div>
           </div>
         </div>

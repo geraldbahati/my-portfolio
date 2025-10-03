@@ -1,26 +1,30 @@
 "use client";
 
 import { memo, useRef } from "react";
-import {
-  motion,
-  MotionValue,
-  useInView,
-  useScroll,
-  useTransform,
-} from "framer-motion";
+import { motion, MotionValue, useInView, useScroll, useTransform } from "framer-motion";
 import { CutoutMaskImage } from "@/components/ui/cutout-image-mask";
 
-// Word component for synchronized animation
-interface WordProps {
+// Character component for synchronized animation
+interface CharProps {
   children: string;
   progress: MotionValue<number>;
   range: [number, number];
   className?: string;
 }
 
-const Word = memo(
-  ({ children, progress, range, className = "" }: WordProps) => {
-    const opacity = useTransform(progress, range, [0, 1]);
+const Char = memo(
+  ({ children, progress, range, className = "" }: CharProps) => {
+    // Create a highlight window that peaks in the middle of the range
+    const [start, end] = range;
+    const mid = (start + end) / 2;
+    const windowSize = (end - start) * 2; // Width of highlight window
+
+    // Opacity peaks when scroll progress is at the character's position
+    const opacity = useTransform(
+      progress,
+      [mid - windowSize, mid, mid + windowSize],
+      [0, 1, 0]
+    );
 
     return (
       <span className={`relative ${className}`}>
@@ -33,7 +37,7 @@ const Word = memo(
   },
 );
 
-Word.displayName = "Word";
+Char.displayName = "Char";
 
 // Main Bio Section Component
 export default function BioSection() {
@@ -46,30 +50,34 @@ export default function BioSection() {
   // Scroll progress for the entire section
   const { scrollYProgress } = useScroll({
     target: sectionRef,
-    offset: ["start end", "end start"],
+    offset: ["start start", "end end"],
   });
 
   // Scroll progress specifically for content animations
   const { scrollYProgress: contentProgress } = useScroll({
     target: contentRef,
-    offset: ["start 0.9", "start 0.1"],
+    offset: ["start 0.9", "end 0.3"],
   });
 
-  // Transform values for the cutout image
-  const imageScale = useTransform(contentProgress, [0, 0.5], [0.6, 1]);
-  const imageOpacity = useTransform(contentProgress, [0, 0.2], [0, 1]);
-  const imageY = useTransform(contentProgress, [0, 0.5], [100, 0]);
+  // Transform values for the cutout image (using full section scroll)
+  const imageScale = useTransform(scrollYProgress, [0, 1], [0.6, 1]);
+  const imageOpacity = useTransform(scrollYProgress, [0, 0.2], [0, 1]);
+  const imageY = useTransform(scrollYProgress, [0, 1], [100, 0]);
 
   // Text content
   const tagline = "What I can do for you";
-  const taglineWords = tagline.split(" ");
+  const taglineChars = tagline.split("");
 
   const mainText =
     "As a web designer and digital expert, I combine creative, detail-loving design with strategic know-how in digital marketing to unlock your brand's full potential.";
-  const mainWords = mainText.split(" ");
+  const mainChars = mainText.split("");
 
-  // Calculate word reveal ranges
-  const totalWords = taglineWords.length + mainWords.length + 1; // +1 for "(01)"
+  const numberText = "(01)";
+  const numberChars = numberText.split("");
+
+  // Calculate character reveal ranges
+  const totalChars =
+    taglineChars.length + numberChars.length + mainChars.length;
 
   return (
     <section
@@ -114,53 +122,61 @@ export default function BioSection() {
           <div className="space-y-8">
             {/* Tagline and Number */}
             <div className="flex justify-between items-start">
-              <div className="flex flex-wrap gap-2">
-                {taglineWords.map((word, i) => {
-                  const wordIndex = i;
-                  const start = wordIndex / totalWords;
-                  const end = (wordIndex + 1) / totalWords;
+              <div className="text-xs sm:text-sm font-medium tracking-[0.2em] uppercase text-gray-600">
+                {taglineChars.map((char, i) => {
+                  const charIndex = i;
+                  const start = charIndex / totalChars;
+                  const end = (charIndex + 1) / totalChars;
 
                   return (
-                    <Word
+                    <Char
                       key={`tag-${i}`}
                       progress={contentProgress}
                       range={[start, end]}
-                      className="text-xs sm:text-sm font-medium tracking-[0.2em] uppercase text-gray-600"
+                      className=""
                     >
-                      {word}
-                    </Word>
+                      {char}
+                    </Char>
                   );
                 })}
               </div>
 
-              <Word
-                progress={contentProgress}
-                range={[
-                  taglineWords.length / totalWords,
-                  (taglineWords.length + 1) / totalWords,
-                ]}
-                className="text-xs sm:text-sm font-light text-gray-400"
-              >
-                (01)
-              </Word>
+              <div className="text-xs sm:text-sm font-light text-gray-400">
+                {numberChars.map((char, i) => {
+                  const charIndex = taglineChars.length + i;
+                  const start = charIndex / totalChars;
+                  const end = (charIndex + 1) / totalChars;
+
+                  return (
+                    <Char
+                      key={`num-${i}`}
+                      progress={contentProgress}
+                      range={[start, end]}
+                      className=""
+                    >
+                      {char}
+                    </Char>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Main Text */}
             <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl leading-tight font-light text-gray-900">
-              {mainWords.map((word, i) => {
-                const wordIndex = taglineWords.length + 1 + i; // +1 for "(01)"
-                const start = wordIndex / totalWords;
-                const end = Math.min((wordIndex + 1) / totalWords, 1);
+              {mainChars.map((char, i) => {
+                const charIndex = taglineChars.length + numberChars.length + i;
+                const start = charIndex / totalChars;
+                const end = Math.min((charIndex + 1) / totalChars, 1);
 
                 return (
-                  <Word
+                  <Char
                     key={`main-${i}`}
                     progress={contentProgress}
                     range={[start, end]}
-                    className="mr-[0.25em] inline-block"
+                    className=""
                   >
-                    {word}
-                  </Word>
+                    {char}
+                  </Char>
                 );
               })}
             </h2>
