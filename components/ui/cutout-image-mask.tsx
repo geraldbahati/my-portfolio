@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo, useId } from "react";
+import React, { useId, useMemo, useState } from "react";
+import Image from "next/image";
 
 interface CutoutMaskImageProps {
   imageUrl?: string;
@@ -41,23 +42,21 @@ export const CutoutMaskImage: React.FC<CutoutMaskImageProps> = ({
     }
   };
 
-  // Memoize the SVG paths to avoid re-rendering
-  const svgPaths = useMemo(
-    () => (
-      <>
-        <path d="M108 48C108 21.4903 129.49 0 156 0H160C186.51 0 208 21.4903 208 48V52C208 78.5097 186.51 100 160 100H108V48Z" />
-        <path d="M216 324H268C294.51 324 316 345.49 316 372V376C316 402.51 294.51 424 268 424H264C237.49 424 216 402.51 216 376V324Z" />
-        <path d="M108 372C108 345.49 129.49 324 156 324H208V376C208 402.51 186.51 424 160 424H108V372Z" />
-        <path d="M0 372C0 345.49 21.4903 324 48 324H100V376C100 402.51 78.5097 424 52 424H48C21.4903 424 0 402.51 0 376V372Z" />
-        <path d="M108 216H268C294.51 216 316 237.49 316 264V268C316 294.51 294.51 316 268 316H156C129.49 316 108 294.51 108 268V216Z" />
-        <path d="M0 156C0 129.49 21.4903 108 48 108H52C78.5097 108 100 129.49 100 156V316H48C21.4903 316 0 294.51 0 268V156Z" />
-        <path d="M0 48C0 21.4903 21.4903 0 48 0H52C78.5097 0 100 21.4903 100 48V100H48C21.4903 100 0 78.5097 0 52V48Z" />
-        <path d="M108 108H160C186.51 108 208 129.49 208 156V208H156C129.49 208 108 186.51 108 160V108Z" />
-        <path d="M216 48C216 21.4903 237.49 0 264 0H268C294.51 0 316 21.4903 316 48V160C316 186.51 294.51 208 268 208H216V48Z" />
-      </>
-    ),
-    [],
-  );
+  // SVG mask as data URL for CSS
+  const maskSvg = useMemo(() => {
+    const svg = `<svg viewBox="0 0 316 424" xmlns="http://www.w3.org/2000/svg">
+      <path d="M108 48C108 21.4903 129.49 0 156 0H160C186.51 0 208 21.4903 208 48V52C208 78.5097 186.51 100 160 100H108V48Z" />
+      <path d="M216 324H268C294.51 324 316 345.49 316 372V376C316 402.51 294.51 424 268 424H264C237.49 424 216 402.51 216 376V324Z" />
+      <path d="M108 372C108 345.49 129.49 324 156 324H208V376C208 402.51 186.51 424 160 424H108V372Z" />
+      <path d="M0 372C0 345.49 21.4903 324 48 324H100V376C100 402.51 78.5097 424 52 424H48C21.4903 424 0 402.51 0 376V372Z" />
+      <path d="M108 216H268C294.51 216 316 237.49 316 264V268C316 294.51 294.51 316 268 316H156C129.49 316 108 294.51 108 268V216Z" />
+      <path d="M0 156C0 129.49 21.4903 108 48 108H52C78.5097 108 100 129.49 100 156V316H48C21.4903 316 0 294.51 0 268V156Z" />
+      <path d="M0 48C0 21.4903 21.4903 0 48 0H52C78.5097 0 100 21.4903 100 48V100H48C21.4903 100 0 78.5097 0 52V48Z" />
+      <path d="M108 108H160C186.51 108 208 129.49 208 156V208H156C129.49 208 108 186.51 108 160V108Z" />
+      <path d="M216 48C216 21.4903 237.49 0 264 0H268C294.51 0 316 21.4903 316 48V160C316 186.51 294.51 208 268 208H216V48Z" />
+    </svg>`;
+    return `data:image/svg+xml;base64,${btoa(svg)}`;
+  }, []);
 
   return (
     <div
@@ -82,33 +81,28 @@ export const CutoutMaskImage: React.FC<CutoutMaskImageProps> = ({
         }}
         aria-label={clickToChangeImage ? "Click to change image" : alt}
       >
-        <svg
-          viewBox="0 0 316 424"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className="block w-full h-auto"
-          preserveAspectRatio="xMidYMid meet"
-          aria-hidden="true"
+        <div
+          className="relative w-full h-full"
+          style={{
+            WebkitMaskImage: `url("${maskSvg}")`,
+            maskImage: `url("${maskSvg}")`,
+            WebkitMaskSize: "contain",
+            maskSize: "contain",
+            WebkitMaskRepeat: "no-repeat",
+            maskRepeat: "no-repeat",
+            WebkitMaskPosition: "center",
+            maskPosition: "center",
+          }}
         >
-          <defs>
-            <mask id={maskId}>
-              <rect x="0" y="0" width="316" height="424" fill="black" />
-              <g fill="white">{svgPaths}</g>
-            </mask>
-          </defs>
-
-          {/* Apply the image directly with the mask */}
-          <image
-            href={currentImage}
-            x="0"
-            y="0"
-            width="316"
-            height="424"
-            preserveAspectRatio="xMidYMid slice"
-            mask={`url(#${maskId})`}
-            className="transition-opacity duration-300"
+          <Image
+            src={currentImage}
+            alt={alt}
+            fill
+            sizes={`(max-width: ${maxWidth}px) 100vw, ${maxWidth}px`}
+            className="object-cover transition-opacity duration-300"
+            priority
           />
-        </svg>
+        </div>
 
         {/* Image counter indicator */}
         {clickToChangeImage && imageArray.length > 1 && (

@@ -4,7 +4,6 @@ import ProjectsSectionPinned from "@/sections/horizontal-scroll-portfolio";
 import ExpertiseFaqSection from "@/sections/faq";
 import ContactSection from "@/sections/contact";
 import BackgroundColorSwitcherWrapper from "@/components/BackgroundColorSwitcherWrapper.client";
-import BackgroundDebugInfo from "@/components/BackgroundDebugInfo.client";
 import type { Metadata } from "next";
 
 // SEO Metadata
@@ -95,7 +94,7 @@ export default function Home() {
       </div>
 
       {/* Debug Info - Remove in production */}
-      <BackgroundDebugInfo />
+      {/*<BackgroundDebugInfo />*/}
     </>
   );
 }

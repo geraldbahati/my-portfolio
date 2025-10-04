@@ -1,56 +1,58 @@
-"use client"
+"use client";
 
-import { useCallback, useState, useRef, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import Image from 'next/image'
-import Link from 'next/link'
-import { ArrowUpRight } from 'lucide-react'
-import PixelBlast from '@/components/ui/pixel-blast'
-import { TextScramble } from '@/components/ui/text-scramble'
+import { useCallback, useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
+import PixelBlast from "@/components/ui/pixel-blast";
+import { TextScramble } from "@/components/ui/text-scramble";
 
 interface ContactSectionProps {
-  className?: string
+  className?: string;
 }
 
-export default function ContactSection({ className = '' }: ContactSectionProps) {
-  const [isHovered, setIsHovered] = useState(false)
-  const [shouldTriggerScramble, setShouldTriggerScramble] = useState(false)
-  const [hasTriggered, setHasTriggered] = useState(false)
-  const scrambleTimeoutRef = useRef<NodeJS.Timeout>(null)
+export default function ContactSection({
+  className = "",
+}: ContactSectionProps) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [shouldTriggerScramble, setShouldTriggerScramble] = useState(false);
+  const [hasTriggered, setHasTriggered] = useState(false);
+  const scrambleTimeoutRef = useRef<NodeJS.Timeout>(null);
 
   const handleMouseEnter = useCallback(() => {
-    setIsHovered(true)
+    setIsHovered(true);
 
     if (!hasTriggered) {
-      setHasTriggered(true)
-      setShouldTriggerScramble(true)
+      setHasTriggered(true);
+      setShouldTriggerScramble(true);
 
       scrambleTimeoutRef.current = setTimeout(() => {
-        setShouldTriggerScramble(false)
-      }, 800)
+        setShouldTriggerScramble(false);
+      }, 800);
     }
-  }, [hasTriggered])
+  }, [hasTriggered]);
 
   const handleMouseLeave = useCallback(() => {
     if (scrambleTimeoutRef.current) {
-      clearTimeout(scrambleTimeoutRef.current)
+      clearTimeout(scrambleTimeoutRef.current);
     }
-    setIsHovered(false)
-    setShouldTriggerScramble(false)
-    setHasTriggered(false)
-  }, [])
+    setIsHovered(false);
+    setShouldTriggerScramble(false);
+    setHasTriggered(false);
+  }, []);
 
   const handleScrambleComplete = useCallback(() => {
-    setShouldTriggerScramble(false)
-  }, [])
+    setShouldTriggerScramble(false);
+  }, []);
 
   useEffect(() => {
     return () => {
       if (scrambleTimeoutRef.current) {
-        clearTimeout(scrambleTimeoutRef.current)
+        clearTimeout(scrambleTimeoutRef.current);
       }
-    }
-  }, [])
+    };
+  }, []);
 
   return (
     <section
@@ -86,7 +88,7 @@ export default function ContactSection({ className = '' }: ContactSectionProps) 
           >
             <motion.span
               className={`inline-block relative border-b transition-colors duration-300 ${
-                isHovered ? 'border-primary' : 'border-transparent'
+                isHovered ? "border-primary" : "border-transparent"
               }`}
             >
               <TextScramble
@@ -100,31 +102,32 @@ export default function ContactSection({ className = '' }: ContactSectionProps) 
               </TextScramble>
             </motion.span>
             <motion.span
-              className="inline-block relative"
-              initial={{ scale: 0, width: 0 }}
+              className="inline-block relative rounded-xl"
+              initial={{ scale: 0, width: 0, opacity: 0 }}
               animate={{
                 scale: isHovered ? 1 : 0,
-                width: isHovered ? 'auto' : 0,
+                width: isHovered ? "auto" : 0,
+                opacity: isHovered ? 1 : 0,
               }}
               transition={{
-                duration: 0.5,
-                ease: [0.22, 1, 0.36, 1]
+                duration: 0.8,
+                ease: [0.25, 0.1, 0.25, 1],
               }}
-              style={{ overflow: 'hidden' }}
+              style={{ overflow: "hidden" }}
             >
               <Image
                 src="/cta-gif.gif"
                 alt=""
                 width={64}
                 height={64}
-                className="w-12 h-12 sm:w-16 sm:h-16 md:w-24 md:h-24 lg:w-32 lg:h-32 xl:w-40 xl:h-40 object-contain"
+                className="w-12 h-12 sm:w-16 sm:h-16 md:w-24 md:h-24 lg:w-32 lg:h-32 xl:w-40 xl:h-40 object-contain rounded-xl"
                 priority={false}
                 unoptimized
               />
             </motion.span>
             <motion.span
               className={`inline-block relative border-b transition-colors duration-300 ${
-                isHovered ? 'border-primary' : 'border-transparent'
+                isHovered ? "border-primary" : "border-transparent"
               }`}
             >
               <TextScramble
@@ -151,5 +154,5 @@ export default function ContactSection({ className = '' }: ContactSectionProps) 
         </h2>
       </div>
     </section>
-  )
+  );
 }

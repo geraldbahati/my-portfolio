@@ -2,7 +2,7 @@
 
 import { memo, useRef } from "react";
 import { motion, MotionValue, useInView, useScroll, useTransform } from "framer-motion";
-import { CutoutMaskImage } from "@/components/ui/cutout-image-mask";
+import { CutoutMaskImage } from "@/components/ui/cutout-image-mask"; // Character component for synchronized animation
 
 // Character component for synchronized animation
 interface CharProps {
@@ -23,7 +23,7 @@ const Char = memo(
     const opacity = useTransform(
       progress,
       [mid - windowSize, mid, mid + windowSize],
-      [0, 1, 0]
+      [0, 1, 0],
     );
 
     return (
@@ -110,7 +110,7 @@ export default function BioSection() {
             }}
           >
             <CutoutMaskImage
-              imageUrl="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800&auto=format&fit=crop"
+              imageUrl="/original.jpeg"
               clickToChangeImage={false}
               maxWidth={210}
               className="w-full max-w-[210px]"

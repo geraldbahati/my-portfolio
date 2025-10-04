@@ -3,6 +3,7 @@
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
+import Image from "next/image";
 
 // Lazy load heavy components
 const GridPattern = dynamic(
@@ -198,10 +199,27 @@ export default function HeroSection() {
       className="relative min-h-screen overflow-hidden bg-black"
       role="banner"
     >
+      {/* Profile Background Image */}
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="/profile.png"
+          alt=""
+          fill
+          priority
+          className="object-contain object-center mix-blend-screen"
+          sizes="100vw"
+          quality={90}
+        />
+      </div>
+
+      {/* Edge Fade Overlay - Gentle vignette effect */}
+      <div className="absolute inset-0 z-[5] bg-gradient-to-r from-black from-0% via-transparent via-20% to-transparent to-80% [background:linear-gradient(to_right,black_0%,transparent_20%,transparent_80%,black_100%)]" />
+      <div className="absolute inset-0 z-[5] bg-gradient-to-b from-black from-0% via-transparent via-20% to-transparent to-80% [background:linear-gradient(to_bottom,black_0%,transparent_20%,transparent_80%,black_100%)]" />
+
       {/* Grid Pattern Background */}
       <GridPattern
-        className="absolute inset-0 opacity-80"
-        gridClassName="stroke-current/10"
+        className="absolute inset-0 opacity-80 z-10"
+        gridClassName="stroke-current/50"
         width={32}
         height={32}
         surroundingCells={4}

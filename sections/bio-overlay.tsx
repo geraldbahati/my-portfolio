@@ -1,24 +1,28 @@
 "use client";
 
 import { memo } from "react";
-import {
-  motion,
-  useTransform,
-  MotionValue,
-} from "framer-motion";
-import { CutoutMaskImage } from "@/components/ui/cutout-image-mask";
+import { motion, MotionValue, useTransform } from "framer-motion";
+import { CutoutMaskImage } from "@/components/ui/cutout-image-mask"; // Word component for synchronized animation
 
-// Word component for synchronized animation
-interface WordProps {
+// Character component for synchronized animation
+interface CharacterProps {
   children: string;
   progress: MotionValue<number>;
   range: [number, number];
   className?: string;
 }
 
-const Word = memo(
-  ({ children, progress, range, className = "" }: WordProps) => {
-    const opacity = useTransform(progress, range, [0, 1]);
+const Character = memo(
+  ({ children, progress, range, className = "" }: CharacterProps) => {
+    // Apply easing to the opacity transform for smoother reveal
+    const opacity = useTransform(
+      progress,
+      range,
+      [0, 1],
+      {
+        clamp: false,
+      }
+    );
 
     return (
       <span className={`relative ${className}`}>
@@ -31,22 +35,8 @@ const Word = memo(
   },
 );
 
-Word.displayName = "Word";
+Character.displayName = "Character";
 
-/**
- * Bio Section Component optimized for overlay usage
- *
- * This component is designed to work with the scroll-triggered overlay effect.
- *
- * Key design decisions:
- * - Uses h-screen (exactly 100vh) instead of min-h-screen to ensure consistent height
- * - This allows precise bottom-to-bottom alignment with viewport on scroll completion
- * - When scroll animation completes (y=0vh):
- *   - Section top aligns with viewport top
- *   - Section bottom aligns with viewport bottom
- * - overflow-y-auto allows internal scrolling if content exceeds viewport height
- * - Accepts scroll progress from parent to synchronize all internal animations
- */
 interface BioOverlayProps {
   scrollProgress: MotionValue<number>;
 }
@@ -58,9 +48,9 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
 
   // Transform values for the cutout image
   // Image scales and moves as bio section slides up
-  const imageScale = useTransform(contentProgress, [0, 0.5], [0.6, 1]);
+  const imageScale = useTransform(contentProgress, [0, 1], [0.6, 1]);
   const imageOpacity = useTransform(contentProgress, [0, 0.2], [0, 1]);
-  const imageY = useTransform(contentProgress, [0, 0.5], [100, 0]);
+  const imageY = useTransform(contentProgress, [0, 1], [100, 0]);
 
   // CTA button visibility based on scroll progress
   const ctaOpacity = useTransform(contentProgress, [0.7, 1], [0, 1]);
@@ -68,14 +58,18 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
 
   // Text content
   const tagline = "What I can do for you";
-  const taglineWords = tagline.split(" ");
+  const taglineChars = tagline.split("");
 
   const mainText =
     "As a web designer and digital expert, I combine creative, detail-loving design with strategic know-how in digital marketing to unlock your brand's full potential.";
-  const mainWords = mainText.split(" ");
+  const mainChars = mainText.split("");
 
-  // Calculate word reveal ranges
-  const totalWords = taglineWords.length + mainWords.length + 1; // +1 for "(01)"
+  const numberText = "(01)";
+  const numberChars = numberText.split("");
+
+  // Calculate character reveal ranges
+  const totalChars =
+    taglineChars.length + numberChars.length + mainChars.length;
 
   return (
     <section className="relative h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-t-[2rem] sm:rounded-t-[3rem] lg:rounded-t-[4rem] overflow-y-auto">
@@ -102,7 +96,7 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
             }}
           >
             <CutoutMaskImage
-              imageUrl="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800&auto=format&fit=crop"
+              imageUrl="/original.jpeg"
               clickToChangeImage={false}
               maxWidth={210}
               className="w-full max-w-[210px]"
@@ -114,53 +108,58 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
           <div className="space-y-8">
             {/* Tagline and Number */}
             <div className="flex justify-between items-start">
-              <div className="flex flex-wrap gap-2">
-                {taglineWords.map((word, i) => {
-                  const wordIndex = i;
-                  const start = wordIndex / totalWords;
-                  const end = (wordIndex + 1) / totalWords;
+              <div className="text-xs sm:text-sm font-medium tracking-[0.2em] uppercase text-gray-600">
+                {taglineChars.map((char, i) => {
+                  const charIndex = i;
+                  const start = Math.max(0, (charIndex - 1) / totalChars);
+                  const end = Math.min(1, (charIndex + 2) / totalChars);
 
                   return (
-                    <Word
+                    <Character
                       key={`tag-${i}`}
                       progress={contentProgress}
                       range={[start, end]}
-                      className="text-xs sm:text-sm font-medium tracking-[0.2em] uppercase text-gray-600"
                     >
-                      {word}
-                    </Word>
+                      {char}
+                    </Character>
                   );
                 })}
               </div>
 
-              <Word
-                progress={contentProgress}
-                range={[
-                  taglineWords.length / totalWords,
-                  (taglineWords.length + 1) / totalWords,
-                ]}
-                className="text-xs sm:text-sm font-light text-gray-400"
-              >
-                (01)
-              </Word>
+              <div className="text-xs sm:text-sm font-light text-gray-400">
+                {numberChars.map((char, i) => {
+                  const charIndex = taglineChars.length + i;
+                  const start = Math.max(0, (charIndex - 1) / totalChars);
+                  const end = Math.min(1, (charIndex + 2) / totalChars);
+
+                  return (
+                    <Character
+                      key={`num-${i}`}
+                      progress={contentProgress}
+                      range={[start, end]}
+                    >
+                      {char}
+                    </Character>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Main Text */}
             <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl leading-tight font-light text-gray-900">
-              {mainWords.map((word, i) => {
-                const wordIndex = taglineWords.length + 1 + i; // +1 for "(01)"
-                const start = wordIndex / totalWords;
-                const end = Math.min((wordIndex + 1) / totalWords, 1);
+              {mainChars.map((char, i) => {
+                const charIndex = taglineChars.length + numberChars.length + i;
+                const start = Math.max(0, (charIndex - 1) / totalChars);
+                const end = Math.min(1, (charIndex + 2) / totalChars);
 
                 return (
-                  <Word
+                  <Character
                     key={`main-${i}`}
                     progress={contentProgress}
                     range={[start, end]}
-                    className="mr-[0.25em] inline-block"
                   >
-                    {word}
-                  </Word>
+                    {char}
+                  </Character>
                 );
               })}
             </h2>

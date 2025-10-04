@@ -8,7 +8,6 @@ import Image from "next/image";
 interface NavBarProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
-  scrolled: boolean;
 }
 
 interface MenuButtonProps {
@@ -23,15 +22,6 @@ interface MenuOverlayProps {
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   // Prevent body scroll when menu is open
   useEffect(() => {
@@ -47,7 +37,7 @@ const Navbar = () => {
 
   return (
     <>
-      <NavBar isOpen={isOpen} setIsOpen={setIsOpen} scrolled={scrolled} />
+      <NavBar isOpen={isOpen} setIsOpen={setIsOpen} />
       <AnimatePresence>
         {isOpen && <MenuOverlay isOpen={isOpen} setIsOpen={setIsOpen} />}
       </AnimatePresence>
@@ -55,22 +45,25 @@ const Navbar = () => {
   );
 };
 
-const NavBar = ({ isOpen, setIsOpen, scrolled }: NavBarProps) => {
+const NavBar = ({ isOpen, setIsOpen }: NavBarProps) => {
   return (
-    <motion.nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled && !isOpen ? "bg-white/90 backdrop-blur-md shadow-sm" : ""
+    <nav
+      className={`fixed top-0 left-0 right-0 z-50 ${
+        isOpen ? "" : "mix-blend-difference"
       }`}
-      initial={{ y: 0 }}
-      animate={{ y: 0 }}
     >
-      <div className="container mx-auto px-6 lg:px-12">
+      <div className="mx-auto px-6 lg:px-12">
         <div className="flex items-center justify-between py-6">
           {/* Logo */}
           <motion.div
-            className={`relative z-50 transition-colors duration-500 ${
-              isOpen ? "text-white" : "text-black"
-            }`}
+            className="relative text-white"
+            initial={{ y: -100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{
+              duration: 0.8,
+              delay: 0.2,
+              ease: [0.22, 1, 0.36, 1],
+            }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -81,7 +74,7 @@ const NavBar = ({ isOpen, setIsOpen, scrolled }: NavBarProps) => {
           <MenuButton isOpen={isOpen} setIsOpen={setIsOpen} />
         </div>
       </div>
-    </motion.nav>
+    </nav>
   );
 };
 
@@ -92,37 +85,30 @@ const MenuButton = ({ isOpen, setIsOpen }: MenuButtonProps) => {
       onClick={() => setIsOpen(!isOpen)}
       aria-label={isOpen ? "Close menu" : "Open menu"}
       aria-expanded={isOpen}
+      initial={{ y: -100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{
+        duration: 0.8,
+        delay: 0.3,
+        ease: [0.22, 1, 0.36, 1],
+      }}
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.9 }}
     >
       <div className="relative w-8 h-6 flex flex-col justify-center">
         <motion.span
-          className={`absolute h-0.5 w-full transition-colors duration-500 ${
-            isOpen ? "bg-white" : "bg-black"
-          }`}
+          className="absolute h-0.5 w-full bg-white"
           animate={{
             rotate: isOpen ? 45 : 0,
-            y: isOpen ? 0 : -8,
+            y: isOpen ? 0 : -4,
           }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
         />
         <motion.span
-          className={`absolute h-0.5 w-full transition-colors duration-500 ${
-            isOpen ? "bg-white" : "bg-black"
-          }`}
-          animate={{
-            opacity: isOpen ? 0 : 1,
-            x: isOpen ? 20 : 0,
-          }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
-        />
-        <motion.span
-          className={`absolute h-0.5 w-full transition-colors duration-500 ${
-            isOpen ? "bg-white" : "bg-black"
-          }`}
+          className="absolute h-0.5 w-full bg-white"
           animate={{
             rotate: isOpen ? -45 : 0,
-            y: isOpen ? 0 : 8,
+            y: isOpen ? 0 : 4,
           }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
         />
@@ -147,7 +133,7 @@ const MenuOverlay = ({ setIsOpen }: MenuOverlayProps) => {
     exit: {
       clipPath: "inset(0% 0% 100% 0%)",
       transition: {
-        duration: 0.5,
+        duration: 0.8,
         ease: [0.76, 0, 0.24, 1] as [number, number, number, number],
       },
     },
@@ -287,8 +273,8 @@ const MenuOverlay = ({ setIsOpen }: MenuOverlayProps) => {
                         letterSpacing: "0.1em",
                         transition: {
                           duration: 0.3,
-                          ease: "easeOut"
-                        }
+                          ease: "easeOut",
+                        },
                       }}
                       whileTap={{ scale: 0.95 }}
                     >
@@ -335,7 +321,7 @@ const MenuOverlay = ({ setIsOpen }: MenuOverlayProps) => {
               <div className="relative w-full h-full overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-gray-900/20 to-gray-900/40" />
                 <Image
-                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=1000&fit=crop"
+                  src="/man-sitting.jpeg"
                   alt="Profile"
                   fill
                   sizes="(max-width: 640px) 256px, (max-width: 768px) 288px, (max-width: 1024px) 320px, 500px"
@@ -399,66 +385,4 @@ const MenuOverlay = ({ setIsOpen }: MenuOverlayProps) => {
   );
 };
 
-// Demo Page Component
-const DemoPage = () => {
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-6 lg:px-12">
-        <div className="container mx-auto">
-          <motion.h1
-            className="text-6xl lg:text-8xl font-bold mb-6"
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
-            Creative Studio
-          </motion.h1>
-          <motion.p
-            className="text-xl lg:text-2xl text-gray-600 max-w-2xl"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-          >
-            We craft digital experiences that inspire, engage, and transform
-            brands through innovative design and technology.
-          </motion.p>
-        </div>
-      </section>
-
-      {/* Content Sections */}
-      <section className="py-20 px-6 lg:px-12 bg-white">
-        <div className="container mx-auto">
-          <h2 className="text-4xl font-bold mb-12">Our Work</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[1, 2, 3, 4, 5, 6].map((item) => (
-              <motion.div
-                key={item}
-                className="bg-gray-100 h-64 rounded-lg"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: item * 0.1 }}
-                viewport={{ once: true }}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="py-20 px-6 lg:px-12">
-        <div className="container mx-auto">
-          <h2 className="text-4xl font-bold mb-12">About Us</h2>
-          <p className="text-lg text-gray-600 max-w-3xl">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
-            eiusmod tempor incididunt ut labore et dolore magna aliqua.
-          </p>
-        </div>
-      </section>
-    </div>
-  );
-};
-
 export { Navbar };
-export default DemoPage;
