@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Spinner } from "@/components/ui/spinner";
+import { Field, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { type ContactFormData, contactSchema } from "@/lib/validators/contactSchema";
 import { api } from "@/convex/_generated/api";
 
@@ -59,7 +61,7 @@ export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
       // Get client IP (simplified approach)
       let clientIP: string | undefined;
       try {
-        const response = await fetch('/api/get-ip');
+        const response = await fetch("/api/get-ip");
         if (response.ok) {
           const ipData = await response.json();
           clientIP = ipData.ip;
@@ -133,77 +135,71 @@ export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
         aria-hidden="true"
       />
 
-      {/* Name field */}
-      <div className="space-y-2">
-        <label htmlFor="name" className="sr-only">
-          Name
-        </label>
-        <Input
-          id="name"
-          type="text"
-          placeholder="name"
-          autoComplete="name"
-          aria-invalid={errors.name ? "true" : "false"}
-          aria-describedby={errors.name ? "name-error" : undefined}
-          className={`w-full border-black focus:border-black ${errors.name ? "border-red-500 focus:border-red-500" : ""}`}
-          itemProp="name"
-          {...register("name")}
-        />
-        {errors.name && (
-          <p id="name-error" role="alert" className="text-sm text-red-600">
-            {errors.name.message}
-          </p>
-        )}
-      </div>
+      <FieldGroup>
+        {/* Name field */}
+        <Field>
+          <FieldLabel htmlFor="name" className="sr-only">
+            Name
+          </FieldLabel>
+          <Input
+            id="name"
+            type="text"
+            placeholder="name"
+            autoComplete="name"
+            aria-invalid={errors.name ? "true" : "false"}
+            aria-describedby={errors.name ? "name-error" : undefined}
+            className={`w-full border-black focus:border-black ${errors.name ? "border-red-500 focus:border-red-500" : ""}`}
+            itemProp="name"
+            {...register("name")}
+          />
+          {errors.name && (
+            <FieldError id="name-error">{errors.name.message}</FieldError>
+          )}
+        </Field>
 
-      {/* Email field */}
-      <div className="space-y-2">
-        <label htmlFor="email" className="sr-only">
-          Email
-        </label>
-        <Input
-          id="email"
-          type="email"
-          placeholder="e-mail"
-          autoComplete="email"
-          aria-invalid={errors.email ? "true" : "false"}
-          aria-describedby={errors.email ? "email-error" : undefined}
-          className={`w-full border-black focus:border-black ${errors.email ? "border-red-500 focus:border-red-500" : ""}`}
-          itemProp="email"
-          {...register("email")}
-        />
-        {errors.email && (
-          <p id="email-error" role="alert" className="text-sm text-red-600">
-            {errors.email.message}
-          </p>
-        )}
-      </div>
+        {/* Email field */}
+        <Field>
+          <FieldLabel htmlFor="email" className="sr-only">
+            Email
+          </FieldLabel>
+          <Input
+            id="email"
+            type="email"
+            placeholder="e-mail"
+            autoComplete="email"
+            aria-invalid={errors.email ? "true" : "false"}
+            aria-describedby={errors.email ? "email-error" : undefined}
+            className={`w-full border-black focus:border-black ${errors.email ? "border-red-500 focus:border-red-500" : ""}`}
+            itemProp="email"
+            {...register("email")}
+          />
+          {errors.email && (
+            <FieldError id="email-error">{errors.email.message}</FieldError>
+          )}
+        </Field>
 
-      {/* Message field */}
-      <div className="space-y-2">
-        <label htmlFor="message" className="sr-only">
-          Message
-        </label>
-        <Textarea
-          id="message"
-          placeholder="News"
-          rows={5}
-          aria-invalid={errors.message ? "true" : "false"}
-          aria-describedby={errors.message ? "message-error" : undefined}
-          className={`w-full resize-none border-black focus:border-black ${errors.message ? "border-red-500 focus:border-red-500" : ""}`}
-          itemProp="text"
-          {...register("message")}
-        />
-        {errors.message && (
-          <p id="message-error" role="alert" className="text-sm text-red-600">
-            {errors.message.message}
-          </p>
-        )}
-      </div>
+        {/* Message field */}
+        <Field>
+          <FieldLabel htmlFor="message" className="sr-only">
+            Message
+          </FieldLabel>
+          <Textarea
+            id="message"
+            placeholder="News"
+            rows={5}
+            aria-invalid={errors.message ? "true" : "false"}
+            aria-describedby={errors.message ? "message-error" : undefined}
+            className={`w-full resize-none border-black focus:border-black ${errors.message ? "border-red-500 focus:border-red-500" : ""}`}
+            itemProp="text"
+            {...register("message")}
+          />
+          {errors.message && (
+            <FieldError id="message-error">{errors.message.message}</FieldError>
+          )}
+        </Field>
 
-      {/* Privacy consent checkbox */}
-      <div className="space-y-2">
-        <div className="flex items-start space-x-3">
+        {/* Privacy consent checkbox */}
+        <Field orientation="horizontal">
           <Checkbox
             id="privacy-consent"
             checked={privacyConsent}
@@ -215,15 +211,13 @@ export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
               errors.privacyConsent ? "privacy-error" : "privacy-description"
             }
             className={
-              errors.privacyConsent
-                ? "border-red-500 my-1"
-                : "border-black my-1"
+              errors.privacyConsent ? "border-red-500" : "border-black"
             }
           />
-          <div className="space-y-1">
-            <label
+          <FieldContent>
+            <FieldLabel
               htmlFor="privacy-consent"
-              className="text-sm text-gray-600 leading-relaxed cursor-pointer"
+              className="inline font-normal"
             >
               I agree to the{" "}
               <a
@@ -237,33 +231,33 @@ export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
               </a>{" "}
               and consent to my data being temporarily stored for the purpose of
               processing this request.
-            </label>
-            <p id="privacy-description" className="sr-only">
-              Required: You must agree to the privacy policy to submit this form
-            </p>
-          </div>
-        </div>
-        {errors.privacyConsent && (
-          <p id="privacy-error" role="alert" className="text-sm text-red-600">
-            {errors.privacyConsent.message}
-          </p>
-        )}
-      </div>
+            </FieldLabel>
+            {errors.privacyConsent && (
+              <FieldError id="privacy-error">
+                {errors.privacyConsent.message}
+              </FieldError>
+            )}
+          </FieldContent>
+        </Field>
 
-      {/* Submit button */}
-      <Button
-        type="submit"
-        disabled={isSubmitting || !privacyConsent}
-        className="w-auto px-8 py-2 bg-black text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
-        aria-describedby="submit-help"
-      >
-        {isSubmitting ? "SUBMITTING..." : "SUBMIT"}
-      </Button>
-      <p id="submit-help" className="sr-only">
-        {!privacyConsent
-          ? "You must agree to the privacy policy before submitting"
-          : "Submit your contact form"}
-      </p>
+        {/* Submit button */}
+        <Field orientation="horizontal">
+          <Button
+            type="submit"
+            disabled={isSubmitting || !privacyConsent}
+            className="w-auto px-8 py-2 bg-black text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+            aria-describedby="submit-help"
+          >
+            {isSubmitting && <Spinner />}
+            {isSubmitting ? "SUBMITTING..." : "SUBMIT"}
+          </Button>
+          <FieldDescription id="submit-help" className="sr-only">
+            {!privacyConsent
+              ? "You must agree to the privacy policy before submitting"
+              : "Submit your contact form"}
+          </FieldDescription>
+        </Field>
+      </FieldGroup>
     </form>
   );
 }

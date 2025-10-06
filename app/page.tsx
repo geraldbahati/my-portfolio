@@ -1,9 +1,7 @@
 import HeroBioOverlay from "@/sections/hero-bio-overlay";
 import InfoSection from "@/sections/info";
-import ProjectsSectionPinned from "@/sections/horizontal-scroll-portfolio";
-import ExpertiseFaqSection from "@/sections/faq";
-import ContactSection from "@/sections/contact";
-import BackgroundColorSwitcherWrapper from "@/components/BackgroundColorSwitcherWrapper.client";
+import CombinedProjectsFaqSection from "@/sections/combined-projects-faq";
+import { SectionDivider } from "@/components/section-divider";
 import type { Metadata } from "next";
 
 // SEO Metadata
@@ -51,47 +49,42 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <>
-      {/* Background Color Switcher */}
-      <BackgroundColorSwitcherWrapper
-        targets={[
-          {
-            id: "ProjectsSectionPinned",
-            color: "#ffffff",
-            textColor: "#000000",
-            threshold: 0.2,
-          },
-          {
-            id: "ExpertiseFaqSection",
-            color: "#000000",
-            textColor: "#ffffff",
-            threshold: 0.4,
-          },
-          {
-            id: "ContactSection",
-            color: "#000000",
-            textColor: "#ffffff",
-            threshold: 0.1,
-          },
-        ]}
-        defaultColor="#ffffff"
-        animationDuration={0.6}
-        animationEasing="easeInOut"
-      />
-
       {/* Hero and Bio with scroll-triggered overlay effect */}
       <HeroBioOverlay />
 
+      {/* Section Divider */}
+      <section className="relative bg-white py-16 sm:py-20 lg:py-24">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <SectionDivider
+            label="SERVICES IN DETAIL"
+            counter="(02)"
+            duration={2}
+          />
+        </div>
+      </section>
+
       {/* InfoSection and other sections - normal scrolling */}
       <InfoSection />
-      <div id="ProjectsSectionPinned">
-        <ProjectsSectionPinned />
+
+      {/* Section Divider */}
+      <section className="relative bg-white py-16">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <SectionDivider
+            label="FEATURED PROJECTS"
+            counter="(03)"
+            duration={2}
+          />
+        </div>
+      </section>
+
+      <div id="CombinedProjectsFaqSection">
+        <CombinedProjectsFaqSection />
       </div>
-      <div id="ExpertiseFaqSection">
-        <ExpertiseFaqSection />
-      </div>
-      <div id="ContactSection">
-        <ContactSection />
-      </div>
+      {/*<div className="bg-black">*/}
+      {/*  <div id="ContactSection">*/}
+      {/*    <ContactSection />*/}
+      {/*  </div>*/}
+      {/*</div>*/}
 
       {/* Debug Info - Remove in production */}
       {/*<BackgroundDebugInfo />*/}

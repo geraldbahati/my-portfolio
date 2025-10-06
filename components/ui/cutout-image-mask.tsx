@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useId, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import Image from "next/image";
 
 interface CutoutMaskImageProps {
@@ -29,7 +29,6 @@ export const CutoutMaskImage: React.FC<CutoutMaskImageProps> = ({
   alt = "Masked image",
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const maskId = useId();
 
   const currentImage = useMemo(
     () => (clickToChangeImage ? imageArray[currentImageIndex] : imageUrl),

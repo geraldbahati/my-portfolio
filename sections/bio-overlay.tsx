@@ -15,14 +15,9 @@ interface CharacterProps {
 const Character = memo(
   ({ children, progress, range, className = "" }: CharacterProps) => {
     // Apply easing to the opacity transform for smoother reveal
-    const opacity = useTransform(
-      progress,
-      range,
-      [0, 1],
-      {
-        clamp: false,
-      }
-    );
+    const opacity = useTransform(progress, range, [0, 1], {
+      clamp: false,
+    });
 
     return (
       <span className={`relative ${className}`}>
@@ -72,7 +67,7 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
     taglineChars.length + numberChars.length + mainChars.length;
 
   return (
-    <section className="relative h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-t-[2rem] sm:rounded-t-[3rem] lg:rounded-t-[4rem] overflow-y-auto">
+    <section className="relative h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-t-xl sm:rounded-t-[1rem] lg:rounded-t-[2rem] overflow-y-auto">
       {/* Subtle background elements */}
       <motion.div
         className="absolute inset-0 overflow-hidden pointer-events-none"
