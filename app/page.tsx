@@ -3,6 +3,7 @@ import InfoSection from "@/sections/info";
 import CombinedProjectsFaqSection from "@/sections/combined-projects-faq";
 import { SectionDivider } from "@/components/section-divider";
 import type { Metadata } from "next";
+import ContactSection from "@/sections/contact";
 
 // SEO Metadata
 export const metadata: Metadata = {
@@ -80,11 +81,11 @@ export default function Home() {
       <div id="CombinedProjectsFaqSection">
         <CombinedProjectsFaqSection />
       </div>
-      {/*<div className="bg-black">*/}
-      {/*  <div id="ContactSection">*/}
-      {/*    <ContactSection />*/}
-      {/*  </div>*/}
-      {/*</div>*/}
+      <div className="bg-black">
+        <div id="ContactSection">
+          <ContactSection />
+        </div>
+      </div>
 
       {/* Debug Info - Remove in production */}
       {/*<BackgroundDebugInfo />*/}
