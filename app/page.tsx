@@ -7,7 +7,7 @@ import ContactSection from "@/sections/contact";
 
 // SEO Metadata
 export const metadata: Metadata = {
-  title: "Gerald Bahati - Full Stack Developer & Digital Creative",
+  title: "Home",
   description:
     "Experienced full stack developer specializing in modern web technologies, digital solutions, and creative design. Explore my portfolio of websites, applications, and client projects.",
   keywords: [
@@ -21,18 +21,31 @@ export const metadata: Metadata = {
     "TypeScript",
     "modern web technologies",
   ],
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "Gerald Bahati - Full Stack Developer & Digital Creative",
     description:
       "Experienced full stack developer specializing in modern web technologies, digital solutions, and creative design.",
     type: "website",
     locale: "en_US",
+    url: "/",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Gerald Bahati - Full Stack Developer",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Gerald Bahati - Full Stack Developer & Digital Creative",
     description:
       "Experienced full stack developer specializing in modern web technologies, digital solutions, and creative design.",
+    images: ["/og-image.png"],
   },
   robots: {
     index: true,

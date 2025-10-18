@@ -7,7 +7,7 @@ export const revalidate = 60;
 
 // SEO Metadata
 export const metadata: Metadata = {
-  title: "Projects | Portfolio - Creative Digital Solutions",
+  title: "Projects - Creative Digital Solutions",
   description:
     "Creative digital advancement  get to know my approach and style through a selection of my projects. Each project represents quality, well-thought-out structures, and sustainable digital solutions that deliver measurable results.",
   keywords: [
@@ -19,16 +19,15 @@ export const metadata: Metadata = {
     "digital solutions",
     "creative development",
   ],
-  authors: [{ name: "Gerald Bahati" }],
   openGraph: {
-    title: "Projects | Portfolio - Creative Digital Solutions",
+    title: "Projects - Creative Digital Solutions",
     description:
       "Explore a curated selection of projects showcasing quality, well-thought-out structures, and sustainable digital solutions.",
     type: "website",
-    url: "https://geraldbahati.com/projects",
+    url: "/projects",
     images: [
       {
-        url: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=630&fit=crop",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "Projects Portfolio",
@@ -37,15 +36,13 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Projects | Portfolio - Creative Digital Solutions",
+    title: "Projects - Creative Digital Solutions",
     description:
       "Explore a curated selection of projects showcasing quality digital solutions.",
-    images: [
-      "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=630&fit=crop",
-    ],
+    images: ["/og-image.png"],
   },
   alternates: {
-    canonical: "https://geraldbahati.com/projects",
+    canonical: "/projects",
   },
 };
 
@@ -69,11 +66,11 @@ export default function ProjectsPage() {
       position: index + 1,
       item: {
         "@type": "CreativeWork",
-        "@id": `https://geraldbahati.com/projects#${project.id}`,
+        "@id": `/projects#${project.id}`,
         name: project.title,
         description: project.description || project.alt,
         image: project.poster || project.src,
-        url: `https://geraldbahati.com/projects#${project.id}`,
+        url: `/projects#${project.id}`,
         keywords: project.badges?.map((b) => b.text).join(", "),
       },
     })),

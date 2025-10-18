@@ -71,7 +71,7 @@ export default function HeroBioOverlay() {
       >
         {/* Fixed Hero Section - stays in place during scroll */}
         <div className="sticky top-0 h-screen w-full">
-          <HeroSection />
+          <HeroSection scrollProgress={scrollYProgress} />
         </div>
 
         {/* Bio Section - slides up from bottom based on scroll position */}

@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, MotionValue, useTransform } from "framer-motion";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 
@@ -158,12 +158,21 @@ const nameVariants = {
   },
 };
 
-export default function HeroSection() {
+interface HeroSectionProps {
+  scrollProgress?: MotionValue<number>;
+}
+
+export default function HeroSection({ scrollProgress }: HeroSectionProps) {
   const [mounted, setMounted] = useState(false);
   const [nameScrambling, setNameScrambling] = useState(false);
   const [scrambleCount, setScrambleCount] = useState(0);
   const scrambleIntervalRef = useRef<NodeJS.Timeout>(null);
   const stopScrambleTimeoutRef = useRef<NodeJS.Timeout>(null);
+
+  // Scale image down as user scrolls (from 1 to 0.85)
+  const imageScale = scrollProgress
+    ? useTransform(scrollProgress, [0, 1], [1, 0.85])
+    : undefined;
 
   useEffect(() => {
     setMounted(true);
@@ -201,8 +210,11 @@ export default function HeroSection() {
       role="banner"
     >
       {/* Profile Background Image */}
-      <div className="absolute inset-0 z-0 flex items-center justify-center">
-        <div className="relative w-full h-full max-w-[177.78vh] max-h-[56.25vw]">
+      <div className="absolute inset-0 z-0 flex items-start justify-center">
+        <motion.div
+          className="relative w-full h-full max-w-[177.78vh] max-h-[56.25vw]"
+          style={imageScale ? { scale: imageScale } : undefined}
+        >
           <Image
             src="/habibi.png"
             alt=""
@@ -212,7 +224,7 @@ export default function HeroSection() {
             sizes="100vw"
             quality={90}
           />
-        </div>
+        </motion.div>
       </div>
 
       {/* Edge Fade Overlay - Gentle vignette effect */}

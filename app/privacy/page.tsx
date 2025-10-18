@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | Gerald Bahati",
+  title: "Privacy Policy",
   description:
     "Learn how we collect, use, and protect your personal information. Our privacy policy outlines our commitment to your data security.",
   keywords: [
@@ -15,20 +15,19 @@ export const metadata: Metadata = {
     "personal information",
     "data security",
   ],
-  robots: "index, follow",
+  robots: {
+    index: true,
+    follow: true,
+  },
   alternates: {
-    canonical: "https://yoursite.com/privacy",
-    languages: {
-      en: "https://yoursite.com/privacy",
-      de: "https://yoursite.com/de/datenschutz",
-    },
+    canonical: "/privacy",
   },
   openGraph: {
     title: "Privacy Policy | Gerald Bahati",
     description:
       "Our commitment to protecting your personal information and data privacy.",
-    url: "https://yoursite.com/privacy",
-    siteName: "Your Company Name",
+    url: "/privacy",
+    siteName: "Gerald Bahati Portfolio",
     locale: "en_US",
     type: "website",
   },
@@ -50,12 +49,12 @@ export default async function PrivacyPolicyPage() {
 
   const structuredData = generateStructuredData({
     type: "Organization",
-    name: "Your Company Name",
-    url: "https://yoursite.com",
+    name: "Gerald Bahati",
+    url: "https://geraldbahati.com",
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "Privacy Inquiries",
-      email: "privacy@yoursite.com",
+      email: "contact@geraldbahati.com",
     },
   });
 

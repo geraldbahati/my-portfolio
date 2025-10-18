@@ -5,7 +5,7 @@ import GridPattern from "@/components/ui/shadcn-io/grid-pattern";
 import { ContactLinks } from "@/components/ContactLinks";
 
 export const metadata: Metadata = {
-  title: "Contact Gerald - Request a Project | Portfolio",
+  title: "Contact - Request a Project",
   description:
     "Get in touch with Gerald for your next digital project. Contact form, phone, and WhatsApp available. Every message is 100% received and guaranteed to be answered within 24 hours.",
   keywords: [
@@ -18,9 +18,6 @@ export const metadata: Metadata = {
     "trier developer",
     "germany web design"
   ],
-  authors: [{ name: "Gerald Bahati" }],
-  creator: "Gerald Bahati",
-  publisher: "Gerald Bahati",
   openGraph: {
     title: "Contact Gerald - Request a Project",
     description: "Get in touch with Gerald for your next digital project. Available via contact form, phone, and WhatsApp.",
@@ -55,7 +52,7 @@ export default function ContactPage() {
     "@type": "ContactPage",
     "name": "Contact Gerald Bahati",
     "description": "Get in touch with Gerald for your next digital project",
-    "url": "https://geraldbahati.com/contact",
+    "url": "/contact",
     "mainEntity": {
       "@type": "Person",
       "name": "Gerald Bahati",
