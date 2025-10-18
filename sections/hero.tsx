@@ -196,25 +196,28 @@ export default function HeroSection() {
 
   return (
     <section
-      className="relative min-h-screen overflow-hidden bg-black"
+      className="relative min-h-screen overflow-hidden"
+      style={{ backgroundColor: '#0a0a0a' }}
       role="banner"
     >
       {/* Profile Background Image */}
-      <div className="absolute inset-0 z-0">
-        <Image
-          src="/profile.png"
-          alt=""
-          fill
-          priority
-          className="object-contain object-center mix-blend-screen"
-          sizes="100vw"
-          quality={90}
-        />
+      <div className="absolute inset-0 z-0 flex items-center justify-center">
+        <div className="relative w-full h-full max-w-[177.78vh] max-h-[56.25vw]">
+          <Image
+            src="/habibi.png"
+            alt=""
+            fill
+            priority
+            className="object-contain mix-blend-screen"
+            sizes="100vw"
+            quality={90}
+          />
+        </div>
       </div>
 
       {/* Edge Fade Overlay - Gentle vignette effect */}
-      <div className="absolute inset-0 z-[5] bg-gradient-to-r from-black from-0% via-transparent via-20% to-transparent to-80% [background:linear-gradient(to_right,black_0%,transparent_20%,transparent_80%,black_100%)]" />
-      <div className="absolute inset-0 z-[5] bg-gradient-to-b from-black from-0% via-transparent via-20% to-transparent to-80% [background:linear-gradient(to_bottom,black_0%,transparent_20%,transparent_80%,black_100%)]" />
+      <div className="absolute inset-0 z-[5]" style={{ background: 'linear-gradient(to right, #0a0a0a 0%, transparent 20%, transparent 80%, #0a0a0a 100%)' }} />
+      <div className="absolute inset-0 z-[5]" style={{ background: 'linear-gradient(to bottom, #0a0a0a 0%, transparent 20%, transparent 80%, #0a0a0a 100%)' }} />
 
       {/* Grid Pattern Background */}
       <GridPattern

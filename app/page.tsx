@@ -81,6 +81,7 @@ export default function Home() {
       <div id="CombinedProjectsFaqSection">
         <CombinedProjectsFaqSection />
       </div>
+
       <div className="bg-black">
         <div id="ContactSection">
           <ContactSection />
