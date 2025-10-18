@@ -3,6 +3,7 @@
 import { StickyScrollReveal } from "@/components/ui/sticky-scroll-reveal";
 import GridPattern from "@/components/ui/shadcn-io/grid-pattern";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 export default function InfoSection() {
   const sections = [
@@ -20,12 +21,29 @@ export default function InfoSection() {
         "UI and UX optimization",
       ],
       content: (
-        <div className="w-full h-full rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-slate-800 to-slate-900 p-8 flex items-center justify-center">
-          <div className="bg-slate-950 rounded-xl p-6 w-full max-w-md shadow-inner">
-            <div className="aspect-video bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-2xl tracking-wide">
-                RUFF BAUGESELLSCHAFT
-              </span>
+        <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl">
+          {/* Blurred background */}
+          <Image
+            src="/web-design.jpg"
+            alt="Web Design Background"
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
+            quality={75}
+            priority
+            className="object-cover blur-md scale-110"
+          />
+          {/* Foreground card */}
+          <div className="absolute inset-0 flex items-center justify-center p-8">
+            <div className="relative w-[70%] h-[70%] rounded-xl overflow-hidden shadow-2xl">
+              <Image
+                src="/web-design.jpg"
+                alt="Web Design"
+                fill
+                sizes="(max-width: 768px) 70vw, (max-width: 1200px) 35vw, 28vw"
+                quality={85}
+                priority
+                className="object-cover"
+              />
             </div>
           </div>
         </div>
@@ -42,19 +60,29 @@ export default function InfoSection() {
         "Brand messaging and communication",
       ],
       content: (
-        <div className="w-full h-full rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-gray-100 to-gray-200 p-8 flex items-center justify-center">
-          <div className="bg-white rounded-xl p-8 shadow-xl">
-            <div className="text-4xl font-bold mb-6 text-gray-900">
-              Designko.
-            </div>
-            <div className="flex gap-4 mb-6">
-              <div className="w-16 h-16 bg-gray-900 rounded-lg shadow-md"></div>
-              <div className="w-16 h-16 bg-gray-600 rounded-lg shadow-md"></div>
-              <div className="w-16 h-16 bg-blue-500 rounded-lg shadow-md"></div>
-            </div>
-            <div className="text-xl text-gray-700">
-              <div className="font-bold">AaBbCc</div>
-              <div className="text-gray-500">0123456</div>
+        <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl">
+          {/* Blurred background */}
+          <Image
+            src="/branding.jpg"
+            alt="Branding Background"
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
+            quality={75}
+            loading="lazy"
+            className="object-cover blur-md scale-110"
+          />
+          {/* Foreground card */}
+          <div className="absolute inset-0 flex items-center justify-center p-8">
+            <div className="relative w-[70%] h-[70%] rounded-xl overflow-hidden shadow-2xl">
+              <Image
+                src="/branding.jpg"
+                alt="Branding"
+                fill
+                sizes="(max-width: 768px) 70vw, (max-width: 1200px) 35vw, 28vw"
+                quality={85}
+                loading="lazy"
+                className="object-cover"
+              />
             </div>
           </div>
         </div>
@@ -72,13 +100,29 @@ export default function InfoSection() {
         "Ad creation and optimization",
       ],
       content: (
-        <div className="w-full h-full rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 p-12 flex items-center justify-center">
-          <div className="flex gap-8">
-            <div className="bg-green-500 rounded-xl px-8 py-6 text-white transform -rotate-3 shadow-2xl">
-              <div className="font-bold text-2xl">iExplore</div>
-            </div>
-            <div className="bg-black rounded-xl px-8 py-6 text-white transform rotate-3 shadow-2xl">
-              <div className="font-bold text-2xl">All Inquiries</div>
+        <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl">
+          {/* Blurred background */}
+          <Image
+            src="/advertising.jpg"
+            alt="Advertising Background"
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
+            quality={75}
+            loading="lazy"
+            className="object-cover blur-md scale-110"
+          />
+          {/* Foreground card */}
+          <div className="absolute inset-0 flex items-center justify-center p-8">
+            <div className="relative w-[70%] h-[70%] rounded-xl overflow-hidden shadow-2xl">
+              <Image
+                src="/advertising.jpg"
+                alt="Advertising"
+                fill
+                sizes="(max-width: 768px) 70vw, (max-width: 1200px) 35vw, 28vw"
+                quality={85}
+                loading="lazy"
+                className="object-cover"
+              />
             </div>
           </div>
         </div>
@@ -95,25 +139,29 @@ export default function InfoSection() {
         "Digital placements and affiliates",
       ],
       content: (
-        <div className="w-full h-full rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-slate-900 to-blue-900 p-8 flex items-center justify-center">
-          <div className="bg-blue-600 rounded-xl p-10 text-white w-full max-w-md shadow-2xl">
-            <div className="text-center">
-              <div className="text-3xl font-bold mb-6 tracking-wide">
-                WE&apos;RE LOOKING FOR YOU
-              </div>
-              <div className="w-32 h-32 bg-white/20 rounded-full mx-auto flex items-center justify-center backdrop-blur-sm">
-                <svg
-                  className="w-16 h-16 text-white/80"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
+        <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl">
+          {/* Blurred background */}
+          <Image
+            src="/visibility.webp"
+            alt="Visibility Background"
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
+            quality={75}
+            loading="lazy"
+            className="object-cover blur-md scale-110"
+          />
+          {/* Foreground card */}
+          <div className="absolute inset-0 flex items-center justify-center p-8">
+            <div className="relative w-[70%] h-[70%] rounded-xl overflow-hidden shadow-2xl">
+              <Image
+                src="/visibility.webp"
+                alt="Visibility"
+                fill
+                sizes="(max-width: 768px) 70vw, (max-width: 1200px) 35vw, 28vw"
+                quality={85}
+                loading="lazy"
+                className="object-cover"
+              />
             </div>
           </div>
         </div>
