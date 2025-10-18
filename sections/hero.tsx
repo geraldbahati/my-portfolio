@@ -212,7 +212,7 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
       {/* Profile Background Image */}
       <div className="absolute inset-0 z-0 flex items-start justify-center">
         <motion.div
-          className="relative w-full h-full max-w-[177.78vh] max-h-[56.25vw]"
+          className="relative w-full h-full sm:max-w-[177.78vh] sm:max-h-[56.25vw]"
           style={imageScale ? { scale: imageScale } : undefined}
         >
           <Image
@@ -220,7 +220,7 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
             alt=""
             fill
             priority
-            className="object-contain mix-blend-screen"
+            className="object-cover sm:object-contain mix-blend-screen"
             sizes="100vw"
             quality={90}
           />
