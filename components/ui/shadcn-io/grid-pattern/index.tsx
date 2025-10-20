@@ -1,22 +1,20 @@
 "use client";
 
 import React, {
-  useState,
   useEffect,
   useRef,
   useCallback,
   useMemo,
-  useId,
 } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface HighlightSquare {
   x: number;
   y: number;
-  id: string;
   timestamp: number;
-  isCenter?: boolean;
+  isCenter: boolean;
+  opacity: number;
+  scale: number;
 }
 
 interface GridPatternProps {
@@ -30,8 +28,8 @@ interface GridPatternProps {
   gridClassName?: string;
   surroundingCells?: number;
   surroundingRadius?: number;
-  style?: React.CSSProperties; // Add style prop support
-  disableInteraction?: boolean; // Add prop to disable hover effects
+  style?: React.CSSProperties;
+  disableInteraction?: boolean;
   [key: string]: unknown;
 }
 
@@ -40,41 +38,138 @@ export default function GridPattern({
   height = 40,
   x = -1,
   y = -1,
-  strokeDasharray = "0",
+  strokeDasharray, // Destructured for API compatibility but not used in Canvas
   squares,
   className,
   gridClassName = "stroke-current/30",
   surroundingCells = 6,
   surroundingRadius = 2,
-  style, // Accept style prop
-  disableInteraction = false, // Default to false (interaction enabled)
+  style,
+  disableInteraction = false,
   ...props
 }: GridPatternProps) {
-  const [highlightSquares, setHighlightSquares] = useState<HighlightSquare[]>(
-    [],
-  );
-  const [currentCell, setCurrentCell] = useState<{
-    x: number;
-    y: number;
-  } | null>(null);
-  const [isMoving, setIsMoving] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const lastGridCell = useRef<{ x: number; y: number } | null>(null);
-  const svgRef = useRef<SVGSVGElement>(null);
-  const cleanupTimeoutRef = useRef<NodeJS.Timeout>(null);
-  const moveTimeoutRef = useRef<NodeJS.Timeout>(null);
+  // strokeDasharray is part of the API for SVG compatibility but not used in Canvas implementation
+  void strokeDasharray;
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const offscreenCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const highlightSquaresRef = useRef<HighlightSquare[]>([]);
+  const currentCellRef = useRef<{ x: number; y: number } | null>(null);
+  const currentSurroundingRef = useRef<Array<{ x: number; y: number }>>([]);
+  const isMovingRef = useRef(false);
+  const rafIdRef = useRef<number | null>(null);
+  const lastFrameTimeRef = useRef(0);
+  const lastMouseMoveTimeRef = useRef(0);
+  const mouseMoveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Ensure component is mounted before rendering interactive elements
-  useEffect(() => {
-    setMounted(true);
+  // Memoize static squares
+  const staticSquares = useMemo(() => squares || [], [squares]);
+
+  // Get grid color from context - calculates from actual DOM element
+  const getGridColor = useCallback(() => {
+    if (typeof window === "undefined") return "rgba(0, 0, 0, 0.1)";
+
+    // Extract opacity from className like "stroke-current/50"
+    const match = gridClassName.match(/\/(\d+)/);
+    const opacity = match ? parseInt(match[1]) / 100 : 0.1;
+
+    const canvasEl = canvasRef.current;
+    if (!canvasEl) return `rgba(0, 0, 0, ${opacity})`;
+
+    // Helper function to find first non-transparent background
+    const findBackgroundColor = (element: HTMLElement | null): string | null => {
+      let current = element;
+      let depth = 0;
+
+      console.log("🔍 Starting background color detection...");
+
+      while (current && depth < 15) {
+        const styles = getComputedStyle(current);
+        const bgColor = styles.backgroundColor;
+
+        console.log(`  Depth ${depth}:`, {
+          element: current.tagName,
+          className: current.className,
+          backgroundColor: bgColor,
+        });
+
+        // Check if background is not transparent
+        if (bgColor && bgColor !== "rgba(0, 0, 0, 0)" && bgColor !== "transparent") {
+          console.log(`  ✅ Found background at depth ${depth}:`, bgColor);
+          return bgColor;
+        }
+
+        current = current.parentElement;
+        depth++;
+      }
+
+      // Last resort: check body background
+      if (document.body) {
+        const bodyBgColor = getComputedStyle(document.body).backgroundColor;
+        console.log("  🔄 Checking body background:", bodyBgColor);
+        if (bodyBgColor && bodyBgColor !== "rgba(0, 0, 0, 0)" && bodyBgColor !== "transparent") {
+          console.log("  ✅ Using body background:", bodyBgColor);
+          return bodyBgColor;
+        }
+      }
+
+      console.log("  ❌ No background found");
+      return null;
+    };
+
+    // Try to find the actual background color by traversing up
+    const bgColor = findBackgroundColor(canvasEl.parentElement);
+
+    if (bgColor) {
+      // Parse the background color and calculate luminance
+      const rgbMatch = bgColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+      if (rgbMatch) {
+        const [, r, g, b] = rgbMatch.map(Number);
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+        console.log("📊 Luminance calculation:", {
+          rgb: `rgb(${r}, ${g}, ${b})`,
+          luminance: luminance.toFixed(2),
+          isDark: luminance < 0.5,
+        });
+
+        // If dark background (luminance < 0.5), use white lines
+        // If light background (luminance >= 0.5), use black lines
+        if (luminance < 0.5) {
+          console.log("🎨 Using WHITE lines for dark background");
+          return `rgba(255, 255, 255, ${opacity})`;
+        } else {
+          console.log("🎨 Using BLACK lines for light background");
+          return `rgba(0, 0, 0, ${opacity})`;
+        }
+      }
+    }
+
+    // Default to black with opacity (safer fallback for light backgrounds)
+    console.log("🎨 Using DEFAULT black lines");
+    return `rgba(0, 0, 0, ${opacity})`;
+  }, [gridClassName]);
+
+  // Get primary color from CSS variables
+  const getPrimaryColor = useCallback(() => {
+    if (typeof window === "undefined") return "rgba(139, 92, 246, 0.9)";
+
+    const rootStyles = getComputedStyle(document.documentElement);
+    const primaryColor = rootStyles.getPropertyValue("--primary").trim();
+
+    // If we have an oklch color, use it directly (modern browsers support it)
+    if (primaryColor.startsWith("oklch")) {
+      return primaryColor;
+    }
+
+    // Fallback to hardcoded primary color
+    return "rgba(139, 92, 246, 0.9)";
   }, []);
 
-  // Generate random surrounding cells
+  // Generate surrounding cells - memoized
   const generateSurroundingCells = useCallback(
     (centerX: number, centerY: number): Array<{ x: number; y: number }> => {
       const cells: Array<{ x: number; y: number }> = [];
       const usedPositions = new Set<string>();
-
       usedPositions.add(`${centerX}-${centerY}`);
 
       let attempts = 0;
@@ -108,24 +203,199 @@ export default function GridPattern({
 
       return cells;
     },
-    [surroundingCells, surroundingRadius],
+    [surroundingCells, surroundingRadius]
   );
 
-  // Enhanced mouse movement handling for better interaction through layers
-  const handleMouseMove = useCallback(
-    (e: MouseEvent) => {
-      if (!svgRef.current) return;
+  // Draw grid on offscreen canvas (only once)
+  const drawStaticGrid = useCallback(
+    (canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) => {
+      const dpr = window.devicePixelRatio || 1;
+      const canvasWidth = canvas.width / dpr;
+      const canvasHeight = canvas.height / dpr;
 
-      // Check if mouse is over an element that should block grid interaction
-      const elementUnderMouse = document.elementFromPoint(e.clientX, e.clientY);
-      if (elementUnderMouse?.closest('.grid-interaction-blocked')) {
-        // If mouse is over a blocked area, clear current state and return
-        setCurrentCell(null);
-        setIsMoving(false);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = getGridColor();
+      ctx.lineWidth = 0.5;
+
+      // Draw vertical lines
+      for (let i = x; i < canvasWidth; i += width) {
+        ctx.beginPath();
+        ctx.moveTo(i * dpr, 0);
+        ctx.lineTo(i * dpr, canvas.height);
+        ctx.stroke();
+      }
+
+      // Draw horizontal lines
+      for (let i = y; i < canvasHeight; i += height) {
+        ctx.beginPath();
+        ctx.moveTo(0, i * dpr);
+        ctx.lineTo(canvas.width, i * dpr);
+        ctx.stroke();
+      }
+
+      // Draw static squares
+      if (staticSquares.length > 0) {
+        ctx.fillStyle = "currentColor";
+        staticSquares.forEach(([sx, sy]) => {
+          ctx.fillRect(
+            (sx * width + 1) * dpr,
+            (sy * height + 1) * dpr,
+            (width - 1) * dpr,
+            (height - 1) * dpr
+          );
+        });
+      }
+    },
+    [width, height, x, y, getGridColor, staticSquares]
+  );
+
+  // Animation loop using RAF
+  const animate = useCallback(
+    (timestamp: number) => {
+      const canvas = canvasRef.current;
+      const offscreenCanvas = offscreenCanvasRef.current;
+      if (!canvas || !offscreenCanvas || disableInteraction) {
+        rafIdRef.current = requestAnimationFrame(animate);
         return;
       }
 
-      const rect = svgRef.current.getBoundingClientRect();
+      // Throttle to ~60fps
+      if (timestamp - lastFrameTimeRef.current < 16) {
+        rafIdRef.current = requestAnimationFrame(animate);
+        return;
+      }
+      lastFrameTimeRef.current = timestamp;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        rafIdRef.current = requestAnimationFrame(animate);
+        return;
+      }
+
+      const dpr = window.devicePixelRatio || 1;
+
+      // Draw static grid from offscreen canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(offscreenCanvas, 0, 0);
+
+      // Update and draw highlights
+      const now = Date.now();
+      const highlights = highlightSquaresRef.current;
+
+      // Remove expired highlights
+      highlightSquaresRef.current = highlights.filter(
+        (square) => now - square.timestamp < 800
+      );
+
+      // Get current cell and surrounding cells for collision detection
+      let currentActiveCells: { x: number; y: number }[] = [];
+
+      // Draw current active cell ONLY when mouse is moving (not stationary)
+      if (currentCellRef.current && isMovingRef.current) {
+        const { x: cx, y: cy } = currentCellRef.current;
+        // Use cached surrounding cells for performance
+        currentActiveCells = [{ x: cx, y: cy }, ...currentSurroundingRef.current];
+
+        // Get primary color from CSS variables
+        const primaryColor = getPrimaryColor();
+
+        currentActiveCells.forEach((cell, index) => {
+          const isCenter = index === 0;
+          ctx.strokeStyle = primaryColor;
+          ctx.lineWidth = (isCenter ? 2 : 1.5) * dpr;
+
+          ctx.strokeRect(
+            (cell.x * width + 0.5) * dpr,
+            (cell.y * height + 0.5) * dpr,
+            (width - 1) * dpr,
+            (height - 1) * dpr
+          );
+        });
+      }
+
+      // Draw animated trail highlights (skip if matches current active cells to avoid duplication)
+      // Get primary color once for all trail highlights
+      const primaryColorBase = getPrimaryColor();
+
+      highlightSquaresRef.current.forEach((square) => {
+        // Skip drawing if this square matches any of the current hovered cells
+        const isCurrentlyActive = currentActiveCells.some(
+          (cell) => cell.x === square.x && cell.y === square.y
+        );
+
+        if (isCurrentlyActive) {
+          return;
+        }
+
+        const age = Math.min(1, (now - square.timestamp) / 800);
+        const opacity = Math.max(
+          0,
+          (square.isCenter ? 0.7 : 0.5) * (1 - age)
+        );
+        const scale = 1 + age * 0.2;
+        const lineWidth = Math.max(
+          0.5,
+          (square.isCenter ? 1.5 : 1) * (1 - age)
+        );
+
+        if (opacity > 0) {
+          ctx.save();
+
+          // Apply scale transform
+          const centerX = (square.x * width + width / 2) * dpr;
+          const centerY = (square.y * height + width / 2) * dpr;
+
+          ctx.translate(centerX, centerY);
+          ctx.scale(scale, scale);
+          ctx.translate(-centerX, -centerY);
+
+          // Use primary color with dynamic opacity
+          // If primaryColorBase is oklch, append alpha; otherwise use rgba
+          if (primaryColorBase.startsWith("oklch")) {
+            // Convert oklch to rgba for opacity support in canvas
+            // For now, set opacity via globalAlpha
+            ctx.globalAlpha = opacity;
+            ctx.strokeStyle = primaryColorBase;
+          } else {
+            ctx.strokeStyle = primaryColorBase.replace(/[\d.]+\)$/g, `${opacity})`);
+          }
+
+          ctx.lineWidth = lineWidth * dpr;
+
+          ctx.strokeRect(
+            (square.x * width + 0.5) * dpr,
+            (square.y * height + 0.5) * dpr,
+            (width - 1) * dpr,
+            (height - 1) * dpr
+          );
+
+          ctx.restore();
+        }
+      });
+
+      rafIdRef.current = requestAnimationFrame(animate);
+    },
+    [width, height, disableInteraction, getPrimaryColor]
+  );
+
+  // Throttled mouse handler
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (!canvasRef.current || disableInteraction) return;
+
+      // Check if mouse is over blocked area
+      const elementUnderMouse = document.elementFromPoint(e.clientX, e.clientY);
+      if (elementUnderMouse?.closest(".grid-interaction-blocked")) {
+        currentCellRef.current = null;
+        currentSurroundingRef.current = [];
+        isMovingRef.current = false;
+        if (mouseMoveTimeoutRef.current) {
+          clearTimeout(mouseMoveTimeoutRef.current);
+        }
+        return;
+      }
+
+      const rect = canvasRef.current.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
 
@@ -134,308 +404,225 @@ export default function GridPattern({
 
       if (gridX >= 0 && gridY >= 0) {
         const isSameCell =
-          lastGridCell.current &&
-          lastGridCell.current.x === gridX &&
-          lastGridCell.current.y === gridY;
+          currentCellRef.current &&
+          currentCellRef.current.x === gridX &&
+          currentCellRef.current.y === gridY;
 
-        setIsMoving(true);
+        // Update last mouse move time
+        lastMouseMoveTimeRef.current = Date.now();
 
-        if (moveTimeoutRef.current) {
-          clearTimeout(moveTimeoutRef.current);
+        // Set moving state to true (will be set to false after timeout)
+        isMovingRef.current = true;
+
+        // Clear existing timeout
+        if (mouseMoveTimeoutRef.current) {
+          clearTimeout(mouseMoveTimeoutRef.current);
         }
 
-        moveTimeoutRef.current = setTimeout(() => {
-          setIsMoving(false);
-
-          if (lastGridCell.current) {
-            const timestamp = Date.now();
-
-            const fadeSquares: HighlightSquare[] = [
-              {
-                x: lastGridCell.current.x,
-                y: lastGridCell.current.y,
-                id: `fade-center-${lastGridCell.current.x}-${lastGridCell.current.y}-${timestamp}`,
-                timestamp,
-                isCenter: true,
-              },
-            ];
-
-            const surroundingPositions = generateSurroundingCells(
-              lastGridCell.current.x,
-              lastGridCell.current.y,
-            );
-
-            surroundingPositions.forEach((pos, index) => {
-              fadeSquares.push({
-                x: pos.x,
-                y: pos.y,
-                id: `fade-surround-${pos.x}-${pos.y}-${timestamp}-${index}-${Math.random().toString(36).substr(2, 9)}`,
-                timestamp,
-                isCenter: false,
-              });
-            });
-
-            setHighlightSquares((prev) => [...prev, ...fadeSquares]);
-          }
-
-          setCurrentCell(null);
+        // Set timeout to detect when mouse stops moving (100ms without cell change)
+        mouseMoveTimeoutRef.current = setTimeout(() => {
+          isMovingRef.current = false;
+          // Also clear current cell so no highlight shows when stationary
+          currentCellRef.current = null;
+          currentSurroundingRef.current = [];
         }, 100);
 
         if (!isSameCell) {
-          setCurrentCell({ x: gridX, y: gridY });
+          // Add old cell to trail ONLY when actually moving between cells
+          if (currentCellRef.current) {
+            const timestamp = Date.now();
+            const fadeSquares: HighlightSquare[] = [
+              {
+                x: currentCellRef.current.x,
+                y: currentCellRef.current.y,
+                timestamp,
+                isCenter: true,
+                opacity: 0.8,
+                scale: 0.8,
+              },
+            ];
 
-          const timestamp = Date.now();
-          const newSquares: HighlightSquare[] = [];
-
-          newSquares.push({
-            x: gridX,
-            y: gridY,
-            id: `center-${gridX}-${gridY}-${timestamp}`,
-            timestamp,
-            isCenter: true,
-          });
-
-          const surroundingPositions = generateSurroundingCells(gridX, gridY);
-          surroundingPositions.forEach((pos, index) => {
-            newSquares.push({
-              x: pos.x,
-              y: pos.y,
-              id: `surround-${pos.x}-${pos.y}-${timestamp}-${index}-${Math.random().toString(36).substr(2, 9)}`,
-              timestamp,
-              isCenter: false,
+            // Use cached surrounding cells for the trail
+            currentSurroundingRef.current.forEach((pos) => {
+              fadeSquares.push({
+                x: pos.x,
+                y: pos.y,
+                timestamp,
+                isCenter: false,
+                opacity: 0.6,
+                scale: 0.8,
+              });
             });
-          });
 
-          setHighlightSquares((prev) => {
-            const recent = prev.filter((s) => timestamp - s.timestamp < 800);
-            return [...recent, ...newSquares];
-          });
+            // Keep only recent highlights
+            const now = Date.now();
+            highlightSquaresRef.current = [
+              ...highlightSquaresRef.current.filter(
+                (s) => now - s.timestamp < 800
+              ),
+              ...fadeSquares,
+            ];
+          }
 
-          lastGridCell.current = { x: gridX, y: gridY };
+          // Generate new surrounding cells ONLY when entering a new cell
+          currentSurroundingRef.current = generateSurroundingCells(gridX, gridY);
+          currentCellRef.current = { x: gridX, y: gridY };
         }
       }
     },
-    [width, height, generateSurroundingCells],
+    [width, height, generateSurroundingCells, disableInteraction]
   );
 
+  // Mouse leave handler
   const handleMouseLeave = useCallback(() => {
-    if (currentCell && isMoving) {
+    // Clear timeout
+    if (mouseMoveTimeoutRef.current) {
+      clearTimeout(mouseMoveTimeoutRef.current);
+    }
+
+    // Only add to trail if we were actually moving when leaving
+    if (currentCellRef.current && isMovingRef.current) {
       const timestamp = Date.now();
       const fadeSquares: HighlightSquare[] = [
         {
-          x: currentCell.x,
-          y: currentCell.y,
-          id: `fade-leave-center-${currentCell.x}-${currentCell.y}-${timestamp}`,
+          x: currentCellRef.current.x,
+          y: currentCellRef.current.y,
           timestamp,
           isCenter: true,
+          opacity: 0.8,
+          scale: 0.8,
         },
       ];
 
-      const surroundingPositions = generateSurroundingCells(
-        currentCell.x,
-        currentCell.y,
-      );
-      surroundingPositions.forEach((pos, index) => {
+      // Use cached surrounding cells (no need to regenerate)
+      currentSurroundingRef.current.forEach((pos) => {
         fadeSquares.push({
           x: pos.x,
           y: pos.y,
-          id: `fade-leave-surround-${pos.x}-${pos.y}-${timestamp}-${index}-${Math.random().toString(36).substr(2, 9)}`,
           timestamp,
           isCenter: false,
+          opacity: 0.6,
+          scale: 0.8,
         });
       });
 
-      setHighlightSquares((prev) => [...prev, ...fadeSquares]);
+      highlightSquaresRef.current = [
+        ...highlightSquaresRef.current,
+        ...fadeSquares,
+      ];
     }
 
-    setCurrentCell(null);
-    setIsMoving(false);
-    if (moveTimeoutRef.current) {
-      clearTimeout(moveTimeoutRef.current);
-    }
-  }, [currentCell, isMoving, generateSurroundingCells]);
+    currentCellRef.current = null;
+    currentSurroundingRef.current = [];
+    isMovingRef.current = false;
+  }, []);
 
-  // Use document-level mouse tracking for better interaction through layers
+  // Setup canvas and start animation
   useEffect(() => {
-    const svg = svgRef.current;
-    if (!svg || disableInteraction) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-    // Use window-level mouse tracking to catch events through layers
-    const handleGlobalMouseMove = (e: MouseEvent) => {
-      handleMouseMove(e);
-    };
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
 
-    const handleSvgMouseLeave = () => {
-      handleMouseLeave();
-    };
+    // Setup main canvas
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
 
-    window.addEventListener("mousemove", handleGlobalMouseMove);
-    svg.addEventListener("mouseleave", handleSvgMouseLeave);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.scale(dpr, dpr);
+
+    // Create and setup offscreen canvas for static grid
+    const offscreenCanvas = document.createElement("canvas");
+    offscreenCanvas.width = canvas.width;
+    offscreenCanvas.height = canvas.height;
+    offscreenCanvasRef.current = offscreenCanvas;
+
+    const offscreenCtx = offscreenCanvas.getContext("2d");
+    if (offscreenCtx) {
+      offscreenCtx.scale(dpr, dpr);
+
+      // Wait longer to ensure all styles are fully computed and painted
+      // Using both RAF and setTimeout to ensure styles are ready
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          drawStaticGrid(offscreenCanvas, offscreenCtx);
+        }, 100);
+      });
+    }
+
+    // Start animation loop
+    rafIdRef.current = requestAnimationFrame(animate);
 
     return () => {
-      window.removeEventListener("mousemove", handleGlobalMouseMove);
-      if (svg) {
-        svg.removeEventListener("mouseleave", handleSvgMouseLeave);
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
+      if (mouseMoveTimeoutRef.current) {
+        clearTimeout(mouseMoveTimeoutRef.current);
+      }
+    };
+  }, [animate, drawStaticGrid]);
+
+  // Handle mouse events
+  useEffect(() => {
+    if (disableInteraction) return;
+
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    const canvas = canvasRef.current;
+    if (canvas) {
+      canvas.addEventListener("mouseleave", handleMouseLeave);
+    }
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      if (canvas) {
+        canvas.removeEventListener("mouseleave", handleMouseLeave);
       }
     };
   }, [handleMouseMove, handleMouseLeave, disableInteraction]);
 
-  // Cleanup old squares
+  // Resize handler
   useEffect(() => {
-    const cleanup = () => {
-      const now = Date.now();
-      setHighlightSquares((prev) =>
-        prev.filter((square) => now - square.timestamp < 800),
-      );
+    const handleResize = () => {
+      const canvas = canvasRef.current;
+      const offscreenCanvas = offscreenCanvasRef.current;
+      if (!canvas || !offscreenCanvas) return;
+
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      offscreenCanvas.width = canvas.width;
+      offscreenCanvas.height = canvas.height;
+
+      const ctx = canvas.getContext("2d");
+      const offscreenCtx = offscreenCanvas.getContext("2d");
+
+      if (ctx && offscreenCtx) {
+        ctx.scale(dpr, dpr);
+        offscreenCtx.scale(dpr, dpr);
+        // Redraw with slight delay to ensure styles are ready
+        requestAnimationFrame(() => {
+          drawStaticGrid(offscreenCanvas, offscreenCtx);
+        });
+      }
     };
 
-    cleanupTimeoutRef.current = setInterval(cleanup, 500);
-    return () => {
-      if (cleanupTimeoutRef.current) clearInterval(cleanupTimeoutRef.current);
-      if (moveTimeoutRef.current) clearTimeout(moveTimeoutRef.current);
-    };
-  }, []);
-
-  const staticSquares = useMemo(() => squares || [], [squares]);
-
-  const currentActiveCells = useMemo(() => {
-    if (!currentCell || !isMoving) return [];
-
-    const cells = [currentCell];
-    const surrounding = generateSurroundingCells(currentCell.x, currentCell.y);
-    return [...cells, ...surrounding];
-  }, [currentCell, isMoving, generateSurroundingCells]);
-
-  // Generate a stable ID using useId to avoid hydration mismatches
-  const patternId = useId();
+    window.addEventListener("resize", handleResize, { passive: true });
+    return () => window.removeEventListener("resize", handleResize);
+  }, [drawStaticGrid]);
 
   return (
-    <svg
-      ref={svgRef}
+    <canvas
+      ref={canvasRef}
       aria-hidden="true"
       className={cn("absolute inset-0 h-full w-full", className)}
-      style={style} // Apply style prop
+      style={{ ...style, pointerEvents: disableInteraction ? "none" : "auto" }}
       {...props}
-    >
-      <defs>
-        <pattern
-          id={patternId}
-          width={width}
-          height={height}
-          patternUnits="userSpaceOnUse"
-          x={x}
-          y={y}
-        >
-          <path
-            d={`M.5 ${height}V.5H${width}`}
-            fill="none"
-            className={gridClassName}
-            strokeWidth="0.5"
-            strokeDasharray={strokeDasharray}
-          />
-        </pattern>
-      </defs>
-
-      <rect
-        width="100%"
-        height="100%"
-        strokeWidth={0}
-        fill={`url(#${patternId})`}
-      />
-
-      {/* Instant highlight for current cluster */}
-      {!disableInteraction &&
-        mounted &&
-        isMoving &&
-        currentActiveCells.map((cell, index) => (
-          <rect
-            key={`active-${cell.x}-${cell.y}-${index}`}
-            x={cell.x * width + 0.5}
-            y={cell.y * height + 0.5}
-            width={width - 1}
-            height={height - 1}
-            fill="none"
-            className="stroke-primary"
-            strokeWidth={index === 0 ? 2 : 1.5}
-            opacity={index === 0 ? 0.9 : 0.7}
-            pointerEvents="none"
-          />
-        ))}
-
-      {/* Animated trail highlights */}
-      {!disableInteraction && (
-        <AnimatePresence mode="popLayout">
-          {mounted &&
-            highlightSquares.map((square) => {
-              const now = Date.now();
-              const age = Math.min(1, (now - square.timestamp) / 800);
-
-              if (
-                isMoving &&
-                currentActiveCells.some(
-                  (cell) => cell.x === square.x && cell.y === square.y,
-                )
-              ) {
-                return null;
-              }
-
-              return (
-                <motion.rect
-                  key={square.id}
-                  x={square.x * width + 0.5}
-                  y={square.y * height + 0.5}
-                  width={width - 1}
-                  height={height - 1}
-                  fill="none"
-                  className={
-                    square.isCenter ? "stroke-primary/70" : "stroke-primary/50"
-                  }
-                  strokeWidth={square.isCenter ? 1.5 : 1}
-                  initial={{
-                    opacity: square.isCenter ? 0.8 : 0.6,
-                    scale: 0.8,
-                  }}
-                  animate={{
-                    opacity: Math.max(
-                      0,
-                      (square.isCenter ? 0.7 : 0.5) * (1 - age),
-                    ),
-                    strokeWidth: Math.max(
-                      0.5,
-                      (square.isCenter ? 1.5 : 1) * (1 - age),
-                    ),
-                    scale: 1 + age * 0.2,
-                  }}
-                  exit={{
-                    opacity: 0,
-                    scale: 1.3,
-                  }}
-                  transition={{
-                    duration: 0.4,
-                    ease: [0.4, 0, 0.6, 1],
-                  }}
-                />
-              );
-            })}
-        </AnimatePresence>
-      )}
-
-      {/* Static overlay squares */}
-      {staticSquares.length > 0 && (
-        <g>
-          {staticSquares.map(([x, y], index) => (
-            <rect
-              strokeWidth="0"
-              key={`static-${x}-${y}-${index}`}
-              width={width - 1}
-              height={height - 1}
-              x={x * width + 1}
-              y={y * height + 1}
-              fill="currentColor"
-            />
-          ))}
-        </g>
-      )}
-    </svg>
+    />
   );
 }
