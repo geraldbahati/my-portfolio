@@ -1,7 +1,13 @@
 "use client";
 
 import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion, MotionValue, useTransform } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  motionValue,
+  MotionValue,
+  useTransform,
+} from "framer-motion";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 
@@ -170,9 +176,10 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
   const stopScrambleTimeoutRef = useRef<NodeJS.Timeout>(null);
 
   // Scale image down as user scrolls (from 1 to 0.85)
-  const imageScale = scrollProgress
-    ? useTransform(scrollProgress, [0, 1], [1, 0.85])
-    : undefined;
+  // Create a default motion value if scrollProgress is not provided
+  const defaultProgress = useRef(motionValue(0));
+  const activeProgress = scrollProgress ?? defaultProgress.current;
+  const imageScale = useTransform(activeProgress, [0, 1], [1, 0.85]);
 
   useEffect(() => {
     setMounted(true);
@@ -206,14 +213,14 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
   return (
     <section
       className="relative min-h-screen overflow-hidden"
-      style={{ backgroundColor: '#0a0a0a' }}
+      style={{ backgroundColor: "#0a0a0a" }}
       role="banner"
     >
       {/* Profile Background Image */}
       <div className="absolute inset-0 z-0 flex items-start justify-center">
         <motion.div
-          className="relative w-full h-full sm:max-w-[177.78vh] sm:max-h-[56.25vw]"
-          style={imageScale ? { scale: imageScale } : undefined}
+          className="relative w-full h-full sm:w-[1920px] sm:h-[1080px] will-change-transform"
+          style={{ scale: imageScale }}
         >
           <Image
             src="/habibi.png"
@@ -221,25 +228,39 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
             fill
             priority
             className="object-cover sm:object-contain mix-blend-screen"
-            sizes="100vw"
-            quality={90}
+            sizes="(max-width: 640px) 100vw, (max-width: 1280px) 100vw, 1920px"
+            quality={85}
           />
         </motion.div>
       </div>
 
       {/* Edge Fade Overlay - Gentle vignette effect */}
-      <div className="absolute inset-0 z-[5]" style={{ background: 'linear-gradient(to right, #0a0a0a 0%, transparent 20%, transparent 80%, #0a0a0a 100%)' }} />
-      <div className="absolute inset-0 z-[5]" style={{ background: 'linear-gradient(to bottom, #0a0a0a 0%, transparent 20%, transparent 80%, #0a0a0a 100%)' }} />
-
-      {/* Grid Pattern Background */}
-      <GridPattern
-        className="absolute inset-0 opacity-80 z-10"
-        gridClassName="stroke-current/50"
-        width={32}
-        height={32}
-        surroundingCells={4}
-        surroundingRadius={1}
+      <div
+        className="absolute inset-0 z-[5]"
+        style={{
+          background:
+            "linear-gradient(to right, #0a0a0a 0%, transparent 20%, transparent 80%, #0a0a0a 100%)",
+        }}
       />
+      <div
+        className="absolute inset-0 z-[5]"
+        style={{
+          background:
+            "linear-gradient(to bottom, #0a0a0a 0%, transparent 20%, transparent 80%, #0a0a0a 100%)",
+        }}
+      />
+
+      {/* Grid Pattern Background - Memoized for performance */}
+      {mounted && (
+        <GridPattern
+          className="absolute inset-0 z-10"
+          gridClassName="stroke-current/5"
+          width={32}
+          height={32}
+          surroundingCells={4}
+          surroundingRadius={1}
+        />
+      )}
 
       {/* Hero Content */}
       <div className="relative z-10 min-h-screen flex items-end justify-end px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12 lg:pb-16 pointer-events-none">
@@ -259,6 +280,7 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
                   animate="animate"
                 >
                   <motion.div
+                    className="will-change-[filter]"
                     animate={{
                       filter: nameScrambling ? "blur(1px)" : "blur(0px)",
                     }}
@@ -286,7 +308,10 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
                   custom={ANIMATION_DELAYS.TITLE}
                   variants={itemVariants}
                 >
-                  <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-thin leading-[0.9] sm:leading-none tracking-tight grid-interaction-blocked pointer-events-auto text-white">
+                  <h1
+                    className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-thin leading-[0.9] sm:leading-none tracking-tight grid-interaction-blocked pointer-events-auto text-white"
+                    style={{ fontSize: "2.25rem" }}
+                  >
                     <motion.span
                       className="inline-block font-medium"
                       initial={{ opacity: 0, x: -20 }}

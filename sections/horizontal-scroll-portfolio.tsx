@@ -165,7 +165,10 @@ export default function ProjectsSectionPinned() {
                   }
                   transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
                 >
-                  <h1 className="text-4xl lg:text-5xl font-medium leading-tight tracking-tight" style={{ color: 'var(--page-text-auto, #000000)' }}>
+                  <h1
+                    className="text-4xl lg:text-5xl font-medium leading-tight tracking-tight"
+                    style={{ color: 'var(--page-text-auto, #000000)', fontSize: "2.25rem" }}
+                  >
                     Website Creations and Client Projects
                   </h1>
                 </motion.div>

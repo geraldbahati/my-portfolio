@@ -272,6 +272,7 @@ export default function CombinedProjectsFaqSection() {
                       className="text-4xl lg:text-5xl font-medium leading-tight tracking-tight transition-colors duration-700"
                       style={{
                         color: heightReductionProgress > 0 ? "#ffffff" : "#000000",
+                        fontSize: "2.25rem",
                       }}
                     >
                       Website Creations and Client Projects

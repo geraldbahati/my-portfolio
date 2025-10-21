@@ -25,6 +25,7 @@ const mdxComponents = {
   h1: (props: ComponentProps<"h1">) => (
     <h1
       className="text-4xl font-bold mb-6 mt-8 text-gray-900 dark:text-gray-100 print:text-black"
+      style={{ fontSize: "2.25rem" }}
       {...props}
     />
   ),
@@ -143,7 +144,10 @@ export function PrivacyPolicy({
                   <Shield className="w-8 h-8 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-4xl sm:text-5xl font-bold text-white print:text-black mb-2">
+                  <h1
+                    className="text-4xl sm:text-5xl font-bold text-white print:text-black mb-2"
+                    style={{ fontSize: "2.25rem" }}
+                  >
                     Privacy Policy
                   </h1>
                   <p className="text-blue-100 dark:text-blue-200 print:text-gray-600 text-lg">

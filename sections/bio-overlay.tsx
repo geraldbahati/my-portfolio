@@ -1,8 +1,14 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { motion, MotionValue, useTransform } from "framer-motion";
-import { CutoutMaskImage } from "@/components/ui/cutout-image-mask"; // Word component for synchronized animation
+import dynamic from "next/dynamic";
+
+// Lazy load the CutoutMaskImage component for better performance
+const CutoutMaskImage = dynamic(
+  () => import("@/components/ui/cutout-image-mask").then((mod) => ({ default: mod.CutoutMaskImage })),
+  { ssr: true }
+);
 
 // Character component for synchronized animation
 interface CharacterProps {
@@ -39,6 +45,7 @@ interface BioOverlayProps {
 export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
   // Transform scroll progress to control content animations
   // Content animations trigger as bio slides into view (last 60% of scroll)
+  // useTransform is already optimized internally by Framer Motion
   const contentProgress = useTransform(scrollProgress, [0.4, 1], [0, 1]);
 
   // Transform values for the cutout image
@@ -51,20 +58,22 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
   const ctaOpacity = useTransform(contentProgress, [0.7, 1], [0, 1]);
   const ctaY = useTransform(contentProgress, [0.7, 1], [20, 0]);
 
-  // Text content
+  // Text content - Memoized to prevent re-splitting on every render
   const tagline = "What I can do for you";
-  const taglineChars = tagline.split("");
+  const taglineChars = useMemo(() => tagline.split(""), []);
 
   const mainText =
     "As a web designer and digital expert, I combine creative, detail-loving design with strategic know-how in digital marketing to unlock your brand's full potential.";
-  const mainChars = mainText.split("");
+  const mainChars = useMemo(() => mainText.split(""), []);
 
   const numberText = "(01)";
-  const numberChars = numberText.split("");
+  const numberChars = useMemo(() => numberText.split(""), []);
 
-  // Calculate character reveal ranges
-  const totalChars =
-    taglineChars.length + numberChars.length + mainChars.length;
+  // Calculate character reveal ranges - Memoized
+  const totalChars = useMemo(
+    () => taglineChars.length + numberChars.length + mainChars.length,
+    [taglineChars.length, numberChars.length, mainChars.length]
+  );
 
   return (
     <section className="relative h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-t-xl sm:rounded-t-[1rem] lg:rounded-t-[2rem] overflow-y-auto">
@@ -83,7 +92,7 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
         <div className="grid lg:grid-cols-[210px_1fr] gap-12 lg:gap-24 items-center">
           {/* Left: Animated Cutout Mask Image */}
           <motion.div
-            className="flex justify-center lg:justify-start"
+            className="flex justify-center lg:justify-start will-change-transform"
             style={{
               scale: imageScale,
               opacity: imageOpacity,
@@ -161,6 +170,7 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
 
             {/* CTA Button - appears after text */}
             <motion.div
+              className="will-change-transform"
               style={{
                 opacity: ctaOpacity,
                 y: ctaY,

@@ -178,7 +178,9 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
         className="absolute inset-0 w-full h-full object-cover"
         onError={handleVideoError}
         aria-label={alt || title || `Project ${id} video`}
-      />
+      >
+        <track kind="captions" label="No audio" />
+      </video>
     );
   };
 
@@ -295,9 +297,9 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
             }}
             transition={{ duration: 0.3, ease: "easeOut" }}
           >
-            <h3 className="text-white text-lg font-semibold drop-shadow-lg">
+            <h2 className="text-white text-lg font-semibold drop-shadow-lg">
               {title}
-            </h3>
+            </h2>
           </motion.div>
         )}
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { useScroll } from "framer-motion";
 import HeroSection from "@/sections/hero";
 import BioOverlay from "@/sections/bio-overlay";
 
@@ -18,7 +18,7 @@ export default function HeroBioOverlay() {
   // Reference to the scroll container that triggers the animation
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Track scroll progress within the container
+  // Track scroll progress within the container - Memoized for performance
   // offset: ["start start", "center start"] means:
   // - Animation starts when container top hits viewport top (scroll 0) → immediate!
   // - Animation ends when container center hits viewport top (scroll 100vh with 200vh container)
@@ -28,25 +28,8 @@ export default function HeroBioOverlay() {
     offset: ["start start", "center start"],
   });
 
-  // Transform scroll progress (0 to 1) into Y position for bio section
-  // Bio is absolutely positioned at top: 0vh within the container
-  // Transform pushes it down initially, keeps it at perfect position for reveal
-  //
-  // Start (scroll 0vh, scrollYProgress = 0):
-  //   - top: 0vh + y: 100vh = document position 100vh
-  //   - Viewport shows [0, 100vh], bio top at 100vh (bottom edge of viewport)
-  //   - Immediate visibility - bio starts sliding up on first scroll pixel! ✓
-  //
-  // Mid (scroll 50vh, scrollYProgress = 0.5):
-  //   - top: 0vh + y: 100vh = document position 100vh (bio stays at same position)
-  //   - Viewport shows [50vh, 150vh], bio entering viewport from bottom ✓
-  //
-  // End (scroll 100vh, scrollYProgress = 1):
-  //   - top: 0vh + y: 100vh = document position 100vh
-  //   - Viewport shows [100vh, 200vh], bio at [100vh, 200vh] = fully visible! ✓
-  //
-  // Bio stays stationary at 100vh, viewport scrolling creates the "slide up" effect!
-  const bioY = useTransform(scrollYProgress, [0, 1], ["100vh", "100vh"]);
+  // useTransform is already optimized internally by Framer Motion
+  // No need to memoize - it handles its own caching
 
   return (
     <>
@@ -76,19 +59,18 @@ export default function HeroBioOverlay() {
 
         {/* Bio Section - slides up from bottom based on scroll position */}
         {/* ABSOLUTE positioning within container - exits naturally when container ends */}
-        {/* Positioned at top: 0, pushed down via transform to 100vh */}
-        {/* Stays at document 100vh while viewport scrolls past - creating slide-up illusion */}
-        <motion.div
-          className="absolute left-0 w-full h-screen will-change-transform"
+        {/* Positioned at top: 100vh (stays at document 100vh while viewport scrolls past) */}
+        {/* Creating slide-up illusion as viewport scrolls */}
+        <div
+          className="absolute left-0 w-full h-screen"
           style={{
-            top: 0,
-            y: bioY,
+            top: "100vh",
             // Ensure bio appears above hero
             zIndex: 10,
           }}
         >
           <BioOverlay scrollProgress={scrollYProgress} />
-        </motion.div>
+        </div>
       </div>
     </>
   );

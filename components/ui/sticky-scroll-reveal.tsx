@@ -168,7 +168,7 @@ export const StickyScrollReveal = ({
               >
                 {section.label && (
                   <motion.div
-                    className="mb-6"
+                    className="mb-6 grid-interaction-blocked"
                     initial={{ opacity: 0, x: -20 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: false }}
@@ -188,20 +188,20 @@ export const StickyScrollReveal = ({
                 )}
 
                 <motion.h2
-                  className="text-4xl sm:text-5xl font-bold mb-8 tracking-tight text-black"
+                  className="text-4xl sm:text-5xl font-bold mb-8 tracking-tight text-black grid-interaction-blocked"
                   style={{ lineHeight: "1" }}
                 >
                   {section.title}
                 </motion.h2>
 
                 {section.description && (
-                  <motion.p className="text-base mb-8 max-w-lg leading-relaxed text-gray-700">
+                  <motion.p className="text-base mb-8 max-w-lg leading-relaxed text-gray-700 grid-interaction-blocked">
                     {section.description}
                   </motion.p>
                 )}
 
                 {section.bullets && (
-                  <ul className="space-y-3">
+                  <ul className="space-y-3 grid-interaction-blocked">
                     {section.bullets.map((bullet, bulletIndex) => (
                       <motion.li
                         key={`bullet-mobile-${bulletIndex}`}
@@ -260,7 +260,7 @@ export const StickyScrollReveal = ({
                 >
                   {section.label && (
                     <motion.div
-                      className="mb-8"
+                      className="mb-8 grid-interaction-blocked"
                       initial={{ opacity: 0, x: -20 }}
                       animate={{
                         opacity: activeSection === index ? 1 : 0.3,
@@ -281,7 +281,7 @@ export const StickyScrollReveal = ({
                   )}
 
                   <motion.h2
-                    className={`text-6xl lg:text-7xl font-bold mb-12 tracking-tight transition-colors duration-500 ${
+                    className={`text-6xl lg:text-7xl font-bold mb-12 tracking-tight transition-colors duration-500 grid-interaction-blocked ${
                       activeSection === index ? "text-black" : "text-gray-400"
                     }`}
                     style={{ lineHeight: "0.9" }}
@@ -291,7 +291,7 @@ export const StickyScrollReveal = ({
 
                   {section.description && (
                     <motion.p
-                      className={`text-base mb-12 max-w-lg leading-relaxed transition-colors duration-500 ${
+                      className={`text-base mb-12 max-w-lg leading-relaxed transition-colors duration-500 grid-interaction-blocked ${
                         activeSection === index
                           ? "text-gray-700"
                           : "text-gray-400"
@@ -302,7 +302,7 @@ export const StickyScrollReveal = ({
                   )}
 
                   {section.bullets && (
-                    <ul className="space-y-4">
+                    <ul className="space-y-4 grid-interaction-blocked">
                       {section.bullets.map((bullet, bulletIndex) => (
                         <motion.li
                           key={`bullet-${bulletIndex}`}
