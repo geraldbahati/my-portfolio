@@ -109,7 +109,11 @@ export default function ContactPage() {
                   <p className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">
                     CONTACT
                   </p>
-                  <h1 id="contact-heading" className="text-4xl lg:text-5xl font-bold text-black mb-6">
+                  <h1
+                    id="contact-heading"
+                    className="text-4xl lg:text-5xl font-bold text-black mb-6"
+                    style={{ fontSize: "2.25rem" }}
+                  >
                     Request a project
                   </h1>
                   <p className="text-gray-600 text-base leading-relaxed">

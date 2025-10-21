@@ -87,7 +87,10 @@ export default function ProjectsPage() {
       <main className="min-h-screen bg-background">
         {/* Page Header */}
         <header className="max-w-7xl mx-auto px-6 lg:px-8 pt-20 pb-12">
-          <h1 className="text-4xl lg:text-6xl font-bold mb-6 text-foreground">
+          <h1
+            className="text-4xl lg:text-6xl font-bold mb-6 text-foreground"
+            style={{ fontSize: "2.25rem" }}
+          >
             Projects
           </h1>
           <p className="text-base text-muted-foreground max-w-3xl leading-relaxed">
