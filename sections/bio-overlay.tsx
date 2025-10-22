@@ -10,7 +10,7 @@ const CutoutMaskImage = dynamic(
   { ssr: true }
 );
 
-// Character component for synchronized animation
+// Optimized Character component with simplified transforms
 interface CharacterProps {
   children: string;
   progress: MotionValue<number>;
@@ -20,20 +20,33 @@ interface CharacterProps {
 
 const Character = memo(
   ({ children, progress, range, className = "" }: CharacterProps) => {
-    // Apply easing to the opacity transform for smoother reveal
-    const opacity = useTransform(progress, range, [0, 1], {
-      clamp: false,
-    });
+    // Simplified opacity transform with reduced complexity
+    const opacity = useTransform(progress, range, [0, 1]);
+
+    // Handle spaces properly to maintain spacing
+    if (children === " ") {
+      return <span className="inline-block" style={{ width: "0.25em" }}> </span>;
+    }
 
     return (
-      <span className={`relative ${className}`}>
-        <span className="opacity-10">{children}</span>
-        <motion.span className="absolute inset-0" style={{ opacity }}>
+      <span className={`relative inline-block ${className}`}>
+        <span className="opacity-20">{children}</span>
+        <motion.span
+          className="absolute inset-0"
+          style={{
+            opacity,
+            willChange: "opacity",
+          }}
+        >
           {children}
         </motion.span>
       </span>
     );
   },
+  // Custom comparison to prevent unnecessary re-renders
+  (prev, next) => {
+    return prev.children === next.children && prev.progress === next.progress;
+  }
 );
 
 Character.displayName = "Character";
@@ -69,19 +82,26 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
   const numberText = "(01)";
   const numberChars = useMemo(() => numberText.split(""), []);
 
-  // Calculate character reveal ranges - Memoized
+  // Calculate character reveal ranges - Memoized with simplified calculation
   const totalChars = useMemo(
     () => taglineChars.length + numberChars.length + mainChars.length,
     [taglineChars.length, numberChars.length, mainChars.length]
   );
 
   return (
-    <section className="relative h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-t-xl sm:rounded-t-[1rem] lg:rounded-t-[2rem] overflow-y-auto">
+    <section
+      className="relative h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-t-xl sm:rounded-t-[1rem] lg:rounded-t-[2rem] overflow-y-auto"
+      style={{
+        contain: "layout style paint",
+        willChange: "transform",
+      }}
+    >
       {/* Subtle background elements */}
       <motion.div
         className="absolute inset-0 overflow-hidden pointer-events-none"
         style={{
           opacity: useTransform(scrollProgress, [0, 0.5, 1], [0.3, 1, 1]),
+          willChange: "opacity",
         }}
       >
         <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-purple-100/20 to-transparent rounded-full blur-3xl" />
@@ -92,11 +112,13 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
         <div className="grid lg:grid-cols-[210px_1fr] gap-12 lg:gap-24 items-center">
           {/* Left: Animated Cutout Mask Image */}
           <motion.div
-            className="flex justify-center lg:justify-start will-change-transform"
+            className="flex justify-center lg:justify-start"
             style={{
               scale: imageScale,
               opacity: imageOpacity,
               y: imageY,
+              willChange: "transform, opacity",
+              transform: "translateZ(0)", // Force GPU layer
             }}
           >
             <CutoutMaskImage
@@ -113,28 +135,33 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
             {/* Tagline and Number */}
             <div className="flex justify-between items-start">
               <div className="text-xs sm:text-sm font-medium tracking-[0.2em] uppercase text-gray-600">
-                {taglineChars.map((char, i) => {
-                  const charIndex = i;
-                  const start = Math.max(0, (charIndex - 1) / totalChars);
-                  const end = Math.min(1, (charIndex + 2) / totalChars);
+                {tagline.split(" ").map((word, wordIdx) => (
+                  <span key={`tag-word-${wordIdx}`} className="inline-block whitespace-nowrap">
+                    {word.split("").map((char, charIdx) => {
+                      const charIndex = tagline.substring(0, tagline.indexOf(word)).length + charIdx;
+                      const start = charIndex / totalChars;
+                      const end = (charIndex + 3) / totalChars;
 
-                  return (
-                    <Character
-                      key={`tag-${i}`}
-                      progress={contentProgress}
-                      range={[start, end]}
-                    >
-                      {char}
-                    </Character>
-                  );
-                })}
+                      return (
+                        <Character
+                          key={`tag-${wordIdx}-${charIdx}`}
+                          progress={contentProgress}
+                          range={[start, end]}
+                        >
+                          {char}
+                        </Character>
+                      );
+                    })}
+                    {wordIdx < tagline.split(" ").length - 1 && <span className="inline-block" style={{ width: "0.25em" }}> </span>}
+                  </span>
+                ))}
               </div>
 
-              <div className="text-xs sm:text-sm font-light text-gray-400">
+              <div className="text-xs sm:text-sm font-light text-gray-400 whitespace-nowrap">
                 {numberChars.map((char, i) => {
                   const charIndex = taglineChars.length + i;
-                  const start = Math.max(0, (charIndex - 1) / totalChars);
-                  const end = Math.min(1, (charIndex + 2) / totalChars);
+                  const start = charIndex / totalChars;
+                  const end = (charIndex + 3) / totalChars;
 
                   return (
                     <Character
@@ -151,29 +178,37 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
 
             {/* Main Text */}
             <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl leading-tight font-light text-gray-900">
-              {mainChars.map((char, i) => {
-                const charIndex = taglineChars.length + numberChars.length + i;
-                const start = Math.max(0, (charIndex - 1) / totalChars);
-                const end = Math.min(1, (charIndex + 2) / totalChars);
+              {mainText.split(" ").map((word, wordIdx) => (
+                <span key={`main-word-${wordIdx}`} className="inline-block whitespace-nowrap">
+                  {word.split("").map((char, charIdx) => {
+                    const prevText = mainText.split(" ").slice(0, wordIdx).join(" ");
+                    const charIndex = taglineChars.length + numberChars.length +
+                      (prevText.length > 0 ? prevText.length + 1 : 0) + charIdx;
+                    const start = charIndex / totalChars;
+                    const end = (charIndex + 3) / totalChars;
 
-                return (
-                  <Character
-                    key={`main-${i}`}
-                    progress={contentProgress}
-                    range={[start, end]}
-                  >
-                    {char}
-                  </Character>
-                );
-              })}
+                    return (
+                      <Character
+                        key={`main-${wordIdx}-${charIdx}`}
+                        progress={contentProgress}
+                        range={[start, end]}
+                      >
+                        {char}
+                      </Character>
+                    );
+                  })}
+                  {wordIdx < mainText.split(" ").length - 1 && <span className="inline-block" style={{ width: "0.25em" }}> </span>}
+                </span>
+              ))}
             </h2>
 
             {/* CTA Button - appears after text */}
             <motion.div
-              className="will-change-transform"
               style={{
                 opacity: ctaOpacity,
                 y: ctaY,
+                willChange: "transform, opacity",
+                transform: "translateZ(0)",
               }}
             >
               <motion.button
