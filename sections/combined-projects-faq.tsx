@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import ProjectCard, { ProjectCardProps } from "@/components/project-card";
 import Image from "next/image";
@@ -136,7 +136,9 @@ export default function CombinedProjectsFaqSection() {
   const projectsAreaRef = useRef<HTMLDivElement>(null);
   const projectsContainerRef = useRef<HTMLDivElement>(null);
   const faqContentRef = useRef<HTMLDivElement>(null);
-  const [, setScrollProgress] = useState(0);
+  const rafIdRef = useRef<number | null>(null);
+  const lastUpdateTimeRef = useRef(0);
+  const [scrollProgress, setScrollProgress] = useState(0);
   const [isHeaderVisible, setIsHeaderVisible] = useState(false);
   const [heightReductionProgress, setHeightReductionProgress] = useState(0);
   const [minHeightVh, setMinHeightVh] = useState(30);
@@ -177,60 +179,89 @@ export default function CombinedProjectsFaqSection() {
     };
   }, []);
 
+  // Memoize horizontal scroll phase constant
+  const horizontalScrollPhase = useMemo(() => 0.5, []);
+
+  // Optimized scroll handler with RAF throttling
+  const updateScrollPosition = useCallback(() => {
+    const now = performance.now();
+
+    // Throttle to ~60fps
+    if (now - lastUpdateTimeRef.current < 16) {
+      rafIdRef.current = requestAnimationFrame(updateScrollPosition);
+      return;
+    }
+
+    lastUpdateTimeRef.current = now;
+
+    if (!scrollTriggerRef.current || !scrollContainerRef.current) {
+      return;
+    }
+
+    const triggerSection = scrollTriggerRef.current;
+    const rect = triggerSection.getBoundingClientRect();
+    const sectionHeight = triggerSection.offsetHeight;
+    const viewportHeight = window.innerHeight;
+
+    // Check if header should be visible
+    const isInView = rect.top <= viewportHeight * 0.8;
+    setIsHeaderVisible(prev => prev !== isInView ? isInView : prev);
+
+    // Calculate total scrollable distance
+    const scrollableDistance = sectionHeight - viewportHeight;
+    const scrolled = -rect.top;
+    const totalProgress = Math.max(
+      0,
+      Math.min(1, scrolled / scrollableDistance),
+    );
+
+    // Phase breakdown:
+    // 0-50%: horizontal project scrolling
+    // 50-100%: height reduction to push content up
+    if (totalProgress <= horizontalScrollPhase) {
+      // Horizontal scroll phase
+      const horizontalProgress = totalProgress / horizontalScrollPhase;
+      setScrollProgress(horizontalProgress);
+      setHeightReductionProgress(0);
+
+      // Apply horizontal scroll
+      const container = scrollContainerRef.current;
+      const maxHorizontalScroll =
+        container.scrollWidth - container.clientWidth;
+      container.scrollLeft = horizontalProgress * maxHorizontalScroll;
+    } else {
+      // Height reduction phase
+      setScrollProgress(1);
+      const reductionProgress =
+        (totalProgress - horizontalScrollPhase) / (1 - horizontalScrollPhase);
+      setHeightReductionProgress(Math.min(reductionProgress, 1));
+    }
+  }, [horizontalScrollPhase]);
+
   useEffect(() => {
     const handleScroll = () => {
-      if (!scrollTriggerRef.current || !scrollContainerRef.current) return;
-
-      const triggerSection = scrollTriggerRef.current;
-      const rect = triggerSection.getBoundingClientRect();
-      const sectionHeight = triggerSection.offsetHeight;
-      const viewportHeight = window.innerHeight;
-
-      // Check if header should be visible
-      const isInView = rect.top <= viewportHeight * 0.8;
-      setIsHeaderVisible(isInView);
-
-      // Calculate total scrollable distance
-      const scrollableDistance = sectionHeight - viewportHeight;
-      const scrolled = -rect.top;
-      const totalProgress = Math.max(
-        0,
-        Math.min(1, scrolled / scrollableDistance),
-      );
-
-      // Phase breakdown:
-      // 0-50%: horizontal project scrolling
-      // 50-100%: height reduction to push content up
-      const horizontalScrollPhase = 0.5;
-
-      if (totalProgress <= horizontalScrollPhase) {
-        // Horizontal scroll phase
-        const horizontalProgress = totalProgress / horizontalScrollPhase;
-        setScrollProgress(horizontalProgress);
-        setHeightReductionProgress(0);
-
-        // Apply horizontal scroll
-        const container = scrollContainerRef.current;
-        const maxHorizontalScroll =
-          container.scrollWidth - container.clientWidth;
-        container.scrollLeft = horizontalProgress * maxHorizontalScroll;
-      } else {
-        // Height reduction phase
-        setScrollProgress(1);
-        const reductionProgress =
-          (totalProgress - horizontalScrollPhase) / (1 - horizontalScrollPhase);
-        setHeightReductionProgress(Math.min(reductionProgress, 1));
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
       }
+      rafIdRef.current = requestAnimationFrame(updateScrollPosition);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll(); // Initial calculation
 
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
+    };
+  }, [updateScrollPosition]);
 
   // Calculate dynamic height - reduce from 100vh to minimum height where projects bottom is visible
-  const currentHeight = 100 - (heightReductionProgress * (100 - minHeightVh));
+  const currentHeight = useMemo(
+    () => 100 - (heightReductionProgress * (100 - minHeightVh)),
+    [heightReductionProgress, minHeightVh]
+  );
 
   return (
     <>
@@ -243,6 +274,8 @@ export default function CombinedProjectsFaqSection() {
           style={{
             height: `${currentHeight}vh`,
             backgroundColor: heightReductionProgress > 0 ? "#000000" : "#ffffff",
+            willChange: "height, background-color",
+            transform: "translateZ(0)",
           }}
         >
           {/* Projects Container */}
@@ -310,7 +343,11 @@ export default function CombinedProjectsFaqSection() {
                 ref={scrollContainerRef}
                 data-projects-area
                 className="flex gap-6 overflow-hidden relative"
-                style={{ scrollBehavior: "auto" }}
+                style={{
+                  scrollBehavior: "auto",
+                  willChange: "scroll-position",
+                  transform: "translateZ(0)",
+                }}
               >
                 {/* Left spacer */}
                 <div className="w-[calc(50vw-45vw)] md:w-[calc(50vw-250px)] lg:w-[calc(50vw-333px)] flex-shrink-0"></div>
