@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Globe } from "lucide-react";
 import Image from "next/image";
+import Analytics from "@/lib/analytics";
 
 interface NavBarProps {
   isOpen: boolean;
@@ -79,10 +80,19 @@ const NavBar = ({ isOpen, setIsOpen }: NavBarProps) => {
 };
 
 const MenuButton = ({ isOpen, setIsOpen }: MenuButtonProps) => {
+  const handleMenuToggle = () => {
+    const newState = !isOpen;
+    setIsOpen(newState);
+    Analytics.trackButtonClick(
+      newState ? "Open Menu" : "Close Menu",
+      "Navbar"
+    );
+  };
+
   return (
     <motion.button
       className="relative z-50 w-12 h-12 flex flex-col items-center justify-center"
-      onClick={() => setIsOpen(!isOpen)}
+      onClick={handleMenuToggle}
       aria-label={isOpen ? "Close menu" : "Open menu"}
       aria-expanded={isOpen}
       initial={{ y: -100, opacity: 0 }}
@@ -267,7 +277,10 @@ const MenuOverlay = ({ setIsOpen }: MenuOverlayProps) => {
                     <motion.a
                       href={item.href}
                       className="text-white hover:text-primary text-3xl sm:text-4xl lg:text-6xl xl:text-8xl font-medium block cursor-pointer transition-colors duration-300"
-                      onClick={() => setIsOpen(false)}
+                      onClick={() => {
+                        Analytics.trackLinkClick(item.label, item.href, 'internal');
+                        setIsOpen(false);
+                      }}
                       initial={{ letterSpacing: "0em" }}
                       whileHover={{
                         letterSpacing: "0.1em",
@@ -302,6 +315,9 @@ const MenuOverlay = ({ setIsOpen }: MenuOverlayProps) => {
                   variants={socialVariants}
                   whileHover={{ scale: 1.2, rotate: 5 }}
                   whileTap={{ scale: 0.9 }}
+                  onClick={() => {
+                    Analytics.trackSocialShare(social.label, 'profile-link', 'navbar');
+                  }}
                 >
                   <social.Icon size={24} />
                 </motion.a>
@@ -373,6 +389,9 @@ const MenuOverlay = ({ setIsOpen }: MenuOverlayProps) => {
                   variants={socialVariants}
                   whileHover={{ scale: 1.2, rotate: 5 }}
                   whileTap={{ scale: 0.9 }}
+                  onClick={() => {
+                    Analytics.trackSocialShare(social.label, 'profile-link', 'navbar-mobile');
+                  }}
                 >
                   <social.Icon size={24} />
                 </motion.a>
