@@ -5,6 +5,7 @@ import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Footer } from "@/components/footer";
 import { Navbar } from "@/components/navbar";
+import { AnalyticsProvider } from "@/components/analytics-provider";
 
 const syne = Syne({
   subsets: ["latin"],
@@ -101,6 +102,7 @@ export default function RootLayout({
             <Footer />
           </ConvexClientProvider>
         </ClerkProvider>
+        <AnalyticsProvider />
       </body>
     </html>
   );

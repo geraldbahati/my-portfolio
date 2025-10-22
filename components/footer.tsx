@@ -4,6 +4,7 @@ import { motion } from "motion/react";
 import { useCallback, useState } from "react";
 import { TextScramble } from "@/components/ui/text-scramble";
 import { Separator } from "@/components/ui/separator";
+import Analytics from "@/lib/analytics";
 
 interface FooterProps {
   brand?: {
@@ -60,6 +61,10 @@ function AnimatedLink({
     setShouldTriggerScramble(false);
   }, []);
 
+  const handleClick = useCallback(() => {
+    Analytics.trackLinkClick(String(children), href, 'internal');
+  }, [children, href]);
+
   return (
     <motion.a
       href={href}
@@ -68,6 +73,7 @@ function AnimatedLink({
       } ${className}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onClick={handleClick}
       whileHover={{ x: 2 }}
     >
       <TextScramble
