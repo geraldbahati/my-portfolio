@@ -213,14 +213,21 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
   return (
     <section
       className="relative min-h-screen overflow-hidden"
-      style={{ backgroundColor: "#0a0a0a" }}
+      style={{
+        backgroundColor: "#0a0a0a",
+        contain: "layout style paint",
+      }}
       role="banner"
     >
       {/* Profile Background Image */}
       <div className="absolute inset-0 z-0 flex items-start justify-center">
         <motion.div
-          className="relative w-full h-full sm:w-[1920px] sm:h-[1080px] will-change-transform"
-          style={{ scale: imageScale }}
+          className="relative w-full h-full sm:w-[1920px] sm:h-[1080px]"
+          style={{
+            scale: imageScale,
+            willChange: "transform",
+            transform: "translateZ(0)", // Force GPU acceleration
+          }}
         >
           <Image
             src="/habibi.png"
@@ -230,6 +237,9 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
             className="object-cover sm:object-contain mix-blend-screen"
             sizes="(max-width: 640px) 100vw, (max-width: 1280px) 100vw, 1920px"
             quality={85}
+            style={{
+              transform: "translateZ(0)", // Force GPU layer
+            }}
           />
         </motion.div>
       </div>
@@ -254,7 +264,7 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
       {mounted && (
         <GridPattern
           className="absolute inset-0 z-10"
-          gridClassName="stroke-current/5"
+          gridClassName="stroke-current/20"
           width={32}
           height={32}
           surroundingCells={4}

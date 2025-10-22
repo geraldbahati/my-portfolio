@@ -175,7 +175,7 @@ export default function InfoSection() {
       <div className="absolute inset-0 z-0">
         <GridPattern
           className="pointer-events-none"
-          gridClassName="stroke-current/10"
+          gridClassName="stroke-current/5"
           width={32}
           height={32}
           strokeDasharray="0"
