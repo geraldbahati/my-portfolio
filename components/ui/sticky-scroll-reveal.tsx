@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 
@@ -24,6 +24,8 @@ export const StickyScrollReveal = ({
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const rafIdRef = useRef<number | null>(null);
+  const lastUpdateTimeRef = useRef(0);
 
   // Detect mobile/desktop
   useEffect(() => {
@@ -37,78 +39,98 @@ export const StickyScrollReveal = ({
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  // Optimized scroll handler with RAF throttling
+  const updateScrollPosition = useCallback(() => {
+    const now = performance.now();
+
+    // Throttle to ~60fps
+    if (now - lastUpdateTimeRef.current < 16) {
+      rafIdRef.current = requestAnimationFrame(updateScrollPosition);
+      return;
+    }
+
+    lastUpdateTimeRef.current = now;
+    const windowHeight = window.innerHeight;
+
+    // Find which section we're in and the progress through it
+    let foundActiveSection = false;
+
+    for (let index = 0; index < sectionRefs.current.length; index++) {
+      const ref = sectionRefs.current[index];
+      if (!ref) continue;
+
+      const rect = ref.getBoundingClientRect();
+      const sectionTop = rect.top;
+      const sectionHeight = rect.height;
+
+      // Check if this section is the active one
+      if (
+        sectionTop <= windowHeight * 0.5 &&
+        sectionTop > -sectionHeight + windowHeight * 0.5
+      ) {
+        // Calculate progress through this specific section (0 to 1)
+        const progress = 1 - sectionTop / (windowHeight * 0.5);
+        const clampedProgress = Math.max(0, Math.min(1, progress));
+
+        // Only update state if changed (reduces re-renders)
+        setActiveSection(prev => prev !== index ? index : prev);
+        setScrollProgress(clampedProgress);
+        foundActiveSection = true;
+        break; // Early exit once we found active section
+      }
+    }
+
+    if (!foundActiveSection) {
+      rafIdRef.current = requestAnimationFrame(updateScrollPosition);
+    }
+  }, []);
+
   // Track which section is in view and scroll progress
   useEffect(() => {
     const handleScroll = () => {
-      // Calculate overall scroll progress through all sections
-      const windowHeight = window.innerHeight;
-
-      // Find which section we're in and the progress through it
-      sectionRefs.current.forEach((ref, index) => {
-        if (!ref) return;
-
-        const rect = ref.getBoundingClientRect();
-        const sectionTop = rect.top;
-        const sectionHeight = rect.height;
-
-        // Check if this section is the active one
-        if (
-          sectionTop <= windowHeight * 0.5 &&
-          sectionTop > -sectionHeight + windowHeight * 0.5
-        ) {
-          // Calculate progress through this specific section (0 to 1)
-          const progress = 1 - sectionTop / (windowHeight * 0.5);
-          const clampedProgress = Math.max(0, Math.min(1, progress));
-
-          // Only update if this is a different section or progress changed significantly
-          if (index !== activeSection) {
-            setActiveSection(index);
-            setScrollProgress(0); // Reset progress when entering new section
-          } else {
-            setScrollProgress(clampedProgress);
-          }
-        }
-      });
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
+      rafIdRef.current = requestAnimationFrame(updateScrollPosition);
     };
 
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll(); // Initial check
 
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [activeSection]);
-
-  // Track section intersections for more reliable section detection
-  useEffect(() => {
-    const currentSections = sectionRefs.current;
-    const observers = currentSections.map((ref, index) => {
-      if (!ref) return null;
-
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
-              setActiveSection(index);
-            }
-          });
-        },
-        {
-          threshold: [0.5],
-          rootMargin: "-20% 0px -20% 0px",
-        },
-      );
-
-      observer.observe(ref);
-      return observer;
-    });
-
     return () => {
-      observers.forEach((observer, index) => {
-        if (observer && currentSections[index]) {
-          observer.unobserve(currentSections[index]!);
-        }
-      });
+      window.removeEventListener("scroll", handleScroll);
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
     };
-  }, [sections.length]);
+  }, [updateScrollPosition]);
+
+  // Memoize clip path calculation for performance
+  const calculateClipPath = useCallback((index: number) => {
+    const isActive = activeSection === index;
+    const isPrevious = activeSection === index + 1;
+
+    if (index === 0) {
+      if (isActive || (activeSection === 1 && scrollProgress < 1)) {
+        if (activeSection === 1 && scrollProgress < 1) {
+          return `inset(0 0 ${scrollProgress * 100}% 0)`;
+        }
+        return "inset(0 0 0 0)";
+      }
+      return "inset(0 0 100% 0)";
+    }
+
+    if (isActive) {
+      return `inset(${100 - scrollProgress * 100}% 0 0 0)`;
+    }
+    if (isPrevious && scrollProgress < 1) {
+      return `inset(0 0 ${scrollProgress * 100}% 0)`;
+    }
+    if (index < activeSection) {
+      return "inset(0 0 0 0)";
+    }
+    return "inset(0 0 100% 0)";
+  }, [activeSection, scrollProgress]);
 
   // Mobile Layout - Image above content
   if (isMobile) {
@@ -366,6 +388,8 @@ export const StickyScrollReveal = ({
                   top: "calc(50vh - 300px)",
                   width: "600px",
                   height: "600px",
+                  willChange: "transform",
+                  transform: "translateZ(0)",
                 }}
                 initial={{ opacity: 0, y: 350 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -378,44 +402,12 @@ export const StickyScrollReveal = ({
                     const isActive = activeSection === index;
                     const isPrevious = activeSection === index + 1;
 
-                    // Calculate clip path based on scroll progress
-                    let clipPath = "inset(0 0 100% 0)"; // Hidden by default
-
-                    if (index === 0) {
-                      // First image doesn't slide in, it's always fully visible when active
-                      if (
-                        isActive ||
-                        (activeSection === 1 && scrollProgress < 1)
-                      ) {
-                        clipPath = "inset(0 0 0 0)"; // Fully visible
-                      }
-                      // When transitioning to second image, first image slides out
-                      if (activeSection === 1 && scrollProgress < 1) {
-                        const progress = scrollProgress;
-                        clipPath = `inset(0 0 ${progress * 100}% 0)`;
-                      }
-                    } else {
-                      // All other images use the slide transition
-                      if (isActive) {
-                        // Current image slides in from bottom
-                        const progress = scrollProgress;
-                        clipPath = `inset(${100 - progress * 100}% 0 0 0)`;
-                      } else if (isPrevious && scrollProgress < 1) {
-                        // Previous image slides out to top
-                        const progress = scrollProgress;
-                        clipPath = `inset(0 0 ${progress * 100}% 0)`;
-                      } else if (index < activeSection) {
-                        // Images that have been passed are fully visible but below current
-                        clipPath = "inset(0 0 0 0)";
-                      }
-                    }
-
                     return (
                       <div
                         key={`image-${index}`}
                         className={`absolute inset-0 w-full h-full ${contentClassName || ""}`}
                         style={{
-                          clipPath: clipPath,
+                          clipPath: calculateClipPath(index),
                           zIndex:
                             index === 0 && (isActive || isPrevious)
                               ? 25
@@ -426,7 +418,8 @@ export const StickyScrollReveal = ({
                                   : index < activeSection
                                     ? 5
                                     : 1,
-                          transition: "none", // No transition for immediate response to scroll
+                          willChange: "clip-path",
+                          transform: "translateZ(0)",
                         }}
                       >
                         {section.content ? (
