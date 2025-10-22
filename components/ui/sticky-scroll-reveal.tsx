@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 
@@ -73,7 +73,7 @@ export const StickyScrollReveal = ({
         const clampedProgress = Math.max(0, Math.min(1, progress));
 
         // Only update state if changed (reduces re-renders)
-        setActiveSection(prev => prev !== index ? index : prev);
+        setActiveSection((prev) => (prev !== index ? index : prev));
         setScrollProgress(clampedProgress);
         foundActiveSection = true;
         break; // Early exit once we found active section
@@ -106,31 +106,34 @@ export const StickyScrollReveal = ({
   }, [updateScrollPosition]);
 
   // Memoize clip path calculation for performance
-  const calculateClipPath = useCallback((index: number) => {
-    const isActive = activeSection === index;
-    const isPrevious = activeSection === index + 1;
+  const calculateClipPath = useCallback(
+    (index: number) => {
+      const isActive = activeSection === index;
+      const isPrevious = activeSection === index + 1;
 
-    if (index === 0) {
-      if (isActive || (activeSection === 1 && scrollProgress < 1)) {
-        if (activeSection === 1 && scrollProgress < 1) {
-          return `inset(0 0 ${scrollProgress * 100}% 0)`;
+      if (index === 0) {
+        if (isActive || (activeSection === 1 && scrollProgress < 1)) {
+          if (activeSection === 1 && scrollProgress < 1) {
+            return `inset(0 0 ${scrollProgress * 100}% 0)`;
+          }
+          return "inset(0 0 0 0)";
         }
+        return "inset(0 0 100% 0)";
+      }
+
+      if (isActive) {
+        return `inset(${100 - scrollProgress * 100}% 0 0 0)`;
+      }
+      if (isPrevious && scrollProgress < 1) {
+        return `inset(0 0 ${scrollProgress * 100}% 0)`;
+      }
+      if (index < activeSection) {
         return "inset(0 0 0 0)";
       }
       return "inset(0 0 100% 0)";
-    }
-
-    if (isActive) {
-      return `inset(${100 - scrollProgress * 100}% 0 0 0)`;
-    }
-    if (isPrevious && scrollProgress < 1) {
-      return `inset(0 0 ${scrollProgress * 100}% 0)`;
-    }
-    if (index < activeSection) {
-      return "inset(0 0 0 0)";
-    }
-    return "inset(0 0 100% 0)";
-  }, [activeSection, scrollProgress]);
+    },
+    [activeSection, scrollProgress],
+  );
 
   // Mobile Layout - Image above content
   if (isMobile) {
