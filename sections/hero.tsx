@@ -221,9 +221,9 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
       role="banner"
     >
       {/* Profile Background Image */}
-      <div className="absolute inset-0 z-0 flex items-start justify-center">
+      <div className="absolute inset-0 z-0 flex items-center justify-center">
         <motion.div
-          className="relative w-full h-full sm:w-[1920px] sm:h-[1080px]"
+          className="relative w-full h-full"
           style={{
             scale: imageScale,
             willChange: "transform",
@@ -232,12 +232,12 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
         >
           <Image
             src="/habibi.png"
-            alt=""
+            alt="Gerald Bahati - Web Designer"
             fill
             priority
-            className="object-cover sm:object-contain mix-blend-screen"
+            className="object-cover sm:object-contain mix-blend-screen opacity-80 sm:opacity-100"
             sizes="(max-width: 640px) 100vw, (max-width: 1280px) 100vw, 1920px"
-            quality={isMobile ? 60 : 85} // Lower quality on mobile for faster loading
+            quality={60}
             style={{
               transform: "translateZ(0)", // Force GPU layer
             }}
