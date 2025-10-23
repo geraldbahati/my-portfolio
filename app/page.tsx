@@ -1,9 +1,27 @@
-import HeroBioOverlay from "@/sections/hero-bio-overlay";
-import InfoSection from "@/sections/info";
-import CombinedProjectsFaqSection from "@/sections/combined-projects-faq";
-import { SectionDivider } from "@/components/section-divider";
+import dynamicImport from 'next/dynamic';
 import type { Metadata } from "next";
-import ContactSection from "@/sections/contact";
+
+// Above fold - load immediately
+import HeroBioOverlay from "@/sections/hero-bio-overlay";
+
+// Below fold - lazy load for better initial load performance
+const InfoSection = dynamicImport(() => import("@/sections/info"), {
+  ssr: true, // Keep SSR for SEO
+});
+const SectionDivider = dynamicImport(() =>
+  import("@/components/section-divider").then(mod => ({ default: mod.SectionDivider })),
+  { ssr: true }
+);
+const CombinedProjectsFaqSection = dynamicImport(() => import("@/sections/combined-projects-faq"), {
+  ssr: true,
+});
+const ContactSection = dynamicImport(() => import("@/sections/contact"), {
+  ssr: true,
+});
+
+// Performance Optimization: Enable Static Site Generation
+export const dynamic = 'force-static';
+export const revalidate = 3600; // Revalidate every hour (ISR)
 
 // SEO Metadata
 export const metadata: Metadata = {
