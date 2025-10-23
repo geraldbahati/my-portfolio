@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Syne, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import ConvexClientProvider from "@/components/ConvexClientProvider";
-import { ClerkProvider } from "@clerk/nextjs";
+// import ConvexClientProvider from "@/components/ConvexClientProvider";
+// import { ClerkProvider } from "@clerk/nextjs";
 import { Footer } from "@/components/footer";
 import { Navbar } from "@/components/navbar";
 import { AnalyticsProvider } from "@/components/analytics-provider";
@@ -10,11 +10,15 @@ import { AnalyticsProvider } from "@/components/analytics-provider";
 const syne = Syne({
   subsets: ["latin"],
   variable: "--font-sans",
+  display: 'swap', // Show fallback font immediately while loading
+  preload: true,
 });
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
+  display: 'swap', // Show fallback font immediately while loading
+  preload: false, // Only preload if heavily used
 });
 
 export const metadata: Metadata = {
@@ -95,13 +99,15 @@ export default function RootLayout({
       <body
         className={`${syne.variable} ${jetbrainsMono.variable} antialiased bg-background`}
       >
-        <ClerkProvider dynamic>
-          <ConvexClientProvider>
+        {/* Performance: Clerk and Convex providers commented out as they're not used on the homepage
+            This improves TTFB. Re-enable on specific routes if needed. */}
+        {/* <ClerkProvider dynamic> */}
+          {/* <ConvexClientProvider> */}
             <Navbar />
             {children}
             <Footer />
-          </ConvexClientProvider>
-        </ClerkProvider>
+          {/* </ConvexClientProvider> */}
+        {/* </ClerkProvider> */}
         <AnalyticsProvider />
       </body>
     </html>

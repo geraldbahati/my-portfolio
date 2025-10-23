@@ -11,17 +11,29 @@ import {
 import dynamic from "next/dynamic";
 import Image from "next/image";
 
-// Lazy load heavy components
+// Detect mobile for performance optimizations
+const isMobileDevice = () => {
+  if (typeof window === 'undefined') return false;
+  return window.innerWidth < 768;
+};
+
+// Lazy load heavy components with loading optimization
 const GridPattern = dynamic(
   () => import("@/components/ui/shadcn-io/grid-pattern"),
-  { ssr: false },
+  {
+    ssr: false,
+    loading: () => null, // No loading state to avoid layout shift
+  },
 );
 const TextScramble = dynamic(
   () =>
     import("@/components/ui/text-scramble").then((mod) => ({
       default: mod.TextScramble,
     })),
-  { ssr: false },
+  {
+    ssr: false,
+    loading: () => <span>Gerald Bahati</span>, // Show text immediately
+  },
 );
 
 // Animation timing constants
@@ -170,40 +182,29 @@ interface HeroSectionProps {
 
 export default function HeroSection({ scrollProgress }: HeroSectionProps) {
   const [mounted, setMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [nameScrambling, setNameScrambling] = useState(false);
-  const [scrambleCount, setScrambleCount] = useState(0);
-  const scrambleIntervalRef = useRef<NodeJS.Timeout>(null);
   const stopScrambleTimeoutRef = useRef<NodeJS.Timeout>(null);
 
-  // Scale image down as user scrolls (from 1 to 0.85)
-  // Create a default motion value if scrollProgress is not provided
+  // Scale image down as user scrolls (from 1 to 0.85) - disabled on mobile for performance
   const defaultProgress = useRef(motionValue(0));
   const activeProgress = scrollProgress ?? defaultProgress.current;
-  const imageScale = useTransform(activeProgress, [0, 1], [1, 0.85]);
+  const imageScale = useTransform(activeProgress, [0, 1], [1, isMobile ? 1 : 0.85]);
 
   useEffect(() => {
     setMounted(true);
+    const mobile = isMobileDevice();
+    setIsMobile(mobile);
 
-    // Start continuous scrambling immediately
-    setNameScrambling(true);
-
-    // Set up interval to retrigger scramble
-    scrambleIntervalRef.current = setInterval(() => {
-      setScrambleCount((prev) => prev + 1);
-    }, ANIMATION_DURATIONS.NAME_SCRAMBLE + 100); // Small gap between scrambles
-
-    // Stop scrambling when all content appears (after CTA animation starts)
-    stopScrambleTimeoutRef.current = setTimeout(() => {
-      setNameScrambling(false);
-      if (scrambleIntervalRef.current) {
-        clearInterval(scrambleIntervalRef.current);
-      }
-    }, ANIMATION_DELAYS.CTA + 200); // Stop shortly after CTA starts animating
+    // Mobile performance: Skip scramble animation on mobile devices
+    if (!mobile) {
+      setNameScrambling(true);
+      stopScrambleTimeoutRef.current = setTimeout(() => {
+        setNameScrambling(false);
+      }, 800);
+    }
 
     return () => {
-      if (scrambleIntervalRef.current) {
-        clearInterval(scrambleIntervalRef.current);
-      }
       if (stopScrambleTimeoutRef.current) {
         clearTimeout(stopScrambleTimeoutRef.current);
       }
@@ -236,7 +237,7 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
             priority
             className="object-cover sm:object-contain mix-blend-screen"
             sizes="(max-width: 640px) 100vw, (max-width: 1280px) 100vw, 1920px"
-            quality={85}
+            quality={isMobile ? 60 : 85} // Lower quality on mobile for faster loading
             style={{
               transform: "translateZ(0)", // Force GPU layer
             }}
@@ -260,8 +261,8 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
         }}
       />
 
-      {/* Grid Pattern Background - Memoized for performance */}
-      {mounted && (
+      {/* Grid Pattern Background - Disabled on mobile for performance */}
+      {mounted && !isMobile && (
         <GridPattern
           className="absolute inset-0 z-10"
           gridClassName="stroke-current/20"
@@ -299,16 +300,23 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
                       ease: "easeInOut",
                     }}
                   >
-                    <TextScramble
-                      key={nameScrambling ? scrambleCount : "stopped"} // Force re-render only when scrambling
-                      className="text-xs sm:text-sm lg:text-base font-light text-primary tracking-[0.2em] sm:tracking-[0.3em] uppercase"
-                      trigger={nameScrambling}
-                      duration={ANIMATION_DURATIONS.NAME_SCRAMBLE}
-                      speed={ANIMATION_DURATIONS.NAME_SCRAMBLE_SPEED}
-                      as="p"
-                    >
-                      Gerald Bahati
-                    </TextScramble>
+                    {/* Show plain text on mobile, TextScramble on desktop for performance */}
+                    {isMobile ? (
+                      <p className="text-xs sm:text-sm lg:text-base font-light text-primary tracking-[0.2em] sm:tracking-[0.3em] uppercase">
+                        Gerald Bahati
+                      </p>
+                    ) : (
+                      <TextScramble
+                        key={nameScrambling ? "scrambling" : "stopped"}
+                        className="text-xs sm:text-sm lg:text-base font-light text-primary tracking-[0.2em] sm:tracking-[0.3em] uppercase"
+                        trigger={nameScrambling}
+                        duration={ANIMATION_DURATIONS.NAME_SCRAMBLE}
+                        speed={ANIMATION_DURATIONS.NAME_SCRAMBLE_SPEED}
+                        as="p"
+                      >
+                        Gerald Bahati
+                      </TextScramble>
+                    )}
                   </motion.div>
                 </motion.div>
 
@@ -318,35 +326,25 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
                   custom={ANIMATION_DELAYS.TITLE}
                   variants={itemVariants}
                 >
-                  <h1
-                    className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-thin leading-[0.9] sm:leading-none tracking-tight grid-interaction-blocked pointer-events-auto text-white"
-                    style={{ fontSize: "2.25rem" }}
-                  >
+                  <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-thin leading-[0.9] sm:leading-none tracking-tight grid-interaction-blocked pointer-events-auto text-white">
                     <motion.span
                       className="inline-block font-medium"
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{
-                        duration: 0.8,
-                        delay: 0.3,
-                        ease: [0.22, 1, 0.36, 1],
+                        duration: 0.6,
+                        delay: 0.1,
+                        ease: "easeOut",
                       }}
                     >
                       Web design
                     </motion.span>
-                    <motion.span
+                    <span
                       className="text-muted-foreground mx-2 sm:mx-3"
                       aria-hidden="true"
-                      initial={{ opacity: 0, scale: 0 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{
-                        duration: 0.5,
-                        delay: 0.6,
-                        ease: [0.22, 1, 0.36, 1],
-                      }}
                     >
                       /
-                    </motion.span>
+                    </span>
                     <motion.span
                       className="inline-block text-transparent
                       [text-stroke:1px_rgba(255,255,255,1)] [-webkit-text-stroke:1px_rgba(255,255,255,1)]
@@ -354,9 +352,9 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{
-                        duration: 0.8,
-                        delay: 0.8,
-                        ease: [0.22, 1, 0.36, 1],
+                        duration: 0.6,
+                        delay: 0.2,
+                        ease: "easeOut",
                       }}
                     >
                       Digital Marketing
@@ -370,22 +368,13 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
                   custom={ANIMATION_DELAYS.DESCRIPTION}
                   variants={itemVariants}
                 >
-                  {/* Description */}
-                  <motion.div
-                    className="flex-1 lg:max-w-2xl"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{
-                      duration: 0.8,
-                      delay: 1,
-                      ease: [0.22, 1, 0.36, 1],
-                    }}
-                  >
+                  {/* Description - LCP element, no animation delay for performance */}
+                  <div className="flex-1 lg:max-w-2xl">
                     <p className="text-sm sm:text-base lg:text-lg text-muted-foreground font-light leading-relaxed tracking-wide grid-interaction-blocked pointer-events-auto">
                       Design meets Performance – creative web design and digital
                       marketing delivered precisely.
                     </p>
-                  </motion.div>
+                  </div>
 
                   {/* CTA Text */}
                   <motion.div
