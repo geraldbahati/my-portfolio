@@ -17,7 +17,7 @@ const nextConfig: NextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 60,
-    qualities: [75, 85, 90, 100],
+    qualities: [60, 75, 85, 90, 100], // Added 60 for mobile optimization
   },
 
   // Experimental optimizations

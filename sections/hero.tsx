@@ -235,7 +235,7 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
             alt="Gerald Bahati - Web Designer"
             fill
             priority
-            className="object-cover sm:object-contain mix-blend-screen opacity-80 sm:opacity-100"
+            className="object-cover sm:object-contain sm:mix-blend-screen"
             sizes="(max-width: 640px) 100vw, (max-width: 1280px) 100vw, 1920px"
             quality={60}
             style={{
