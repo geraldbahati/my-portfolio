@@ -21,9 +21,9 @@ const CombinedProjectsFaqSection = dynamicImport(
     ssr: true,
   },
 );
-// const ContactSection = dynamicImport(() => import("@/sections/contact"), {
-//   ssr: true,
-// });
+const ContactSection = dynamicImport(() => import("@/sections/contact"), {
+  ssr: true,
+});
 
 // Performance Optimization: Enable Static Site Generation
 export const dynamic = "force-static";
@@ -119,11 +119,11 @@ export default function Home() {
         <CombinedProjectsFaqSection />
       </div>
 
-      {/* <div className="bg-black">
+      <div className="bg-black">
         <div id="ContactSection">
           <ContactSection />
         </div>
-      </div> */}
+      </div>
 
       {/* Debug Info - Remove in production */}
       {/*<BackgroundDebugInfo />*/}
