@@ -10,83 +10,99 @@ import { AnalyticsProvider } from "@/components/analytics-provider";
 const syne = Syne({
   subsets: ["latin"],
   variable: "--font-sans",
-  display: 'swap', // Show fallback font immediately while loading
+  display: "swap", // Show fallback font immediately while loading
   preload: true,
 });
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
-  display: 'swap', // Show fallback font immediately while loading
+  display: "swap", // Show fallback font immediately while loading
   preload: false, // Only preload if heavily used
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://geraldbahati.com'),
+  metadataBase: new URL("https://geraldbahati.com"),
   title: {
-    default: 'Gerald Bahati - Full Stack Developer & Digital Creative',
-    template: '%s | Gerald Bahati',
+    default: "Gerald Bahati - Full Stack Developer & Digital Creative",
+    template: "%s | Gerald Bahati",
   },
-  description: 'Experienced full stack developer specializing in modern web technologies, digital solutions, and creative design. Building exceptional web applications with Next.js, React, TypeScript, and more.',
+  description:
+    "Experienced full stack developer specializing in modern web technologies, digital solutions, and creative design. Building exceptional web applications with Next.js, React, TypeScript, and more.",
+  applicationName: "Gerald Bahati Portfolio",
   keywords: [
-    'Gerald Bahati',
-    'full stack developer',
-    'web developer',
-    'digital creative',
-    'Next.js developer',
-    'React developer',
-    'TypeScript',
-    'web design',
-    'Trier developer',
-    'Germany web development',
+    "Gerald Bahati",
+    "full stack developer",
+    "web developer",
+    "digital creative",
+    "Next.js developer",
+    "React developer",
+    "TypeScript",
+    "web design",
+    "Trier developer",
+    "Germany web development",
+    "software engineer",
+    "frontend developer",
+    "backend developer",
   ],
-  authors: [{ name: 'Gerald Bahati', url: 'https://geraldbahati.com' }],
-  creator: 'Gerald Bahati',
-  publisher: 'Gerald Bahati',
+  authors: [{ name: "Gerald Bahati", url: "https://geraldbahati.com" }],
+  creator: "Gerald Bahati",
+  publisher: "Gerald Bahati",
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
   icons: {
-    icon: '/convex.svg',
+    icon: "/convex.svg",
+    apple: "/convex.svg",
   },
   openGraph: {
-    type: 'website',
-    locale: 'en_US',
-    url: 'https://geraldbahati.com',
-    siteName: 'Gerald Bahati Portfolio',
-    title: 'Gerald Bahati - Full Stack Developer & Digital Creative',
-    description: 'Experienced full stack developer specializing in modern web technologies, digital solutions, and creative design.',
+    type: "website",
+    locale: "en_US",
+    url: "https://geraldbahati.com",
+    siteName: "Gerald Bahati Portfolio",
+    title: "Gerald Bahati - Full Stack Developer & Digital Creative",
+    description:
+      "Experienced full stack developer specializing in modern web technologies, digital solutions, and creative design. Building exceptional web applications with Next.js, React, TypeScript, and more.",
     images: [
       {
-        url: '/og-image.png',
+        url: "https://geraldbahati.com/original.jpeg",
         width: 1200,
         height: 630,
-        alt: 'Gerald Bahati - Full Stack Developer',
+        alt: "Gerald Bahati - Full Stack Developer & Digital Creative",
+        type: "image/jpeg",
       },
     ],
   },
   twitter: {
-    card: 'summary_large_image',
-    title: 'Gerald Bahati - Full Stack Developer & Digital Creative',
-    description: 'Experienced full stack developer specializing in modern web technologies, digital solutions, and creative design.',
-    images: ['/og-image.png'],
+    card: "summary_large_image",
+    title: "Gerald Bahati - Full Stack Developer & Digital Creative",
+    description:
+      "Experienced full stack developer specializing in modern web technologies, digital solutions, and creative design. Building exceptional web applications with Next.js, React, TypeScript, and more.",
+    creator: "@geraldbahati",
+    images: {
+      url: "https://geraldbahati.com/original.jpeg",
+      alt: "Gerald Bahati - Full Stack Developer & Digital Creative",
+    },
   },
   robots: {
     index: true,
     follow: true,
+    nocache: false,
     googleBot: {
       index: true,
       follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
+      noimageindex: false,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
     },
   },
   alternates: {
-    canonical: 'https://geraldbahati.com',
+    canonical: "https://geraldbahati.com",
   },
+  category: "technology",
 };
 
 export default function RootLayout({
@@ -102,11 +118,11 @@ export default function RootLayout({
         {/* Performance: Clerk and Convex providers commented out as they're not used on the homepage
             This improves TTFB. Re-enable on specific routes if needed. */}
         {/* <ClerkProvider dynamic> */}
-          {/* <ConvexClientProvider> */}
-            <Navbar />
-            {children}
-            <Footer />
-          {/* </ConvexClientProvider> */}
+        {/* <ConvexClientProvider> */}
+        <Navbar />
+        {children}
+        <Footer />
+        {/* </ConvexClientProvider> */}
         {/* </ClerkProvider> */}
         <AnalyticsProvider />
       </body>
