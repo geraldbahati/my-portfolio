@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     url: "/projects",
     images: [
       {
-        url: "/og-image.png",
+        url: "/original.jpeg",
         width: 1200,
         height: 630,
         alt: "Projects Portfolio",
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     title: "Projects - Creative Digital Solutions",
     description:
       "Explore a curated selection of projects showcasing quality digital solutions.",
-    images: ["/og-image.png"],
+    images: ["/original.jpeg"],
   },
   alternates: {
     canonical: "/projects",

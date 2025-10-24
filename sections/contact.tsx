@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import PixelBlast from "@/components/ui/pixel-blast";
+import GridPattern from "@/components/ui/shadcn-io/grid-pattern";
 import { TextScramble } from "@/components/ui/text-scramble";
 
 interface ContactSectionProps {
@@ -61,23 +61,15 @@ export default function ContactSection({
       aria-label="Contact call-to-action section"
     >
       <div className="absolute inset-0 w-full h-full z-0">
-        <PixelBlast
-          className="w-full h-full"
-          variant="circle"
-          pixelSize={4}
-          color="primary"
-          patternScale={3}
-          patternDensity={0.6}
-          enableRipples={true}
-          rippleIntensityScale={1.2}
-          rippleSpeed={0.4}
-          edgeFade={0.3}
-          liquid={true}
-          liquidStrength={0.08}
-          transparent={true}
+        <GridPattern
+          width={32}
+          height={32}
+          gridClassName="stroke-gray-400/20"
+          surroundingCells={4}
+          surroundingRadius={1}
         />
       </div>
-      <div className="relative z-10 text-center max-w-7xl mx-auto">
+      <div className="relative z-10 text-center max-w-7xl mx-auto grid-interaction-blocked">
         <h2 className="text-4xl sm:text-6xl md:text-7xl lg:text-7xl font-light text-white tracking-wide drop-shadow-2xl">
           <Link
             href="/contact"
