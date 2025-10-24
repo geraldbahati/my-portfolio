@@ -15,9 +15,12 @@ const SectionDivider = dynamicImport(
     })),
   { ssr: true },
 );
-// const CombinedProjectsFaqSection = dynamicImport(() => import("@/sections/combined-projects-faq"), {
-//   ssr: true,
-// });
+const CombinedProjectsFaqSection = dynamicImport(
+  () => import("@/sections/combined-projects-faq"),
+  {
+    ssr: true,
+  },
+);
 // const ContactSection = dynamicImport(() => import("@/sections/contact"), {
 //   ssr: true,
 // });
@@ -102,7 +105,7 @@ export default function Home() {
       <InfoSection />
 
       {/* Section Divider */}
-      {/* <section className="relative bg-white py-16">
+      <section className="relative bg-white py-16">
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <SectionDivider
             label="FEATURED PROJECTS"
@@ -116,7 +119,7 @@ export default function Home() {
         <CombinedProjectsFaqSection />
       </div>
 
-      <div className="bg-black">
+      {/* <div className="bg-black">
         <div id="ContactSection">
           <ContactSection />
         </div>
