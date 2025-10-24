@@ -13,7 +13,7 @@ import Image from "next/image";
 
 // Detect mobile for performance optimizations
 const isMobileDevice = () => {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === "undefined") return false;
   return window.innerWidth < 768;
 };
 
@@ -189,7 +189,11 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
   // Scale image down as user scrolls (from 1 to 0.85) - disabled on mobile for performance
   const defaultProgress = useRef(motionValue(0));
   const activeProgress = scrollProgress ?? defaultProgress.current;
-  const imageScale = useTransform(activeProgress, [0, 1], [1, isMobile ? 1 : 0.85]);
+  const imageScale = useTransform(
+    activeProgress,
+    [0, 1],
+    [1, isMobile ? 1 : 0.85],
+  );
 
   useEffect(() => {
     setMounted(true);
@@ -262,7 +266,7 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
       />
 
       {/* Grid Pattern Background - Disabled on mobile for performance */}
-      {mounted && !isMobile && (
+      {mounted && (
         <GridPattern
           className="absolute inset-0 z-10"
           gridClassName="stroke-current/20"
