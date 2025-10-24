@@ -1,4 +1,4 @@
-import dynamicImport from 'next/dynamic';
+import dynamicImport from "next/dynamic";
 import type { Metadata } from "next";
 
 // Above fold - load immediately
@@ -8,19 +8,22 @@ import HeroBioOverlay from "@/sections/hero-bio-overlay";
 const InfoSection = dynamicImport(() => import("@/sections/info"), {
   ssr: true, // Keep SSR for SEO
 });
-const SectionDivider = dynamicImport(() =>
-  import("@/components/section-divider").then(mod => ({ default: mod.SectionDivider })),
-  { ssr: true }
+const SectionDivider = dynamicImport(
+  () =>
+    import("@/components/section-divider").then((mod) => ({
+      default: mod.SectionDivider,
+    })),
+  { ssr: true },
 );
-const CombinedProjectsFaqSection = dynamicImport(() => import("@/sections/combined-projects-faq"), {
-  ssr: true,
-});
-const ContactSection = dynamicImport(() => import("@/sections/contact"), {
-  ssr: true,
-});
+// const CombinedProjectsFaqSection = dynamicImport(() => import("@/sections/combined-projects-faq"), {
+//   ssr: true,
+// });
+// const ContactSection = dynamicImport(() => import("@/sections/contact"), {
+//   ssr: true,
+// });
 
 // Performance Optimization: Enable Static Site Generation
-export const dynamic = 'force-static';
+export const dynamic = "force-static";
 export const revalidate = 3600; // Revalidate every hour (ISR)
 
 // SEO Metadata
@@ -99,7 +102,7 @@ export default function Home() {
       <InfoSection />
 
       {/* Section Divider */}
-      <section className="relative bg-white py-16">
+      {/* <section className="relative bg-white py-16">
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <SectionDivider
             label="FEATURED PROJECTS"
@@ -117,7 +120,7 @@ export default function Home() {
         <div id="ContactSection">
           <ContactSection />
         </div>
-      </div>
+      </div> */}
 
       {/* Debug Info - Remove in production */}
       {/*<BackgroundDebugInfo />*/}
