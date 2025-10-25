@@ -1,5 +1,6 @@
 import dynamicImport from "next/dynamic";
 import type { Metadata } from "next";
+import { cacheLife } from "next/cache";
 
 // Above fold - load immediately
 import HeroBioOverlay from "@/sections/hero-bio-overlay";
@@ -24,10 +25,6 @@ const CombinedProjectsFaqSection = dynamicImport(
 const ContactSection = dynamicImport(() => import("@/sections/contact"), {
   ssr: true,
 });
-
-// Performance Optimization: Enable Static Site Generation
-export const dynamic = "force-static";
-export const revalidate = 3600; // Revalidate every hour (ISR)
 
 // SEO Metadata
 export const metadata: Metadata = {
@@ -84,7 +81,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Home() {
+export default async function Home() {
+  "use cache";
+  cacheLife("hours");
+
   return (
     <>
       {/* Hero and Bio with scroll-triggered overlay effect */}

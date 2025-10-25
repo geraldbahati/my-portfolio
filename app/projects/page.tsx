@@ -1,9 +1,7 @@
 import { Metadata } from "next";
+import { cacheLife } from "next/cache";
 import { ProjectsGrid } from "@/components/projects-grid";
 import { projects } from "./data";
-
-// SSG configuration with ISR (revalidate every 60 seconds)
-export const revalidate = 60;
 
 // SEO Metadata
 export const metadata: Metadata = {
@@ -47,12 +45,15 @@ export const metadata: Metadata = {
 };
 
 /**
- * Projects Page - SSG with ISR
+ * Projects Page - Cached with Cache Components
  *
- * This page is statically generated at build time and revalidated every 60 seconds.
+ * This page is cached and revalidated every minute for optimal performance.
  * All content is server-rendered for optimal SEO and performance.
  */
-export default function ProjectsPage() {
+export default async function ProjectsPage() {
+  "use cache";
+  cacheLife("minutes");
+
   // Generate JSON-LD structured data for SEO
   const structuredData = {
     "@context": "https://schema.org",
