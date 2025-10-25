@@ -4,9 +4,6 @@ import { generateStructuredData } from "@/lib/seo";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
-// Temporarily disable static generation for this page
-export const dynamic = 'force-dynamic';
-
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
