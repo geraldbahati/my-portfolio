@@ -4,18 +4,12 @@ import { cacheLife } from "next/cache";
 
 // Above fold - load immediately
 import HeroBioOverlay from "@/sections/hero-bio-overlay";
+import { SectionDivider } from "@/components/section-divider";
 
 // Below fold - lazy load for better initial load performance
 const InfoSection = dynamicImport(() => import("@/sections/info"), {
   ssr: true, // Keep SSR for SEO
 });
-const SectionDivider = dynamicImport(
-  () =>
-    import("@/components/section-divider").then((mod) => ({
-      default: mod.SectionDivider,
-    })),
-  { ssr: true },
-);
 const CombinedProjectsFaqSection = dynamicImport(
   () => import("@/sections/combined-projects-faq"),
   {
