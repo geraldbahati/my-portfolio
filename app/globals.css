@@ -198,3 +198,45 @@
     display: none;
   }
 }
+
+@media print {
+  @page {
+    margin: 2cm;
+    size: A4;
+  }
+
+  * {
+    color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Avoid page breaks inside elements */
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  p, li {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Show link URLs for reference */
+  a[href]:after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    color: #666;
+  }
+
+  /* Don't show URLs for internal links */
+  a[href^="#"]:after,
+  a[href^="/"]:after {
+    content: "";
+  }
+}
