@@ -12,8 +12,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@clerk/clerk-react": "^5.25.0",
-    "@clerk/nextjs": "^6.12.6",
     "@convex-dev/rate-limiter": "^0.2.13",
     "@convex-dev/resend": "^0.1.13",
     "@hookform/resolvers": "^5.2.2",
