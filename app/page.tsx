@@ -1,30 +1,12 @@
-import dynamicImport from "next/dynamic";
 import type { Metadata } from "next";
 import { cacheLife } from "next/cache";
 
-// Above fold - load immediately
+// Component imports
 import HeroBioOverlay from "@/sections/hero-bio-overlay";
-
-// Below fold - lazy load for better initial load performance
-const InfoSection = dynamicImport(() => import("@/sections/info"), {
-  ssr: true, // Keep SSR for SEO
-});
-const SectionDivider = dynamicImport(
-  () =>
-    import("@/components/section-divider").then((mod) => ({
-      default: mod.SectionDivider,
-    })),
-  { ssr: true },
-);
-const CombinedProjectsFaqSection = dynamicImport(
-  () => import("@/sections/combined-projects-faq"),
-  {
-    ssr: true,
-  },
-);
-const ContactSection = dynamicImport(() => import("@/sections/contact"), {
-  ssr: true,
-});
+import { SectionDivider } from "@/components/section-divider";
+import InfoSection from "@/sections/info";
+import CombinedProjectsFaqSection from "@/sections/combined-projects-faq";
+import ContactSection from "@/sections/contact";
 
 // SEO Metadata
 export const metadata: Metadata = {
