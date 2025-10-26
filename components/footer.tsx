@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { TextScramble } from "@/components/ui/text-scramble";
 import { Separator } from "@/components/ui/separator";
 import Analytics from "@/lib/analytics";
@@ -109,8 +109,22 @@ export function Footer({
     { name: "Imprint", url: "/imprint" },
     { name: "Data protection", url: "/privacy" },
   ],
-  copyright = `©${new Date().getFullYear()} Alexander Klimenko | All rights reserved.`,
+  copyright,
 }: FooterProps) {
+  const [copyrightText, setCopyrightText] = useState<string>(
+    copyright || ""
+  );
+
+  useEffect(() => {
+    // Update copyright with current year on client-side only
+    if (!copyright) {
+      const currentYear = new Date().getFullYear();
+      setCopyrightText(`©${currentYear} Alexander Klimenko | All rights reserved.`);
+    } else {
+      setCopyrightText(copyright);
+    }
+  }, [copyright]);
+
   return (
     <footer className="bg-black text-white">
       {/* Separator line */}
@@ -214,7 +228,7 @@ export function Footer({
           viewport={{ once: true }}
           className="mt-16 pt-8"
         >
-          <p className="text-base text-gray-500">{copyright}</p>
+          <p className="text-base text-gray-500">{copyrightText}</p>
         </motion.div>
       </div>
     </footer>

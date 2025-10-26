@@ -1,180 +1,198 @@
 ---
 title: Privacy Policy
-lastUpdated: 2024-01-15
-version: 2.0
+lastUpdated: 2025-10-26
+version: 2.1
 ---
 
 # Privacy Policy
 
-*Effective Date: January 15, 2024*
+**Effective Date:** October 26, 2025
+**Version:** 2.1
 
 ## 1. Introduction
 
-Welcome to **Your Company Name** ("we," "our," or "us"). We are committed to protecting your personal information and
-your right to privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when
-you visit our website [yoursite.com](https://yoursite.com).
+Welcome to **Your Company Name** ("Company", "we", "our", or "us"). We are committed to protecting your personal information and respecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard personal information when you visit or use our website at [yoursite.com](https://yoursite.com) and related services (collectively, the "Services").
 
-Please read this privacy policy carefully. If you do not agree with the terms of this privacy policy, please do not
-access the site.
+Please read this Privacy Policy carefully. By using our Services, you agree to the collection and use of information in accordance with this policy. If you do not agree, please do not use the Services.
 
-## 2. Information We Collect {#data-collection}
+## 2. Controller & Contact Information
 
-### 2.1 Personal Information You Provide
+**Data Controller:**
+Your Company Name
+123 Main Street
+City, State 12345
+Country
 
-We collect personal information that you voluntarily provide to us when you:
+**Privacy / DPO Contact:**
+Email: privacy@yoursite.com
+Phone: +1 (555) 123-4567
 
-- Register on the website
-- Express interest in obtaining information about us or our products
-- Participate in activities on the website
-- Contact us
+For privacy inquiries, to exercise your rights, or to report a privacy concern, contact the address above.
 
-The personal information we collect may include:
+## 3. Definitions
 
-- **Name and Contact Data**: First and last name, email address, postal address, phone number
-- **Credentials**: Passwords, password hints, security information
-- **Payment Data**: Credit card numbers, billing information (processed by our payment processors)
-- **Preferences**: Your preferences and settings such as time zone and language
+- **Personal information / personal data:** Any information that identifies or can reasonably identify an individual.
+- **Processing:** Any operation performed on personal data (collection, storage, use, disclosure, deletion).
+- **Service Providers / Processors:** Third parties who process data on our behalf.
 
-### 2.2 Information Automatically Collected
+## 4. Information We Collect
 
-When you visit our website, we automatically collect certain information about your device, including:
+We collect personal information in two ways: information you provide directly and information collected automatically.
 
-- IP address
-- Browser type and version
-- Time zone setting
-- Browser plug-in types and versions
-- Operating system and platform
-- Information about your visit including URL clickstream
+### 4.1 Information You Provide
 
-We use cookies and similar tracking technologies to track activity on our website and hold certain information. You can
-instruct your browser to refuse all cookies or to indicate when a cookie is being sent.
+When you interact with our Services, you may provide:
 
-## 3. How We Use Your Information {#data-usage}
+- **Identity & Contact:** Name, email address, postal address, phone number.
+- **Account Credentials:** Username, password, password hints.
+- **Payment & Billing:** Credit/debit card details, billing address (processed by third-party payment processors).
+- **Communications:** Messages you send to us, support requests, feedback.
+- **Profile & Preferences:** Language, time zone, settings, preferences.
+- **Content you submit:** Documents, files, images, or other content you upload.
 
-We use personal information collected via our website for a variety of business purposes described below:
+### 4.2 Information Collected Automatically
 
-### 3.1 To Provide Services
+We automatically collect information when you visit or use the Services:
 
-- To provide, operate, and maintain our website
-- To improve, personalize, and expand our website
-- To understand and analyze how you use our website
-- To develop new products, services, features, and functionality
+- Device and browser information (IP address, browser type/version, operating system)
+- Usage data (pages visited, time spent, clickstream, referring URL)
+- Location data (approximate, based on IP)
+- Cookies and similar tracking technologies (see Section 7)
 
-### 3.2 Communications
+## 5. How We Use Your Information (Purposes & Legal Bases)
 
-- To communicate with you, either directly or through one of our partners
-- To send you emails
-- To provide you with updates and other information relating to the website
+We use personal information for the following purposes and legal bases (where applicable):
 
-### 3.3 Legal and Safety
+- **To provide and operate our Services.** (Performance of a contract)
+- **To manage your account and deliver customer support.** (Performance of a contract / legitimate interest)
+- **To process payments and prevent fraud.** (Performance of a contract / legal obligation)
+- **To personalize, improve, and develop products and features.** (Legitimate interest or consent)
+- **To send transactional communications (e.g., confirmations, security alerts).** (Performance of a contract / legitimate interest)
+- **To send marketing where you consent or where permitted by law.** (Consent)
+- **To comply with legal obligations and protect legal rights.** (Legal obligation / legitimate interest)
 
-- To find and prevent fraud
-- To comply with legal obligations
-- To respond to legal requests and prevent harm
+If we rely on your consent to process certain categories of personal information (for example, marketing emails or certain cookies), you may withdraw that consent at any time (see Section 10).
 
-## 4. Sharing Your Information {#data-sharing}
+## 6. Cookies & Tracking Technologies
 
-We may share information we have collected about you in certain situations:
+We use cookies, web beacons, local storage, and similar technologies to operate and improve the Services.
 
-### 4.1 Business Transfers
+- **Essential cookies:** Required for core functionality (e.g., login, shopping cart).
+- **Performance & analytics cookies:** Help us understand usage and improve the Services.
+- **Functional cookies:** Remember preferences (language, region).
+- **Advertising/targeting cookies:** For personalized advertising (where permitted).
 
-We may share or transfer your information in connection with, or during negotiations of, any merger, sale of company
-assets, financing, or acquisition of all or a portion of our business.
+You can control cookies through your browser settings and cookie controls on our site. Blocking some cookies may affect functionality.
 
-### 4.2 Service Providers
+## 7. Sharing & Disclosure
 
-We may share your information with third-party vendors, service providers, contractors, or agents who perform services
-for us or on our behalf.
+We may share personal information in the following circumstances:
 
-### 4.3 Legal Obligations
+- **Service Providers / Processors:** Payment processors, hosting providers, analytics providers, customer support providers — only to perform services on our behalf and under contract.
+- **Business Transactions:** In connection with a merger, acquisition, financing, or sale of assets (we will notify users where required).
+- **Legal Requirements:** When required by law or to respond to lawful requests by public authorities.
+- **Protection of Rights:** To protect the safety, legal rights, or property of the Company, users, or the public.
+- **With your consent:** We will share data when you instruct us to do so.
 
-We may disclose your information where we are legally required to do so in order to comply with applicable law,
-governmental requests, a judicial proceeding, court order, or legal process.
+### Subprocessors & Third Parties (Examples)
+We use reputable third-party processors, such as:
+- Payment Processor: ExamplePay (replace with actual)
+- Hosting/Infrastructure: ExampleCloud (replace with actual)
+- Analytics: ExampleAnalytics (replace with actual)
 
-## 5. Data Security
+Maintain a current list of subprocessors in your internal documentation and update users when required by law.
 
-We have implemented appropriate technical and organizational security measures designed to protect the security of any
-personal information we process. However, please also remember that we cannot guarantee that the internet itself is 100%
-secure.
+## 8. International Transfers
 
-## 6. Your Privacy Rights {#your-rights}
+If we transfer your personal information across borders (e.g., to servers or processors in other countries), we will protect the transfer by appropriate safeguards such as:
 
-Depending on your location, you may have the following rights:
+- Standard Contractual Clauses (SCCs)
+- Adequacy decisions where applicable
+- Other lawful transfer mechanisms required by local law
 
-### 6.1 Access and Portability
-
-You have the right to request access to the personal information we collect from you, change that information, or delete
-it in some circumstances.
-
-### 6.2 Withdrawal of Consent
-
-You have the right to withdraw consent where you have previously given your consent to the processing of your personal
-information.
-
-### 6.3 Objection
-
-You have the right to object to the processing of your personal information under certain circumstances.
-
-### 6.4 Complaint
-
-You have the right to complain to a data protection authority about our collection and use of your personal information.
-
-## 7. California Privacy Rights (CCPA)
-
-If you are a California resident, you have specific rights regarding your personal information:
-
-- Right to Know
-- Right to Delete
-- Right to Opt-Out of Sale
-- Right to Non-Discrimination
-
-To exercise any of these rights, please contact us using the information below.
-
-## 8. European Privacy Rights (GDPR)
-
-If you are a European resident, you have the following rights under GDPR:
-
-- Right to be informed
-- Right of access
-- Right to rectification
-- Right to erasure
-- Right to restrict processing
-- Right to data portability
-- Right to object
-- Rights related to automated decision making and profiling
+Contact privacy@yoursite.com for details about where your data is stored and the safeguards in place.
 
 ## 9. Data Retention
 
-We will only keep your personal information for as long as it is necessary for the purposes set out in this privacy
-policy, unless a longer retention period is required or permitted by law.
+We retain personal information only as long as necessary for the purposes described and to comply with legal obligations. Typical retention periods include:
 
-## 10. Children's Privacy
+- Account information: retained while the account is active + 2 years after account deletion (unless otherwise required).
+- Transaction & billing records: 6–7 years for tax and compliance (or as required by law).
+- Support logs and messages: 2–3 years (subject to business needs).
+- Analytics data: aggregated or retained for up to 2 years unless anonymized.
 
-We do not knowingly solicit data from or market to children under 13 years of age. If we learn that personal information
-from users less than 13 years of age has been collected, we will deactivate the account and take reasonable measures to
-promptly delete such data.
+Retention periods depend on the nature of the data and legal/regulatory requirements.
 
-## 11. Updates to This Policy
+## 10. Your Rights & Choices
 
-We may update this privacy policy from time to time. The updated version will be indicated by an updated "Revised" date
-and the updated version will be effective as soon as it is accessible.
+Depending on your jurisdiction, you may have rights including:
 
-## 12. Contact Us {#contact}
+- **Access:** Request a copy of your personal data.
+- **Rectification:** Request correction of inaccurate or incomplete data.
+- **Erasure ("Right to be forgotten"):** Request deletion of your data where permitted.
+- **Restriction:** Request restriction of processing in certain circumstances.
+- **Portability:** Receive your data in a commonly used, machine-readable format.
+- **Objection:** Object to processing based on legitimate interests or for direct marketing.
+- **Withdraw consent:** Where processing is based on consent, you may withdraw it.
+- **Opt-out of sale/sharing:** Residents of certain jurisdictions (e.g., California) may opt out of the sale/sharing of personal information.
 
-If you have questions or comments about this policy, you may contact us at:
+To exercise your rights, contact us at **privacy@yoursite.com**. We may need to verify your identity before fulfilling requests. We will respond in accordance with applicable law.
 
-**Your Company Name**  
-Privacy Department  
-123 Main Street  
-City, State 12345  
-United States
+If you are a California resident, you may submit requests via:
+- Email: privacy@yoursite.com
+- Phone: +1 (555) 123-4567
 
-Email: [privacy@yoursite.com](mailto:privacy@yoursite.com)  
+You may also file a complaint with a data protection authority (e.g., a supervisory authority in the EU or the California Attorney General for CCPA matters).
+
+## 11. California Privacy Rights (CCPA / CPRA)
+
+If you are a California resident, you have additional rights under the California Consumer Privacy Act (CCPA) and the California Privacy Rights Act (CPRA), including:
+
+- Right to know (categories and specific pieces of personal information collected)
+- Right to delete
+- Right to opt-out of sale or sharing of personal information
+- Right to non-discrimination for exercising your rights
+
+We do not knowingly sell the personal information of minors under 16 without affirmative authorization. To exercise these rights, contact privacy@yoursite.com or use our designated web form (if applicable).
+
+## 12. European Privacy Rights (GDPR)
+
+If you are in the EU/EEA/UK, GDPR provides rights similar to those described in Section 10. Our legal bases for processing include performance of a contract, compliance with legal obligations, legitimate interests, and consent where required.
+
+For concerns about automated decision-making or profiling, or to request records of processing activities, contact privacy@yoursite.com.
+
+## 13. Children's Privacy
+
+Our Services are not directed to children under the age of 13 (or 16 where local law requires). We do not knowingly collect personal data from children. If we learn we have collected data from a child without parental consent, we will take steps to delete that data promptly. Parents or guardians may contact privacy@yoursite.com to request deletion.
+
+## 14. Data Security
+
+We implement reasonable technical, administrative, and physical safeguards to protect personal information from unauthorized access, disclosure, alteration, or destruction. Measures include encryption in transit, access controls, monitoring, and staff privacy training.
+
+**Important:** No internet transmission is completely secure. If you believe your account or credentials have been compromised, contact us immediately at privacy@yoursite.com.
+
+## 15. Third-Party Links & Services
+
+Our Services may contain links to third-party websites, products, or services. This Privacy Policy does not apply to those third parties — review their privacy policies before providing any personal data.
+
+## 16. Changes to This Policy
+
+We may update this Privacy Policy to reflect changes to our practices or for legal, operational, or regulatory reasons. When we make material changes, we will provide notice (for example, by updating the `lastUpdated` date and posting the updated policy). You should review the Privacy Policy whenever you access the Services.
+
+## 17. How to Contact Us
+
+For privacy-related questions, exercising rights, complaints, or other requests:
+
+**Your Company Name**
+Privacy Department
+123 Main Street
+City, State 12345
+Country
+
+Email: privacy@yoursite.com
 Phone: +1 (555) 123-4567
-
-Data Protection Officer:  
-[dpo@yoursite.com](mailto:dpo@yoursite.com)
+Data Protection Officer: dpo@yoursite.com
 
 ---
 
-*This privacy policy was last updated on January 15, 2024*
+*This policy was last updated on October 26, 2025.*

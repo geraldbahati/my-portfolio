@@ -106,10 +106,16 @@ function parseFrontmatter(content: string) {
   return { content: mainContent, frontmatter };
 }
 
+async function getCurrentDate() {
+  "use cache";
+  return new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
+
 async function getDefaultPrivacyContent() {
+  const currentDate = await getCurrentDate();
   const defaultContent = `# Privacy Policy
 
-Last updated: ${new Date().toLocaleDateString()}
+Last updated: ${currentDate}
 
 ## Introduction {#introduction}
 
@@ -263,16 +269,17 @@ export async function getPrivacyContentSimple() {
     };
   } catch {
     return {
-      content: getDefaultMarkdown(),
+      content: await getDefaultMarkdown(),
       isMarkdown: true,
     };
   }
 }
 
-function getDefaultMarkdown() {
+async function getDefaultMarkdown() {
+  const currentDate = await getCurrentDate();
   return `# Privacy Policy
 
-Last updated: ${new Date().toLocaleDateString()}
+Last updated: ${currentDate}
 
 ## Introduction
 
