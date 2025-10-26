@@ -64,7 +64,7 @@ export default function ContactSection({
         <GridPattern
           width={32}
           height={32}
-          gridClassName="stroke-gray-400/20"
+          gridClassName="stroke-muted-foreground/20"
           surroundingCells={4}
           surroundingRadius={1}
         />
