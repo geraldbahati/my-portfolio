@@ -22,28 +22,20 @@ export default function InfoSection() {
       ],
       content: (
         <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl">
-          {/* Blurred background */}
+          {/* Single optimized image with blur effect applied via CSS */}
           <Image
             src="/web-design.jpg"
-            alt="Web Design Background"
+            alt="Web Design"
             fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
-            quality={75}
+            sizes="(max-width: 640px) 320px, (max-width: 828px) 400px, (max-width: 1200px) 500px, 600px"
+            quality={60}
             priority
-            className="object-cover blur-md scale-110"
+            className="object-cover"
           />
-          {/* Foreground card */}
+          {/* Overlay for depth effect - no additional image needed */}
           <div className="absolute inset-0 flex items-center justify-center p-8">
-            <div className="relative w-[70%] h-[70%] rounded-xl overflow-hidden shadow-2xl">
-              <Image
-                src="/web-design.jpg"
-                alt="Web Design"
-                fill
-                sizes="(max-width: 768px) 70vw, (max-width: 1200px) 35vw, 28vw"
-                quality={85}
-                priority
-                className="object-cover"
-              />
+            <div className="relative w-[70%] h-[70%] rounded-xl overflow-hidden shadow-2xl bg-black/5 backdrop-blur-sm">
+              {/* Empty div for visual effect - no duplicate image load */}
             </div>
           </div>
         </div>
@@ -61,28 +53,20 @@ export default function InfoSection() {
       ],
       content: (
         <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl">
-          {/* Blurred background */}
+          {/* Single optimized image */}
           <Image
             src="/branding.jpg"
-            alt="Branding Background"
+            alt="Branding"
             fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
-            quality={75}
+            sizes="(max-width: 640px) 320px, (max-width: 828px) 400px, (max-width: 1200px) 500px, 600px"
+            quality={60}
             loading="lazy"
-            className="object-cover blur-md scale-110"
+            className="object-cover"
           />
-          {/* Foreground card */}
+          {/* Overlay for depth effect */}
           <div className="absolute inset-0 flex items-center justify-center p-8">
-            <div className="relative w-[70%] h-[70%] rounded-xl overflow-hidden shadow-2xl">
-              <Image
-                src="/branding.jpg"
-                alt="Branding"
-                fill
-                sizes="(max-width: 768px) 70vw, (max-width: 1200px) 35vw, 28vw"
-                quality={85}
-                loading="lazy"
-                className="object-cover"
-              />
+            <div className="relative w-[70%] h-[70%] rounded-xl overflow-hidden shadow-2xl bg-black/5 backdrop-blur-sm">
+              {/* Empty div for visual effect */}
             </div>
           </div>
         </div>
@@ -101,28 +85,20 @@ export default function InfoSection() {
       ],
       content: (
         <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl">
-          {/* Blurred background */}
+          {/* Single optimized image */}
           <Image
             src="/advertising.jpg"
-            alt="Advertising Background"
+            alt="Advertising"
             fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
-            quality={75}
+            sizes="(max-width: 640px) 320px, (max-width: 828px) 400px, (max-width: 1200px) 500px, 600px"
+            quality={60}
             loading="lazy"
-            className="object-cover blur-md scale-110"
+            className="object-cover"
           />
-          {/* Foreground card */}
+          {/* Overlay for depth effect */}
           <div className="absolute inset-0 flex items-center justify-center p-8">
-            <div className="relative w-[70%] h-[70%] rounded-xl overflow-hidden shadow-2xl">
-              <Image
-                src="/advertising.jpg"
-                alt="Advertising"
-                fill
-                sizes="(max-width: 768px) 70vw, (max-width: 1200px) 35vw, 28vw"
-                quality={85}
-                loading="lazy"
-                className="object-cover"
-              />
+            <div className="relative w-[70%] h-[70%] rounded-xl overflow-hidden shadow-2xl bg-black/5 backdrop-blur-sm">
+              {/* Empty div for visual effect */}
             </div>
           </div>
         </div>
@@ -140,28 +116,20 @@ export default function InfoSection() {
       ],
       content: (
         <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl">
-          {/* Blurred background */}
+          {/* Single optimized image */}
           <Image
             src="/visibility.webp"
-            alt="Visibility Background"
+            alt="Visibility"
             fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
-            quality={75}
+            sizes="(max-width: 640px) 320px, (max-width: 828px) 400px, (max-width: 1200px) 500px, 600px"
+            quality={60}
             loading="lazy"
-            className="object-cover blur-md scale-110"
+            className="object-cover"
           />
-          {/* Foreground card */}
+          {/* Overlay for depth effect */}
           <div className="absolute inset-0 flex items-center justify-center p-8">
-            <div className="relative w-[70%] h-[70%] rounded-xl overflow-hidden shadow-2xl">
-              <Image
-                src="/visibility.webp"
-                alt="Visibility"
-                fill
-                sizes="(max-width: 768px) 70vw, (max-width: 1200px) 35vw, 28vw"
-                quality={85}
-                loading="lazy"
-                className="object-cover"
-              />
+            <div className="relative w-[70%] h-[70%] rounded-xl overflow-hidden shadow-2xl bg-black/5 backdrop-blur-sm">
+              {/* Empty div for visual effect */}
             </div>
           </div>
         </div>

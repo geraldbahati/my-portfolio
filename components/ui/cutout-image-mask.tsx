@@ -27,6 +27,9 @@ export const CutoutMaskImage: React.FC<CutoutMaskImageProps> = ({
   ],
   maxWidth = 316,
   alt = "Masked image",
+  priority = false,
+  quality = 75,
+  sizes,
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -97,9 +100,10 @@ export const CutoutMaskImage: React.FC<CutoutMaskImageProps> = ({
             src={currentImage}
             alt={alt}
             fill
-            sizes={`(max-width: ${maxWidth}px) 100vw, ${maxWidth}px`}
+            sizes={sizes || `(max-width: ${maxWidth}px) 100vw, ${maxWidth}px`}
+            quality={quality}
             className="object-cover transition-opacity duration-300"
-            priority
+            priority={priority}
           />
         </div>
 
