@@ -20,7 +20,6 @@ This is a portfolio website built with:
 - **Next.js 16** - React framework with App Router
 - **React 19.2** - Latest React version
 - **Convex** - Backend-as-a-service for database and server functions
-- **Clerk** - Authentication provider (configured but currently disabled for performance)
 - **Tailwind CSS 4** - Styling framework
 - **TypeScript** - Type safety
 - **Motion (Framer Motion)** - Animation library
@@ -84,21 +83,11 @@ The main page (`app/page.tsx`) uses dynamic imports for performance optimization
 - Resend component for email sending
 - Rate limiter component (5 requests per hour, capacity 3)
 
-### Authentication Setup (Currently Disabled)
-
-Clerk authentication is configured but disabled in `app/layout.tsx` for performance optimization. To enable:
-1. Uncomment ClerkProvider and ConvexClientProvider in `app/layout.tsx`
-2. Uncomment the provider configuration in `convex/auth.config.ts`
-3. Set up Clerk JWT template (see README instructions)
-4. Configure `CLERK_JWT_ISSUER_DOMAIN` environment variable
-5. Re-enable the providers on specific routes if homepage performance is a concern
-
 ### Environment Variables
 
 Required for full functionality:
 - `CONVEX_DEPLOYMENT` - Convex deployment URL (auto-configured)
 - `NEXT_PUBLIC_CONVEX_URL` - Public Convex URL for client
-- `CLERK_JWT_ISSUER_DOMAIN` - Clerk JWT issuer (if using authentication)
 - `SENDER_EMAIL` - Email address for sending contact form submissions (Resend)
 - `RECIPIENT_EMAIL` - Email address to receive contact form submissions
 
@@ -162,7 +151,6 @@ This project follows strict Convex best practices (defined in `.cursor/rules/con
 - Dynamic imports for below-the-fold content
 - Page caching with `"use cache"` and `cacheLife("hours")`
 - Font optimization with `display: "swap"` and selective preloading
-- Clerk and Convex providers commented out on homepage to improve TTFB
 - Image optimization through Next.js Image component
 - Comprehensive SEO metadata with Open Graph and Twitter Card support
 
