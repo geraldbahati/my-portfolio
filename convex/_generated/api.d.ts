@@ -10,6 +10,7 @@
 
 import type * as contactForm from "../contactForm.js";
 import type * as http from "../http.js";
+import type * as projects from "../projects.js";
 
 import type {
   ApiFromModules,
@@ -28,6 +29,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   contactForm: typeof contactForm;
   http: typeof http;
+  projects: typeof projects;
 }>;
 declare const fullApiWithMounts: typeof fullApi;
 

@@ -3,8 +3,6 @@ import { Syne, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 // import ConvexClientProvider from "@/components/ConvexClientProvider";
 // import { ClerkProvider } from "@clerk/nextjs";
-import { Footer } from "@/components/footer";
-import { Navbar } from "@/components/navbar";
 import { AnalyticsProvider } from "@/components/analytics-provider";
 
 const syne = Syne({
@@ -119,9 +117,7 @@ export default function RootLayout({
             This improves TTFB. Re-enable on specific routes if needed. */}
         {/* <ClerkProvider dynamic> */}
         {/* <ConvexClientProvider> */}
-        <Navbar />
         {children}
-        <Footer />
         {/* </ConvexClientProvider> */}
         {/* </ClerkProvider> */}
         <AnalyticsProvider />

@@ -12,7 +12,7 @@ import { describe, it, expect } from "@jest/globals";
 import { render, screen } from "@testing-library/react";
 import { ProjectsGrid } from "@/components/projects-grid";
 import { BadgePill } from "@/components/badge-pill";
-import { Project } from "@/app/projects/data";
+import { Project } from "@/app/(root)/projects/data";
 
 // Mock Framer Motion to avoid animation issues in tests
 jest.mock("framer-motion", () => ({
@@ -68,7 +68,7 @@ const mockProjects: Project[] = [
 describe("BadgePill Component", () => {
   it("should render badge with correct text", () => {
     const { container } = render(
-      <BadgePill text="Test Badge" position="bottom-left" />
+      <BadgePill text="Test Badge" position="bottom-left" />,
     );
 
     expect(container.textContent).toContain("Test Badge");
@@ -76,7 +76,7 @@ describe("BadgePill Component", () => {
 
   it("should apply correct accessibility attributes", () => {
     const { container } = render(
-      <BadgePill text="Test Badge" position="bottom-left" />
+      <BadgePill text="Test Badge" position="bottom-left" />,
     );
 
     const badge = container.querySelector("span");
@@ -86,7 +86,7 @@ describe("BadgePill Component", () => {
   it("should be keyboard focusable when interactive", () => {
     const handleClick = jest.fn();
     const { container } = render(
-      <BadgePill text="Interactive Badge" onClick={handleClick} />
+      <BadgePill text="Interactive Badge" onClick={handleClick} />,
     );
 
     const badge = container.querySelector("span");
@@ -143,7 +143,7 @@ describe("ProjectsGrid Component", () => {
     };
 
     const { container } = render(
-      <ProjectsGrid projects={[projectWithoutBadges]} />
+      <ProjectsGrid projects={[projectWithoutBadges]} />,
     );
 
     expect(screen.getByText("No Badges Project")).toBeInTheDocument();
