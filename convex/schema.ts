@@ -58,4 +58,16 @@ export default defineSchema({
     .index("by_order", ["order"])
     .index("by_published", ["isPublished", "order"])
     .index("by_project_id", ["id"]), // For looking up by project ID
+
+  // FAQs
+  faqs: defineTable({
+    question: v.string(),
+    answer: v.string(),
+    order: v.number(), // For sorting FAQs in display order
+    isPublished: v.boolean(), // Control visibility
+    createdAt: v.number(), // timestamp
+    updatedAt: v.number(), // timestamp
+  })
+    .index("by_order", ["order"])
+    .index("by_published", ["isPublished", "order"]),
 });

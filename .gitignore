@@ -42,3 +42,6 @@ next-env.d.ts
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+# admin dashboard UI (not for public repo - backend is committed but secure)
+/app/(admin)/

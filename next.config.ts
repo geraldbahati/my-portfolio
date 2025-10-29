@@ -30,6 +30,11 @@ const nextConfig: NextConfig = {
     removeConsole: process.env.NODE_ENV === 'production',
   },
 
+  // Turbopack configuration
+  turbopack: {
+    root: __dirname,
+  },
+
   cacheComponents: true,
 };
 
