@@ -5,7 +5,7 @@ import { cacheLife } from "next/cache";
 import HeroBioOverlay from "@/sections/hero-bio-overlay";
 import { SectionDivider } from "@/components/section-divider";
 import InfoSection from "@/sections/info";
-import CombinedProjectsFaqSection from "@/sections/combined-projects-faq";
+import CombinedProjectsFaqWrapper from "@/sections/combined-projects-faq-wrapper";
 import ContactSection from "@/sections/contact";
 
 // SEO Metadata
@@ -98,7 +98,7 @@ export default async function Home() {
       </section>
 
       <div id="CombinedProjectsFaqSection">
-        <CombinedProjectsFaqSection />
+        <CombinedProjectsFaqWrapper />
       </div>
 
       <div className="bg-black">

@@ -29,4 +29,33 @@ export default defineSchema({
     .index("by_email", ["email"])
     .index("by_status", ["status"])
     .index("by_submitted_at", ["submittedAt"]),
+
+  // Projects
+  projects: defineTable({
+    id: v.string(), // Unique project identifier (e.g., "ev-rent-gmbh")
+    title: v.string(),
+    description: v.optional(v.string()),
+    src: v.string(), // Video/gif URL (prefer mp4 for performance)
+    type: v.union(v.literal("video"), v.literal("gif")),
+    poster: v.optional(v.string()), // Poster/thumbnail image
+    alt: v.optional(v.string()), // Alt text for accessibility
+    badges: v.optional(
+      v.array(
+        v.object({
+          text: v.string(),
+          position: v.optional(
+            v.union(v.literal("bottom-left"), v.literal("bottom-right"))
+          ),
+        })
+      )
+    ),
+    aspectRatio: v.optional(v.string()), // e.g., "16/9", "4/3"
+    order: v.number(), // For sorting projects in display order
+    isPublished: v.boolean(), // Control visibility
+    createdAt: v.number(), // timestamp
+    updatedAt: v.number(), // timestamp
+  })
+    .index("by_order", ["order"])
+    .index("by_published", ["isPublished", "order"])
+    .index("by_project_id", ["id"]), // For looking up by project ID
 });

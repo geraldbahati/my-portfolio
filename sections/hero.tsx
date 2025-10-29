@@ -333,12 +333,13 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
                   <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-thin leading-[0.9] sm:leading-none tracking-tight grid-interaction-blocked pointer-events-auto text-white">
                     <motion.span
                       className="inline-block font-medium"
+                      style={{ willChange: 'auto' }}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{
-                        duration: 0.6,
-                        delay: 0.1,
-                        ease: "easeOut",
+                        duration: 0.4,
+                        delay: 0,
+                        ease: [0.22, 1, 0.36, 1],
                       }}
                     >
                       Web design
@@ -350,15 +351,14 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
                       /
                     </span>
                     <motion.span
-                      className="inline-block text-transparent
-                      [text-stroke:1px_rgba(255,255,255,1)] [-webkit-text-stroke:1px_rgba(255,255,255,1)]
-                      sm:[text-stroke:0.5px_rgba(255,255,255,1)] sm:[-webkit-text-stroke:0.5px_rgba(255,255,255,1)]"
+                      className="inline-block text-transparent [text-stroke:1px_white] [-webkit-text-stroke:1px_white]"
+                      style={{ willChange: 'auto' }}
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{
-                        duration: 0.6,
-                        delay: 0.2,
-                        ease: "easeOut",
+                        duration: 0.4,
+                        delay: 0.1,
+                        ease: [0.22, 1, 0.36, 1],
                       }}
                     >
                       Digital Marketing

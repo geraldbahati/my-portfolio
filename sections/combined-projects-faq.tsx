@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
 import { motion } from "framer-motion";
 import ProjectCard, { ProjectCardProps } from "@/components/project-card";
 import Image from "next/image";
@@ -8,91 +14,11 @@ import { Facebook, Globe, Instagram, Linkedin, Twitter } from "lucide-react";
 import { SectionDivider } from "@/components/section-divider";
 import { FaqAccordion } from "@/components/faq-accordion";
 import { FAQ_DATA } from "@/constants/faq-data";
+import { Project } from "@/lib/data/projects";
 
-// Sample project data
-const projectsData: Omit<ProjectCardProps, "onVisible">[] = [
-  {
-    id: "ruff-baugesellschaft",
-    src: "https://videos.pexels.com/video-files/3784309/3784309-uhd_2560_1440_30fps.mp4",
-    type: "video",
-    title: "RUFF BAUGESELLSCHAFT",
-    alt: "Construction company website project",
-    badges: [
-      { text: "ABOUT US", position: "bottom-left" },
-      { text: "1+ Years", position: "bottom-right" },
-    ],
-    aspectRatio: "3/2",
-  },
-  {
-    id: "ev-rent",
-    src: "https://videos.pexels.com/video-files/3571264/3571264-uhd_2560_1440_30fps.mp4",
-    type: "video",
-    title: "EV RENT",
-    alt: "Electric vehicle rental platform",
-    badges: [
-      { text: "Traffic: +95.00%", position: "bottom-left" },
-      { text: "Cost-per-Lead: -80.00%", position: "bottom-right" },
-    ],
-    aspectRatio: "3/2",
-  },
-  {
-    id: "webfluss",
-    src: "https://videos.pexels.com/video-files/3195394/3195394-uhd_2560_1440_25fps.mp4",
-    type: "video",
-    title: "Webfluss",
-    alt: "Webflow agency project",
-    badges: [{ text: "Coming Soon", position: "bottom-left" }],
-    aspectRatio: "3/2",
-  },
-  {
-    id: "tech-startup",
-    src: "https://videos.pexels.com/video-files/3130284/3130284-uhd_2560_1440_30fps.mp4",
-    type: "video",
-    title: "TECH STARTUP PLATFORM",
-    alt: "Modern tech startup website",
-    badges: [
-      { text: "SaaS Platform", position: "bottom-left" },
-      { text: "New", position: "bottom-right" },
-    ],
-    aspectRatio: "3/2",
-  },
-  {
-    id: "ecommerce-store",
-    src: "https://videos.pexels.com/video-files/3195394/3195394-uhd_2560_1440_25fps.mp4",
-    type: "video",
-    title: "E-COMMERCE STORE",
-    alt: "Modern e-commerce platform",
-    badges: [
-      { text: "Sales: +150%", position: "bottom-left" },
-      { text: "6 Months", position: "bottom-right" },
-    ],
-    aspectRatio: "3/2",
-  },
-  {
-    id: "creative-agency",
-    src: "https://videos.pexels.com/video-files/5011647/5011647-uhd_2560_1440_30fps.mp4",
-    type: "video",
-    title: "CREATIVE AGENCY",
-    alt: "Design agency portfolio website",
-    badges: [
-      { text: "Design Studio", position: "bottom-left" },
-      { text: "Featured", position: "bottom-right" },
-    ],
-    aspectRatio: "3/2",
-  },
-  {
-    id: "mobile-app",
-    src: "https://videos.pexels.com/video-files/3196036/3196036-uhd_2560_1440_30fps.mp4",
-    type: "video",
-    title: "RESTAURANT APP",
-    alt: "Food delivery mobile application",
-    badges: [
-      { text: "Mobile App", position: "bottom-left" },
-      { text: "React Native", position: "bottom-right" },
-    ],
-    aspectRatio: "3/2",
-  },
-];
+interface CombinedProjectsFaqSectionProps {
+  projects: Project[];
+}
 
 // Social Links Component
 function SocialSidebar() {
@@ -129,7 +55,9 @@ function SocialSidebar() {
 }
 
 // Main Combined Component
-export default function CombinedProjectsFaqSection() {
+export default function CombinedProjectsFaqSection({
+  projects,
+}: CombinedProjectsFaqSectionProps) {
   const scrollTriggerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const faqContainerRef = useRef<HTMLDivElement>(null);
@@ -155,7 +83,9 @@ export default function CombinedProjectsFaqSection() {
       const containerRect = container.getBoundingClientRect();
 
       // Find the projects area (the scrollable container with cards)
-      const projectsArea = container.querySelector('[data-projects-area]') as HTMLElement;
+      const projectsArea = container.querySelector(
+        "[data-projects-area]",
+      ) as HTMLElement;
       if (!projectsArea) return;
 
       const projectsRect = projectsArea.getBoundingClientRect();
@@ -171,11 +101,11 @@ export default function CombinedProjectsFaqSection() {
 
     // Measure after layout is complete
     const timer = setTimeout(measureMinHeight, 500);
-    window.addEventListener('resize', measureMinHeight);
+    window.addEventListener("resize", measureMinHeight);
 
     return () => {
       clearTimeout(timer);
-      window.removeEventListener('resize', measureMinHeight);
+      window.removeEventListener("resize", measureMinHeight);
     };
   }, []);
 
@@ -205,7 +135,7 @@ export default function CombinedProjectsFaqSection() {
 
     // Check if header should be visible
     const isInView = rect.top <= viewportHeight * 0.8;
-    setIsHeaderVisible(prev => prev !== isInView ? isInView : prev);
+    setIsHeaderVisible((prev) => (prev !== isInView ? isInView : prev));
 
     // Calculate total scrollable distance
     const scrollableDistance = sectionHeight - viewportHeight;
@@ -226,8 +156,7 @@ export default function CombinedProjectsFaqSection() {
 
       // Apply horizontal scroll
       const container = scrollContainerRef.current;
-      const maxHorizontalScroll =
-        container.scrollWidth - container.clientWidth;
+      const maxHorizontalScroll = container.scrollWidth - container.clientWidth;
       container.scrollLeft = horizontalProgress * maxHorizontalScroll;
     } else {
       // Height reduction phase
@@ -259,119 +188,142 @@ export default function CombinedProjectsFaqSection() {
 
   // Calculate dynamic height - reduce from 100vh to minimum height where projects bottom is visible
   const currentHeight = useMemo(
-    () => 100 - (heightReductionProgress * (100 - minHeightVh)),
-    [heightReductionProgress, minHeightVh]
+    () => 100 - heightReductionProgress * (100 - minHeightVh),
+    [heightReductionProgress, minHeightVh],
   );
 
   return (
     <>
       {/* Scroll trigger container - provides scrollable height */}
-      <div ref={scrollTriggerRef} style={{ height: "300vh", position: "relative" }}>
+      <div
+        ref={scrollTriggerRef}
+        style={{ height: "300vh", position: "relative" }}
+      >
         {/* Projects Section with Dynamic Height - sticky within scroll trigger */}
         <section
           data-section-id="CombinedProjectsFaqSection"
           className="sticky top-0 transition-colors duration-700"
           style={{
             height: `${currentHeight}vh`,
-            backgroundColor: heightReductionProgress > 0 ? "#000000" : "#ffffff",
+            backgroundColor:
+              heightReductionProgress > 0 ? "#000000" : "#ffffff",
             willChange: "height, background-color",
             transform: "translateZ(0)",
           }}
         >
           {/* Projects Container */}
-          <div ref={projectsContainerRef} className="relative h-full overflow-hidden">
+          <div
+            ref={projectsContainerRef}
+            className="relative h-full overflow-hidden"
+          >
             <div className="absolute inset-0">
-            {/* Header Section */}
-            <motion.div
-              className="absolute top-0 left-0 right-0 z-40 pt-16"
-              initial={{ opacity: 0, y: 32 }}
-              animate={
-                isHeaderVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 32 }
-              }
-              transition={{ duration: 0.4, ease: "easeOut" }}
-            >
-              <div className="max-w-7xl mx-auto px-6 pb-12">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-                  <motion.div
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={
-                      isHeaderVisible
-                        ? { opacity: 1, y: 0 }
-                        : { opacity: 0, y: 16 }
-                    }
-                    transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
-                  >
-                    <h1
-                      className="text-4xl lg:text-5xl font-medium leading-tight tracking-tight transition-colors duration-700"
-                      style={{
-                        color: heightReductionProgress > 0 ? "#ffffff" : "#000000",
-                        fontSize: "2.25rem",
-                      }}
-                    >
-                      Website Creations and Client Projects
-                    </h1>
-                  </motion.div>
-                  <motion.div
-                    className="lg:pl-12"
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={
-                      isHeaderVisible
-                        ? { opacity: 1, y: 0 }
-                        : { opacity: 0, y: 16 }
-                    }
-                    transition={{ duration: 0.5, ease: "easeOut", delay: 0.2 }}
-                  >
-                    <p
-                      className="text-base leading-relaxed transition-colors duration-700"
-                      style={{
-                        color: heightReductionProgress > 0 ? "#cccccc" : "#666666",
-                        opacity: 0.8,
-                      }}
-                    >
-                      Get to know me, my work style and my values through an
-                      insight into my projects that stand for quality, structure
-                      and sustainable solutions.
-                    </p>
-                  </motion.div>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Scrollable Projects Container */}
-            <div className="h-full flex items-start pb-20 pt-80 lg:pt-64">
-              <div
-                ref={scrollContainerRef}
-                data-projects-area
-                className="flex gap-6 overflow-hidden relative"
-                style={{
-                  scrollBehavior: "auto",
-                  willChange: "scroll-position",
-                  transform: "translateZ(0)",
-                }}
+              {/* Header Section */}
+              <motion.div
+                className="absolute top-0 left-0 right-0 z-40 pt-16"
+                initial={{ opacity: 0, y: 32 }}
+                animate={
+                  isHeaderVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 32 }
+                }
+                transition={{ duration: 0.4, ease: "easeOut" }}
               >
-                {/* Left spacer */}
-                <div className="w-[calc(50vw-45vw)] md:w-[calc(50vw-250px)] lg:w-[calc(50vw-333px)] flex-shrink-0"></div>
-
-                <div ref={projectsAreaRef} className="flex gap-6 px-6">
-                  {projectsData.map((project) => (
-                    <div
-                      key={project.id}
-                      className="w-[90vw] md:w-[500px] lg:w-[666px] flex-shrink-0"
+                <div className="max-w-7xl mx-auto px-6 pb-12">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                    <motion.div
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={
+                        isHeaderVisible
+                          ? { opacity: 1, y: 0 }
+                          : { opacity: 0, y: 16 }
+                      }
+                      transition={{
+                        duration: 0.5,
+                        ease: "easeOut",
+                        delay: 0.1,
+                      }}
                     >
-                      <ProjectCard
-                        {...project}
-                        className="w-full transition-all duration-500"
-                      />
-                    </div>
-                  ))}
+                      <h1
+                        className="text-4xl lg:text-5xl font-medium leading-tight tracking-tight transition-colors duration-700"
+                        style={{
+                          color:
+                            heightReductionProgress > 0 ? "#ffffff" : "#000000",
+                          fontSize: "2.25rem",
+                        }}
+                      >
+                        Website Creations and Client Projects
+                      </h1>
+                    </motion.div>
+                    <motion.div
+                      className="lg:pl-12"
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={
+                        isHeaderVisible
+                          ? { opacity: 1, y: 0 }
+                          : { opacity: 0, y: 16 }
+                      }
+                      transition={{
+                        duration: 0.5,
+                        ease: "easeOut",
+                        delay: 0.2,
+                      }}
+                    >
+                      <p
+                        className="text-base leading-relaxed transition-colors duration-700"
+                        style={{
+                          color:
+                            heightReductionProgress > 0 ? "#cccccc" : "#666666",
+                          opacity: 0.8,
+                        }}
+                      >
+                        Get to know me, my work style and my values through an
+                        insight into my projects that stand for quality,
+                        structure and sustainable solutions.
+                      </p>
+                    </motion.div>
+                  </div>
                 </div>
+              </motion.div>
 
-                {/* Right spacer */}
-                <div className="w-[calc(50vw-45vw)] md:w-[calc(50vw-250px)] lg:w-[calc(50vw-333px)] flex-shrink-0"></div>
+              {/* Scrollable Projects Container */}
+              <div className="h-full flex items-start pb-20 pt-80 lg:pt-64">
+                <div
+                  ref={scrollContainerRef}
+                  data-projects-area
+                  className="flex gap-6 overflow-hidden relative"
+                  style={{
+                    scrollBehavior: "auto",
+                    willChange: "scroll-position",
+                    transform: "translateZ(0)",
+                  }}
+                >
+                  {/* Left spacer */}
+                  <div className="w-[calc(50vw-45vw)] md:w-[calc(50vw-250px)] lg:w-[calc(50vw-333px)] flex-shrink-0"></div>
+
+                  <div ref={projectsAreaRef} className="flex gap-6 px-6">
+                    {projects.map((project) => (
+                      <div
+                        key={project.id}
+                        className="w-[90vw] md:w-[500px] lg:w-[666px] flex-shrink-0"
+                      >
+                        <ProjectCard
+                          id={project.id}
+                          src={project.src}
+                          type={project.type}
+                          title={project.title}
+                          alt={project.alt}
+                          badges={project.badges}
+                          aspectRatio="4/3"
+                          className="w-full transition-all duration-500"
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Right spacer */}
+                  <div className="w-[calc(50vw-45vw)] md:w-[calc(50vw-250px)] lg:w-[calc(50vw-333px)] flex-shrink-0"></div>
+                </div>
               </div>
             </div>
-              </div>
-            </div>
+          </div>
         </section>
       </div>
 
@@ -416,9 +368,9 @@ export default function CombinedProjectsFaqSection() {
                 </h2>
                 <p className="text-gray-400 text-base leading-relaxed font-light">
                   Honesty and transparency throughout the entire project are
-                  essential for success. It&apos;s important to define goals
-                  and options right from the start. This is the only way to
-                  develop a functioning concept and a sustainable strategy.
+                  essential for success. It&apos;s important to define goals and
+                  options right from the start. This is the only way to develop
+                  a functioning concept and a sustainable strategy.
                 </p>
               </div>
             </div>

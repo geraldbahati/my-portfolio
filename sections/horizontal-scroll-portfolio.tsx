@@ -3,93 +3,15 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import ProjectCard, { ProjectCardProps } from "@/components/project-card";
+import { Project } from "@/lib/data/projects";
 
-// Sample project data - same as before
-const projectsData: Omit<ProjectCardProps, "onVisible">[] = [
-  {
-    id: "ruff-baugesellschaft",
-    src: "https://videos.pexels.com/video-files/3784309/3784309-uhd_2560_1440_30fps.mp4",
-    type: "video",
-    title: "RUFF BAUGESELLSCHAFT",
-    alt: "Construction company website project",
-    badges: [
-      { text: "ABOUT US", position: "bottom-left" },
-      { text: "1+ Years", position: "bottom-right" },
-    ],
-    aspectRatio: "3/2",
-  },
-  {
-    id: "ev-rent",
-    src: "https://videos.pexels.com/video-files/3571264/3571264-uhd_2560_1440_30fps.mp4",
-    type: "video",
-    title: "EV RENT",
-    alt: "Electric vehicle rental platform",
-    badges: [
-      { text: "Traffic: +95.00%", position: "bottom-left" },
-      { text: "Cost-per-Lead: -80.00%", position: "bottom-right" },
-    ],
-    aspectRatio: "3/2",
-  },
-  {
-    id: "webfluss",
-    src: "https://videos.pexels.com/video-files/3195394/3195394-uhd_2560_1440_25fps.mp4",
-    type: "video",
-    title: "Webfluss",
-    alt: "Webflow agency project",
-    badges: [{ text: "Coming Soon", position: "bottom-left" }],
-    aspectRatio: "3/2",
-  },
-  {
-    id: "tech-startup",
-    src: "https://videos.pexels.com/video-files/3130284/3130284-uhd_2560_1440_30fps.mp4",
-    type: "video",
-    title: "TECH STARTUP PLATFORM",
-    alt: "Modern tech startup website",
-    badges: [
-      { text: "SaaS Platform", position: "bottom-left" },
-      { text: "New", position: "bottom-right" },
-    ],
-    aspectRatio: "3/2",
-  },
-  {
-    id: "ecommerce-store",
-    src: "https://videos.pexels.com/video-files/3195394/3195394-uhd_2560_1440_25fps.mp4",
-    type: "video",
-    title: "E-COMMERCE STORE",
-    alt: "Modern e-commerce platform",
-    badges: [
-      { text: "Sales: +150%", position: "bottom-left" },
-      { text: "6 Months", position: "bottom-right" },
-    ],
-    aspectRatio: "3/2",
-  },
-  {
-    id: "creative-agency",
-    src: "https://videos.pexels.com/video-files/5011647/5011647-uhd_2560_1440_30fps.mp4",
-    type: "video",
-    title: "CREATIVE AGENCY",
-    alt: "Design agency portfolio website",
-    badges: [
-      { text: "Design Studio", position: "bottom-left" },
-      { text: "Featured", position: "bottom-right" },
-    ],
-    aspectRatio: "3/2",
-  },
-  {
-    id: "mobile-app",
-    src: "https://videos.pexels.com/video-files/3196036/3196036-uhd_2560_1440_30fps.mp4",
-    type: "video",
-    title: "RESTAURANT APP",
-    alt: "Food delivery mobile application",
-    badges: [
-      { text: "Mobile App", position: "bottom-left" },
-      { text: "React Native", position: "bottom-right" },
-    ],
-    aspectRatio: "3/2",
-  },
-];
+interface ProjectsSectionPinnedProps {
+  projects: Project[];
+}
 
-export default function ProjectsSectionPinned() {
+export default function ProjectsSectionPinned({
+  projects,
+}: ProjectsSectionPinnedProps) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -249,13 +171,19 @@ export default function ProjectsSectionPinned() {
               <div className="w-[calc(50vw-45vw)] md:w-[calc(50vw-250px)] lg:w-[calc(50vw-333px)] flex-shrink-0"></div>
 
               <div className="flex gap-6 px-6">
-                {projectsData.map((project) => (
+                {projects.map((project) => (
                   <div
                     key={project.id}
                     className="w-[90vw] md:w-[500px] lg:w-[666px] flex-shrink-0"
                   >
                     <ProjectCard
-                      {...project}
+                      id={project.id}
+                      src={project.src}
+                      type={project.type}
+                      title={project.title}
+                      alt={project.alt}
+                      badges={project.badges}
+                      aspectRatio={project.aspectRatio}
                       className="w-full transition-all duration-500"
                     />
                   </div>

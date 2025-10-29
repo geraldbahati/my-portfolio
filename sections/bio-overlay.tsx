@@ -124,9 +124,12 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
             <CutoutMaskImage
               imageUrl="/original.jpeg"
               clickToChangeImage={false}
-              maxWidth={210}
-              className="w-full max-w-[210px]"
+              maxWidth={282}
+              className="w-full max-w-[282px]"
               alt="Profile portrait"
+              priority={true}
+              quality={75}
+              sizes="(max-width: 640px) 282px, 282px"
             />
           </motion.div>
 
