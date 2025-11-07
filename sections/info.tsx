@@ -3,7 +3,6 @@
 import { StickyScrollReveal } from "@/components/ui/sticky-scroll-reveal";
 import GridPattern from "@/components/ui/shadcn-io/grid-pattern";
 import { motion } from "framer-motion";
-import Image from "next/image";
 
 export default function InfoSection() {
   const sections = [
@@ -20,26 +19,7 @@ export default function InfoSection() {
         "Website redesign and relaunch",
         "UI and UX optimization",
       ],
-      content: (
-        <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl">
-          {/* Single optimized image with blur effect applied via CSS */}
-          <Image
-            src="/web-design.jpg"
-            alt="Web Design"
-            fill
-            sizes="(max-width: 640px) 320px, (max-width: 828px) 400px, (max-width: 1200px) 500px, 600px"
-            quality={60}
-            priority
-            className="object-cover"
-          />
-          {/* Overlay for depth effect - no additional image needed */}
-          <div className="absolute inset-0 flex items-center justify-center p-8">
-            <div className="relative w-[70%] h-[70%] rounded-xl overflow-hidden shadow-2xl bg-black/5 backdrop-blur-sm">
-              {/* Empty div for visual effect - no duplicate image load */}
-            </div>
-          </div>
-        </div>
-      ),
+      image: "/web-design.jpg",
     },
     {
       label: "PHASE 1",
@@ -51,26 +31,7 @@ export default function InfoSection() {
         "Brand strategy and positioning",
         "Brand messaging and communication",
       ],
-      content: (
-        <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl">
-          {/* Single optimized image */}
-          <Image
-            src="/branding.jpg"
-            alt="Branding"
-            fill
-            sizes="(max-width: 640px) 320px, (max-width: 828px) 400px, (max-width: 1200px) 500px, 600px"
-            quality={60}
-            loading="lazy"
-            className="object-cover"
-          />
-          {/* Overlay for depth effect */}
-          <div className="absolute inset-0 flex items-center justify-center p-8">
-            <div className="relative w-[70%] h-[70%] rounded-xl overflow-hidden shadow-2xl bg-black/5 backdrop-blur-sm">
-              {/* Empty div for visual effect */}
-            </div>
-          </div>
-        </div>
-      ),
+      image: "/branding.jpg",
     },
     {
       label: "PHASE 2",
@@ -83,26 +44,7 @@ export default function InfoSection() {
         "GDPR-compliant and data-driven tracking",
         "Ad creation and optimization",
       ],
-      content: (
-        <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl">
-          {/* Single optimized image */}
-          <Image
-            src="/advertising.jpg"
-            alt="Advertising"
-            fill
-            sizes="(max-width: 640px) 320px, (max-width: 828px) 400px, (max-width: 1200px) 500px, 600px"
-            quality={60}
-            loading="lazy"
-            className="object-cover"
-          />
-          {/* Overlay for depth effect */}
-          <div className="absolute inset-0 flex items-center justify-center p-8">
-            <div className="relative w-[70%] h-[70%] rounded-xl overflow-hidden shadow-2xl bg-black/5 backdrop-blur-sm">
-              {/* Empty div for visual effect */}
-            </div>
-          </div>
-        </div>
-      ),
+      image: "/advertising.jpg",
     },
     {
       label: "PHASE 3",
@@ -114,26 +56,7 @@ export default function InfoSection() {
         "Content strategy and copywriting",
         "Digital placements and affiliates",
       ],
-      content: (
-        <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl">
-          {/* Single optimized image */}
-          <Image
-            src="/visibility.webp"
-            alt="Visibility"
-            fill
-            sizes="(max-width: 640px) 320px, (max-width: 828px) 400px, (max-width: 1200px) 500px, 600px"
-            quality={60}
-            loading="lazy"
-            className="object-cover"
-          />
-          {/* Overlay for depth effect */}
-          <div className="absolute inset-0 flex items-center justify-center p-8">
-            <div className="relative w-[70%] h-[70%] rounded-xl overflow-hidden shadow-2xl bg-black/5 backdrop-blur-sm">
-              {/* Empty div for visual effect */}
-            </div>
-          </div>
-        </div>
-      ),
+      image: "/visibility.webp",
     },
   ];
 
