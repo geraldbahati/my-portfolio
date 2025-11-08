@@ -8,7 +8,10 @@
  * @module
  */
 
+import type * as adminFaqs from "../adminFaqs.js";
+import type * as adminProjects from "../adminProjects.js";
 import type * as contactForm from "../contactForm.js";
+import type * as faqs from "../faqs.js";
 import type * as http from "../http.js";
 import type * as projects from "../projects.js";
 
@@ -27,7 +30,10 @@ import type {
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  adminFaqs: typeof adminFaqs;
+  adminProjects: typeof adminProjects;
   contactForm: typeof contactForm;
+  faqs: typeof faqs;
   http: typeof http;
   projects: typeof projects;
 }>;

@@ -154,9 +154,9 @@ export const getProjectById = query({
 });
 
 /**
- * Create a new project
+ * Create a new project (internal use only)
  */
-export const createProject = mutation({
+export const createProject = internalMutation({
   args: {
     id: v.string(),
     title: v.string(),
@@ -204,9 +204,9 @@ export const createProject = mutation({
 });
 
 /**
- * Update an existing project
+ * Update an existing project (internal use only)
  */
-export const updateProject = mutation({
+export const updateProject = internalMutation({
   args: {
     projectId: v.id("projects"),
     title: v.optional(v.string()),
@@ -253,6 +253,33 @@ export const deleteProject = internalMutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     await ctx.db.delete(args.projectId);
+    return null;
+  },
+});
+
+/**
+ * Reorder projects by updating their order values
+ */
+export const reorderProjects = internalMutation({
+  args: {
+    projectOrders: v.array(
+      v.object({
+        projectId: v.id("projects"),
+        order: v.number(),
+      })
+    ),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const now = Date.now();
+
+    for (const { projectId, order } of args.projectOrders) {
+      await ctx.db.patch(projectId, {
+        order,
+        updatedAt: now,
+      });
+    }
+
     return null;
   },
 });
