@@ -36,6 +36,8 @@ This is a portfolio website built with:
 ### Key Directories
 
 - `app/` - Next.js App Router pages and layouts
+  - `app/(root)/` - Public-facing pages (home, contact, projects, privacy)
+  - `app/(admin)/` - Admin dashboard pages (contacts, projects, FAQs management)
 - `sections/` - Page section components (hero, bio, info, faq, contact, projects)
 - `components/` - Reusable React components
   - `components/ui/` - UI primitives and custom components
@@ -54,12 +56,18 @@ The main page (`app/page.tsx`) uses dynamic imports for performance optimization
 ### Section Components Architecture
 
 - `hero-bio-overlay.tsx` - Combined hero and bio with scroll-triggered overlay effect
+  - Uses Framer Motion's `useScroll` hook with scroll progress tracking
+  - 200vh container provides animation distance and buffer
+  - Hero stays fixed while bio slides up from bottom based on scroll position
+  - Animation runs from scroll 0-100vh, bio stays visible 100-200vh
 - `hero.tsx` - Hero section with background animations
 - `bio.tsx` - Biography section with animations
+- `bio-overlay.tsx` - Bio component that receives scroll progress for overlay animation
 - `info.tsx` - Services/information section with responsive backgrounds
 - `horizontal-scroll-portfolio.tsx` - Horizontal scrolling project showcase
 - `faq.tsx` - FAQ accordion component
 - `combined-projects-faq.tsx` - Combined projects and FAQ sections
+- `combined-projects-faq-wrapper.tsx` - Client wrapper for combined section
 - `contact.tsx` - Contact form with Convex integration
 
 ### Convex Backend Structure
@@ -69,12 +77,31 @@ The main page (`app/page.tsx`) uses dynamic imports for performance optimization
 - `contactSubmissions` table - Contact form submissions with fields:
   - `name`, `email`, `message`, `emailId`, `status`, `submittedAt`, `clientIP`, `userAgent`
   - Indexes: `by_email`, `by_status`, `by_submitted_at`
+- `projects` table - Portfolio projects with fields:
+  - `id`, `title`, `description`, `src`, `type`, `poster`, `alt`, `badges`, `aspectRatio`, `order`, `isPublished`, `createdAt`, `updatedAt`
+  - Indexes: `by_order`, `by_published`, `by_project_id`
+- `faqs` table - Frequently asked questions with fields:
+  - `question`, `answer`, `order`, `isPublished`, `createdAt`, `updatedAt`
+  - Indexes: `by_order`, `by_published`
 
-**Functions (`convex/contactForm.ts`):**
+**Functions:**
+
+*Contact Form (`convex/contactForm.ts`):*
 - `submitContactForm` (mutation) - Handles contact form submissions with rate limiting and email sending via Resend
 - `getContactSubmissions` (query) - Retrieve submissions with optional filtering by status
 - `getContactSubmission` (query) - Get single submission by ID
 - `getContactStats` (query) - Get submission statistics (total, today, week, pending, failed)
+
+*Projects (`convex/projects.ts`):*
+- `getPublishedProjects` (query) - Get all published projects ordered by display order
+- `getProjectById` (query) - Get a single project by its ID
+
+*FAQs (`convex/faqs.ts`):*
+- `getPublishedFaqs` (query) - Get all published FAQs ordered by display order
+
+*Admin Functions (`convex/adminProjects.ts`, `convex/adminFaqs.ts`):*
+- Internal mutations for managing projects and FAQs (create, update, delete, reorder)
+- These are internal-only functions for admin management
 
 **HTTP Endpoints (`convex/http.ts`):**
 - `/resend-webhook` (POST) - Webhook for Resend email status updates
@@ -176,6 +203,7 @@ This project follows strict Convex best practices (defined in `.cursor/rules/con
 - **Next.js 16 Compatibility**: Client components with dynamic imports should use normal imports or `ssr: false`
 - **React 19.2**: Uses latest React features with type overrides in package.json
 - **Tailwind 4**: Uses new PostCSS-based architecture
-- **Motion Library**: Formerly framer-motion, now using the `motion` package
+- **Animation Libraries**: Project uses both `framer-motion` (imported from `framer-motion`) and the newer `motion` package
 - **Contact Form**: Includes rate limiting (5 per hour) and Resend email integration
 - **Print Styles**: Custom print styles defined for privacy policy and other pages
+- **Admin Dashboard**: Located at `/admin` route with pages for managing contacts, projects, and FAQs

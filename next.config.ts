@@ -17,12 +17,13 @@ const nextConfig: NextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 60,
-    qualities: [60, 75, 85, 90, 100], // Added 60 for mobile optimization
+    qualities: [50, 60, 75, 85, 90, 95, 100], // Added 50 for blur backgrounds and 95 for sharp center images
   },
 
   // Experimental optimizations
   experimental: {
     optimizePackageImports: ['framer-motion', 'lucide-react'],
+    turbopackFileSystemCacheForDev: true,
   },
 
   // Compiler optimizations
@@ -36,6 +37,7 @@ const nextConfig: NextConfig = {
   },
 
   cacheComponents: true,
+  reactCompiler: true,
 };
 
 export default nextConfig;

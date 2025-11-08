@@ -167,12 +167,48 @@ export const StickyScrollReveal = ({
                   {section.content ? (
                     section.content
                   ) : section.image ? (
-                    <Image
-                      src={section.image}
-                      alt={section.title}
-                      fill
-                      className="object-cover"
-                    />
+                    <div className="relative w-full h-full overflow-hidden">
+                      {/* Background blurred image */}
+                      <div
+                        className="absolute inset-0 w-full h-full"
+                        style={{ zIndex: 1 }}
+                      >
+                        <Image
+                          src={section.image}
+                          alt={`${section.title} background`}
+                          fill
+                          className="object-cover"
+                          style={{
+                            filter: "blur(10px) brightness(0.95)",
+                            transform: "scale(1.1)",
+                          }}
+                          priority={index === 0}
+                          quality={50}
+                          sizes="500px"
+                        />
+                      </div>
+
+                      {/* Centered sharp image - bigger size */}
+                      <div
+                        className="absolute inset-0 flex items-center justify-center p-8"
+                        style={{ zIndex: 2 }}
+                      >
+                        <div className="relative w-full max-w-[320px] aspect-square rounded-lg overflow-hidden shadow-2xl bg-white">
+                          <Image
+                            src={section.image}
+                            alt={section.title}
+                            fill
+                            className="object-cover"
+                            style={{
+                              filter: "none",
+                            }}
+                            priority={index === 0}
+                            quality={95}
+                            sizes="320px"
+                          />
+                        </div>
+                      </div>
+                    </div>
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
                       <span className="text-gray-600 text-lg font-medium text-center px-4">
@@ -428,13 +464,47 @@ export const StickyScrollReveal = ({
                         {section.content ? (
                           section.content
                         ) : section.image ? (
-                          <div className="w-full h-full">
-                            <Image
-                              src={section.image}
-                              alt={section.title}
-                              fill
-                              className="object-cover"
-                            />
+                          <div className="relative w-full h-full overflow-hidden">
+                            {/* Background blurred image */}
+                            <div
+                              className="absolute inset-0 w-full h-full"
+                              style={{ zIndex: 1 }}
+                            >
+                              <Image
+                                src={section.image}
+                                alt={`${section.title} background`}
+                                fill
+                                className="object-cover"
+                                style={{
+                                  filter: "blur(10px) brightness(0.95)",
+                                  transform: "scale(1.1)",
+                                }}
+                                priority={index === 0}
+                                quality={50}
+                                sizes="600px"
+                              />
+                            </div>
+
+                            {/* Centered sharp image - bigger size */}
+                            <div
+                              className="absolute inset-0 flex items-center justify-center p-8"
+                              style={{ zIndex: 2 }}
+                            >
+                              <div className="relative w-full max-w-[450px] aspect-square rounded-lg overflow-hidden shadow-2xl bg-white">
+                                <Image
+                                  src={section.image}
+                                  alt={section.title}
+                                  fill
+                                  className="object-cover"
+                                  style={{
+                                    filter: "none",
+                                  }}
+                                  priority={index === 0}
+                                  quality={95}
+                                  sizes="450px"
+                                />
+                              </div>
+                            </div>
                           </div>
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
