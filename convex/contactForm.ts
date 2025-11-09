@@ -149,6 +149,13 @@ export const submitContactForm = mutation({
 
 // Query functions for managing contact submissions
 
+export const getContactSubmissionCount = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("contactSubmissions").collect().then(s => s.length);
+  },
+});
+
 export const getContactSubmissions = query({
   args: {
     limit: v.optional(v.number()),

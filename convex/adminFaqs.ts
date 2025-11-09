@@ -6,14 +6,14 @@
  */
 
 import { v } from "convex/values";
-import { action, ActionCtx } from "./_generated/server";
+import { action, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 
 /**
- * Get all FAQs (including unpublished) - DEV ONLY
+ * Get all FAQs (including unpublished) as a query - for real-time updates
  */
-export const getAllFaqs = action({
+export const getAllFaqsQuery = query({
   args: {},
   returns: v.array(
     v.object({
@@ -27,8 +27,14 @@ export const getAllFaqs = action({
       updatedAt: v.number(),
     })
   ),
-  handler: async (ctx): Promise<any> => {
-    return await ctx.runQuery(internal.faqs.getAllFaqs);
+  handler: async (ctx) => {
+    const faqs = await ctx.db
+      .query("faqs")
+      .withIndex("by_order")
+      .order("asc")
+      .collect();
+
+    return faqs;
   },
 });
 

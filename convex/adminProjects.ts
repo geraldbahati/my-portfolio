@@ -7,14 +7,14 @@
  */
 
 import { v } from "convex/values";
-import { action, ActionCtx } from "./_generated/server";
+import { action, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 
 /**
- * Get all projects (including unpublished) - DEV ONLY
+ * Get all projects (including unpublished) as a query - for real-time updates
  */
-export const getAllProjects = action({
+export const getAllProjectsQuery = query({
   args: {},
   returns: v.array(
     v.object({
@@ -44,8 +44,14 @@ export const getAllProjects = action({
       updatedAt: v.number(),
     })
   ),
-  handler: async (ctx): Promise<any> => {
-    return await ctx.runQuery(internal.projects.getAllProjects);
+  handler: async (ctx) => {
+    const projects = await ctx.db
+      .query("projects")
+      .withIndex("by_order")
+      .order("asc")
+      .collect();
+
+    return projects;
   },
 });
 
