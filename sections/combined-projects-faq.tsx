@@ -65,6 +65,7 @@ export default function CombinedProjectsFaqSection({
   const projectsContainerRef = useRef<HTMLDivElement>(null);
   const faqContentRef = useRef<HTMLDivElement>(null);
   const rafIdRef = useRef<number | null>(null);
+  const scrollEndTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastUpdateTimeRef = useRef(0);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isHeaderVisible, setIsHeaderVisible] = useState(false);
@@ -112,21 +113,21 @@ export default function CombinedProjectsFaqSection({
   // Memoize horizontal scroll phase constant
   const horizontalScrollPhase = useMemo(() => 0.5, []);
 
-  // Optimized scroll handler with RAF throttling
-  const updateScrollPosition = useCallback(() => {
+  // Optimized scroll handler with RAF throttling and final update
+  const updateScrollPosition = useCallback((forceFinal = false) => {
+    if (!scrollTriggerRef.current || !scrollContainerRef.current) {
+      return;
+    }
+
     const now = performance.now();
 
-    // Throttle to ~60fps
-    if (now - lastUpdateTimeRef.current < 16) {
-      rafIdRef.current = requestAnimationFrame(updateScrollPosition);
+    // Throttle to ~60fps, but allow forced final updates
+    if (!forceFinal && now - lastUpdateTimeRef.current < 16) {
+      rafIdRef.current = requestAnimationFrame(() => updateScrollPosition(false));
       return;
     }
 
     lastUpdateTimeRef.current = now;
-
-    if (!scrollTriggerRef.current || !scrollContainerRef.current) {
-      return;
-    }
 
     const triggerSection = scrollTriggerRef.current;
     const rect = triggerSection.getBoundingClientRect();
@@ -157,13 +158,25 @@ export default function CombinedProjectsFaqSection({
       // Apply horizontal scroll
       const container = scrollContainerRef.current;
       const maxHorizontalScroll = container.scrollWidth - container.clientWidth;
-      container.scrollLeft = horizontalProgress * maxHorizontalScroll;
+      const targetScrollLeft = horizontalProgress * maxHorizontalScroll;
+
+      // Use smooth scrolling for better visual consistency
+      if (Math.abs(container.scrollLeft - targetScrollLeft) > 1) {
+        container.scrollLeft = targetScrollLeft;
+      }
     } else {
       // Height reduction phase
       setScrollProgress(1);
       const reductionProgress =
         (totalProgress - horizontalScrollPhase) / (1 - horizontalScrollPhase);
       setHeightReductionProgress(Math.min(reductionProgress, 1));
+
+      // Ensure horizontal scroll is at max during height reduction
+      const container = scrollContainerRef.current;
+      const maxHorizontalScroll = container.scrollWidth - container.clientWidth;
+      if (container.scrollLeft < maxHorizontalScroll - 1) {
+        container.scrollLeft = maxHorizontalScroll;
+      }
     }
   }, [horizontalScrollPhase]);
 
@@ -172,7 +185,17 @@ export default function CombinedProjectsFaqSection({
       if (rafIdRef.current) {
         cancelAnimationFrame(rafIdRef.current);
       }
-      rafIdRef.current = requestAnimationFrame(updateScrollPosition);
+      rafIdRef.current = requestAnimationFrame(() => updateScrollPosition(false));
+
+      // Clear any existing scroll end timeout
+      if (scrollEndTimeoutRef.current) {
+        clearTimeout(scrollEndTimeoutRef.current);
+      }
+
+      // Set a timeout to ensure final position is set after scrolling stops
+      scrollEndTimeoutRef.current = setTimeout(() => {
+        updateScrollPosition(true); // Force final update
+      }, 100);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -182,6 +205,9 @@ export default function CombinedProjectsFaqSection({
       window.removeEventListener("scroll", handleScroll);
       if (rafIdRef.current) {
         cancelAnimationFrame(rafIdRef.current);
+      }
+      if (scrollEndTimeoutRef.current) {
+        clearTimeout(scrollEndTimeoutRef.current);
       }
     };
   }, [updateScrollPosition]);
