@@ -76,11 +76,11 @@ const NavBar = ({ isOpen, setIsOpen }: NavBarProps) => {
             <Image
               src="/logo.png"
               alt="Portfolio Logo"
-              width={64}
-              height={64}
+              width={80}
+              height={80}
               priority
-              sizes="(max-width: 640px) 40px, (max-width: 1024px) 48px, 64px"
-              className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 xl:w-16 xl:h-16 invert brightness-0 transition-all duration-300"
+              sizes="(max-width: 640px) 48px, (max-width: 768px) 56px, (max-width: 1024px) 56px, (max-width: 1280px) 64px, 80px"
+              className="w-12 h-12 sm:w-14 sm:h-14 md:w-14 md:h-14 lg:w-16 lg:h-16 xl:w-20 xl:h-20 invert brightness-0 transition-all duration-300"
             />
           </motion.a>
 
