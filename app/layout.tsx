@@ -50,10 +50,6 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  icons: {
-    icon: "/convex.svg",
-    apple: "/convex.svg",
-  },
   openGraph: {
     type: "website",
     locale: "en_US",
