@@ -38,7 +38,7 @@ export default function HelloMarquee() {
   if (prefersReducedMotion) {
     return (
       <div
-        className="w-full py-8 bg-white border-t-2 border-b-2 border-black mt-20"
+        className="w-full py-8 bg-white border-t-2 border-b-2 border-black"
         aria-hidden="true"
       >
         <div className="text-center">
@@ -59,7 +59,7 @@ export default function HelloMarquee() {
   }
 
   return (
-    <div className="w-full overflow-hidden py-8 bg-white border-t-2 border-b-2 border-black mt-20">
+    <div className="w-full overflow-hidden py-8 bg-white border-t-2 border-b-2 border-black">
       {/* Hidden accessible content for screen readers */}
       <div className="sr-only">
         Decorative scrolling text showing multilingual greetings:{" "}
