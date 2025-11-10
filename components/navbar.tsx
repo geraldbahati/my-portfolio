@@ -56,8 +56,9 @@ const NavBar = ({ isOpen, setIsOpen }: NavBarProps) => {
       <div className="mx-auto px-6 lg:px-12">
         <div className="flex items-center justify-between py-6">
           {/* Logo */}
-          <motion.div
-            className="relative text-white"
+          <motion.a
+            href="/"
+            className="relative block cursor-pointer"
             initial={{ y: -100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{
@@ -67,9 +68,21 @@ const NavBar = ({ isOpen, setIsOpen }: NavBarProps) => {
             }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            aria-label="Home"
+            onClick={() => {
+              Analytics.trackLinkClick("Logo", "/", "internal");
+            }}
           >
-            <span className="text-3xl font-bold tracking-tighter">AK</span>
-          </motion.div>
+            <Image
+              src="/logo.png"
+              alt="Portfolio Logo"
+              width={80}
+              height={80}
+              priority
+              sizes="(max-width: 640px) 48px, (max-width: 768px) 56px, (max-width: 1024px) 56px, (max-width: 1280px) 64px, 80px"
+              className="w-12 h-12 sm:w-14 sm:h-14 md:w-14 md:h-14 lg:w-16 lg:h-16 xl:w-20 xl:h-20 invert brightness-0 transition-all duration-300"
+            />
+          </motion.a>
 
           {/* Menu Button */}
           <MenuButton isOpen={isOpen} setIsOpen={setIsOpen} />
@@ -83,10 +96,7 @@ const MenuButton = ({ isOpen, setIsOpen }: MenuButtonProps) => {
   const handleMenuToggle = () => {
     const newState = !isOpen;
     setIsOpen(newState);
-    Analytics.trackButtonClick(
-      newState ? "Open Menu" : "Close Menu",
-      "Navbar"
-    );
+    Analytics.trackButtonClick(newState ? "Open Menu" : "Close Menu", "Navbar");
   };
 
   return (
@@ -278,7 +288,11 @@ const MenuOverlay = ({ setIsOpen }: MenuOverlayProps) => {
                       href={item.href}
                       className="text-white hover:text-primary text-3xl sm:text-4xl lg:text-6xl xl:text-8xl font-medium block cursor-pointer transition-colors duration-300"
                       onClick={() => {
-                        Analytics.trackLinkClick(item.label, item.href, 'internal');
+                        Analytics.trackLinkClick(
+                          item.label,
+                          item.href,
+                          "internal",
+                        );
                         setIsOpen(false);
                       }}
                       initial={{ letterSpacing: "0em" }}
@@ -316,7 +330,11 @@ const MenuOverlay = ({ setIsOpen }: MenuOverlayProps) => {
                   whileHover={{ scale: 1.2, rotate: 5 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => {
-                    Analytics.trackSocialShare(social.label, 'profile-link', 'navbar');
+                    Analytics.trackSocialShare(
+                      social.label,
+                      "profile-link",
+                      "navbar",
+                    );
                   }}
                 >
                   <social.Icon size={24} />
@@ -390,7 +408,11 @@ const MenuOverlay = ({ setIsOpen }: MenuOverlayProps) => {
                   whileHover={{ scale: 1.2, rotate: 5 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => {
-                    Analytics.trackSocialShare(social.label, 'profile-link', 'navbar-mobile');
+                    Analytics.trackSocialShare(
+                      social.label,
+                      "profile-link",
+                      "navbar-mobile",
+                    );
                   }}
                 >
                   <social.Icon size={24} />
