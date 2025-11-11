@@ -3,6 +3,7 @@
 import { motion } from "motion/react";
 import { useCallback, useState } from "react";
 import { TextScramble } from "@/components/ui/text-scramble";
+import Analytics from "@/lib/analytics";
 
 interface ContactLinksProps {
   phoneNumber?: string;
@@ -73,10 +74,12 @@ export function ContactLinks({
   className = "",
 }: ContactLinksProps) {
   const handleCall = () => {
+    Analytics.trackPhoneClick("Contact Page");
     window.location.href = `tel:${phoneNumber.replace(/\s/g, "")}`;
   };
 
   const handleWhatsApp = () => {
+    Analytics.trackOutboundLink(`https://wa.me/${whatsappNumber}`, "WhatsApp Chat - Contact Page");
     window.location.href = `https://wa.me/${whatsappNumber}`;
   };
 

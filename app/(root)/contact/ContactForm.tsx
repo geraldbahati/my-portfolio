@@ -12,6 +12,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Field, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { type ContactFormData, contactSchema } from "@/lib/validators/contactSchema";
 import { api } from "@/convex/_generated/api";
+import { useTrackForm } from "@/lib/hooks/useAnalytics";
 
 interface ContactFormProps {
   onSubmitSuccess?: () => void;
@@ -24,6 +25,7 @@ export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
   }>({ type: null, message: "" });
 
   const submitContactForm = useMutation(api.contactForm.submitContactForm);
+  const trackForm = useTrackForm();
 
   const {
     register,
@@ -84,6 +86,7 @@ export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
           type: "success",
           message: result.message || "Message sent successfully!",
         });
+        trackForm("Contact Form", true, "contact-page-form");
         reset();
         onSubmitSuccess?.();
       } else {
@@ -91,13 +94,16 @@ export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
           type: "error",
           message: result.error || "Failed to send message. Please try again.",
         });
+        trackForm("Contact Form", false, "contact-page-form", result.error);
       }
     } catch (error) {
       console.error("Form submission error:", error);
+      const errorMessage = "An unexpected error occurred. Please try again.";
       setSubmitStatus({
         type: "error",
-        message: "An unexpected error occurred. Please try again.",
+        message: errorMessage,
       });
+      trackForm("Contact Form", false, "contact-page-form", errorMessage);
     }
   };
 

@@ -3,6 +3,7 @@ import ContactForm from "./ContactForm";
 import HelloMarquee from "@/components/HelloMarquee";
 import GridPattern from "@/components/ui/shadcn-io/grid-pattern";
 import { ContactLinks } from "@/components/ContactLinks";
+import { PageAnalytics } from "@/components/PageAnalytics";
 
 export const metadata: Metadata = {
   title: "Contact - Request a Project",
@@ -80,6 +81,7 @@ export default function ContactPage() {
 
   return (
     <>
+      <PageAnalytics trackPageView trackTime />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
