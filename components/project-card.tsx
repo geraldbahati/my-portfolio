@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Cursor } from "@/components/ui/cursor";
 import { EyeIcon } from "lucide-react";
+import Analytics from "@/lib/analytics";
 
 // Types
 export interface ProjectCardProps {
@@ -47,6 +48,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   const [isHovering, setIsHovering] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const targetRef = useRef<HTMLDivElement>(null);
+  const hasTrackedView = useRef(false);
 
   // Check for reduced motion preference and mobile view
   useEffect(() => {
@@ -85,6 +87,16 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
             entry.isIntersecting && entry.intersectionRatio >= 0.3;
           setIsVisible(visible);
           onVisible?.(visible);
+          
+          // Track project view when it becomes visible
+          if (visible && !hasTrackedView.current) {
+            hasTrackedView.current = true;
+            Analytics.trackMediaInteraction({
+              mediaType: type === 'video' ? 'video' : 'image',
+              action: 'view',
+              mediaId: id,
+            });
+          }
         });
       },
       {
@@ -99,7 +111,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       observer.unobserve(element);
       observer.disconnect();
     };
-  }, [onVisible]);
+  }, [onVisible, id, type]);
 
   // Control video playback based on visibility
   useEffect(() => {
@@ -256,7 +268,10 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
         }}
         role="article"
         aria-label={title || `Project ${id}`}
-        onClick={onClick}
+        onClick={() => {
+          Analytics.trackButtonClick(title || `Project ${id}`, 'Project Card');
+          onClick?.();
+        }}
         onHoverStart={() => setIsHovered(true)}
         onHoverEnd={() => setIsHovered(false)}
         whileTap={{ scale: 0.98 }}
