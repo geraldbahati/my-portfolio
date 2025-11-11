@@ -234,7 +234,6 @@ export default function CombinedProjectsFaqSection({
             backgroundColor:
               heightReductionProgress > 0 ? "#000000" : "#ffffff",
             willChange: "height, background-color",
-            transform: "translateZ(0)",
           }}
         >
           {/* Projects Container */}
@@ -318,7 +317,6 @@ export default function CombinedProjectsFaqSection({
                   style={{
                     scrollBehavior: "auto",
                     willChange: "scroll-position",
-                    transform: "translateZ(0)",
                   }}
                 >
                   {/* Left spacer */}

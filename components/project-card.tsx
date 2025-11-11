@@ -196,15 +196,15 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
     );
   };
 
-  // Handle cursor position change exactly like the example
-  const handlePositionChange = (x: number, y: number) => {
+  // Handle cursor position change with scroll compensation
+  const handlePositionChange = useCallback((x: number, y: number) => {
     if (targetRef.current) {
       const rect = targetRef.current.getBoundingClientRect();
       const isInside =
         x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
       setIsHovering(isInside);
     }
-  };
+  }, []);
 
   // Animation variants for Framer Motion
   const mediaVariants = {
