@@ -4,6 +4,7 @@ import { generateStructuredData } from "@/lib/seo";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { connection } from "next/server";
+import { PageAnalytics } from "@/components/PageAnalytics";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
@@ -66,6 +67,7 @@ export default function PrivacyPolicyPage() {
 
   return (
     <>
+      <PageAnalytics trackPageView trackScroll trackTime />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}

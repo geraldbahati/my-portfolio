@@ -45,3 +45,8 @@ next-env.d.ts
 
 # admin dashboard UI (not for public repo - backend is committed but secure)
 /app/(admin)/
+
+# codebuff
+codebuff.json
+knowledge.md
+logs/

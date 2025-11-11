@@ -3,6 +3,7 @@ import { cacheLife } from "next/cache";
 import { Suspense } from "react";
 import { ProjectsGrid } from "@/components/projects-grid";
 import { getCachedProjects } from "@/lib/data/projects";
+import { PageAnalytics } from "@/components/PageAnalytics";
 
 // SEO Metadata
 export const metadata: Metadata = {
@@ -131,6 +132,7 @@ export default async function ProjectsPage() {
 
   return (
     <main className="min-h-screen bg-background">
+      <PageAnalytics trackPageView trackScroll trackTime />
       {/* Page Header - Static, always pre-rendered */}
       <header className="max-w-7xl mx-auto px-6 lg:px-8 pt-20 pb-12">
         <h1

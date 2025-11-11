@@ -7,6 +7,7 @@ import { SectionDivider } from "@/components/section-divider";
 import InfoSection from "@/sections/info";
 import CombinedProjectsFaqWrapper from "@/sections/combined-projects-faq-wrapper";
 import ContactSection from "@/sections/contact";
+import { PageAnalytics } from "@/components/PageAnalytics";
 
 // SEO Metadata
 export const metadata: Metadata = {
@@ -69,6 +70,7 @@ export default async function Home() {
 
   return (
     <>
+      <PageAnalytics trackPageView trackScroll trackTime />
       {/* Hero and Bio with scroll-triggered overlay effect */}
       <HeroBioOverlay />
 
