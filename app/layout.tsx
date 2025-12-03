@@ -19,7 +19,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://geraldbahati.com"),
+  metadataBase: new URL("https://geraldbahati.dev"),
   title: {
     default: "Gerald Bahati - Full Stack Developer & Digital Creative",
     template: "%s | Gerald Bahati",
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     "frontend developer",
     "backend developer",
   ],
-  authors: [{ name: "Gerald Bahati", url: "https://geraldbahati.com" }],
+  authors: [{ name: "Gerald Bahati", url: "https://geraldbahati.dev" }],
   creator: "Gerald Bahati",
   publisher: "Gerald Bahati",
   formatDetection: {
@@ -53,14 +53,14 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://geraldbahati.com",
+    url: "https://geraldbahati.dev",
     siteName: "Gerald Bahati Portfolio",
     title: "Gerald Bahati - Full Stack Developer & Digital Creative",
     description:
       "Experienced full stack developer specializing in modern web technologies, digital solutions, and creative design. Building exceptional web applications with Next.js, React, TypeScript, and more.",
     images: [
       {
-        url: "https://geraldbahati.com/original.jpeg",
+        url: "https://geraldbahati.dev/original.jpeg",
         width: 1200,
         height: 630,
         alt: "Gerald Bahati - Full Stack Developer & Digital Creative",
@@ -75,7 +75,7 @@ export const metadata: Metadata = {
       "Experienced full stack developer specializing in modern web technologies, digital solutions, and creative design. Building exceptional web applications with Next.js, React, TypeScript, and more.",
     creator: "@geraldbahati",
     images: {
-      url: "https://geraldbahati.com/original.jpeg",
+      url: "https://geraldbahati.dev/original.jpeg",
       alt: "Gerald Bahati - Full Stack Developer & Digital Creative",
     },
   },
@@ -93,7 +93,7 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "https://geraldbahati.com",
+    canonical: "https://geraldbahati.dev",
   },
   category: "technology",
 };

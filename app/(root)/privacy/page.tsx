@@ -57,11 +57,11 @@ export default function PrivacyPolicyPage() {
   const structuredData = generateStructuredData({
     type: "Organization",
     name: "Gerald Bahati",
-    url: "https://geraldbahati.com",
+    url: "https://geraldbahati.dev",
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "Privacy Inquiries",
-      email: "contact@geraldbahati.com",
+      email: "contact@geraldbahati.dev",
     },
   });
 
@@ -72,7 +72,13 @@ export default function PrivacyPolicyPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <Suspense
+        fallback={
+          <div className="min-h-screen flex items-center justify-center">
+            Loading...
+          </div>
+        }
+      >
         <PrivacyContent />
       </Suspense>
     </>
