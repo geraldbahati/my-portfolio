@@ -36,7 +36,9 @@ export const submitContactForm = mutation({
       });
 
       if (!ok) {
-        throw new Error(`Too many requests. Please try again in ${Math.ceil(retryAfter / (1000 * 60))} minutes.`);
+        throw new Error(
+          `Too many requests. Please try again in ${Math.ceil(retryAfter / (1000 * 60))} minutes.`,
+        );
       }
 
       // Sanitize message content
@@ -60,7 +62,9 @@ export const submitContactForm = mutation({
       try {
         // Send email using Resend
         const emailId = await resend.sendEmail(ctx, {
-          from: process.env.SENDER_EMAIL || "Portfolio Contact <contact@yourdomain.com>",
+          from:
+            process.env.SENDER_EMAIL ||
+            "Portfolio Contact <contact@yourdomain.com>",
           to: process.env.RECIPIENT_EMAIL || "your-email@example.com",
           subject: `Portfolio Contact: ${args.name}`,
           html: `
@@ -77,7 +81,7 @@ export const submitContactForm = mutation({
               <div style="background-color: #ffffff; padding: 20px; border: 1px solid #e9ecef; border-radius: 8px;">
                 <h3 style="margin-top: 0; color: #333;">Message</h3>
                 <div style="line-height: 1.6; color: #555;">
-                  ${sanitizedMessage.replace(/\n/g, '<br>')}
+                  ${sanitizedMessage.replace(/\n/g, "<br>")}
                 </div>
               </div>
 
@@ -88,6 +92,31 @@ export const submitContactForm = mutation({
             </div>
           `,
           replyTo: [args.email],
+        });
+
+        // Send confirmation email to the user
+        await resend.sendEmail(ctx, {
+          from:
+            process.env.SENDER_EMAIL ||
+            "Portfolio Contact <contact@yourdomain.com>",
+          to: args.email,
+          subject: "We received your message",
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                <h2 style="margin-top: 0; color: #333;">Thanks for reaching out!</h2>
+                <p>Hi ${args.name},</p>
+                <p>I've received your message and will get back to you as soon as possible.</p>
+              </div>
+
+              <div style="background-color: #ffffff; padding: 20px; border: 1px solid #e9ecef; border-radius: 8px;">
+                <h3 style="margin-top: 0; color: #333;">Your Message</h3>
+                <div style="line-height: 1.6; color: #555;">
+                  ${sanitizedMessage.replace(/\n/g, "<br>")}
+                </div>
+              </div>
+            </div>
+          `,
         });
 
         // Update submission with email ID and status
@@ -152,19 +181,24 @@ export const submitContactForm = mutation({
 export const getContactSubmissionCount = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("contactSubmissions").collect().then(s => s.length);
+    return await ctx.db
+      .query("contactSubmissions")
+      .collect()
+      .then((s) => s.length);
   },
 });
 
 export const getContactSubmissions = query({
   args: {
     limit: v.optional(v.number()),
-    status: v.optional(v.union(
-      v.literal("pending"),
-      v.literal("sent"),
-      v.literal("delivered"),
-      v.literal("failed")
-    )),
+    status: v.optional(
+      v.union(
+        v.literal("pending"),
+        v.literal("sent"),
+        v.literal("delivered"),
+        v.literal("failed"),
+      ),
+    ),
   },
   handler: async (ctx, args) => {
     let submissions;
@@ -172,7 +206,12 @@ export const getContactSubmissions = query({
     if (args.status) {
       submissions = await ctx.db
         .query("contactSubmissions")
-        .withIndex("by_status", (q) => q.eq("status", args.status as "pending" | "sent" | "delivered" | "failed"))
+        .withIndex("by_status", (q) =>
+          q.eq(
+            "status",
+            args.status as "pending" | "sent" | "delivered" | "failed",
+          ),
+        )
         .order("desc")
         .take(args.limit ?? 50);
     } else {
@@ -183,7 +222,7 @@ export const getContactSubmissions = query({
         .take(args.limit ?? 50);
     }
 
-    return submissions.map(submission => ({
+    return submissions.map((submission) => ({
       ...submission,
       submittedAt: new Date(submission.submittedAt).toISOString(),
     }));
@@ -207,8 +246,8 @@ export const getContactStats = query({
   args: {},
   handler: async (ctx) => {
     const now = Date.now();
-    const dayAgo = now - (24 * 60 * 60 * 1000);
-    const weekAgo = now - (7 * 24 * 60 * 60 * 1000);
+    const dayAgo = now - 24 * 60 * 60 * 1000;
+    const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
 
     const [
       totalSubmissions,
@@ -217,19 +256,30 @@ export const getContactStats = query({
       pendingSubmissions,
       failedSubmissions,
     ] = await Promise.all([
-      ctx.db.query("contactSubmissions").collect().then(s => s.length),
-      ctx.db.query("contactSubmissions")
+      ctx.db
+        .query("contactSubmissions")
+        .collect()
+        .then((s) => s.length),
+      ctx.db
+        .query("contactSubmissions")
         .withIndex("by_submitted_at", (q) => q.gte("submittedAt", dayAgo))
-        .collect().then(s => s.length),
-      ctx.db.query("contactSubmissions")
+        .collect()
+        .then((s) => s.length),
+      ctx.db
+        .query("contactSubmissions")
         .withIndex("by_submitted_at", (q) => q.gte("submittedAt", weekAgo))
-        .collect().then(s => s.length),
-      ctx.db.query("contactSubmissions")
+        .collect()
+        .then((s) => s.length),
+      ctx.db
+        .query("contactSubmissions")
         .withIndex("by_status", (q) => q.eq("status", "pending"))
-        .collect().then(s => s.length),
-      ctx.db.query("contactSubmissions")
+        .collect()
+        .then((s) => s.length),
+      ctx.db
+        .query("contactSubmissions")
         .withIndex("by_status", (q) => q.eq("status", "failed"))
-        .collect().then(s => s.length),
+        .collect()
+        .then((s) => s.length),
     ]);
 
     return {
