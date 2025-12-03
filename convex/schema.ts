@@ -39,6 +39,7 @@ export default defineSchema({
     type: v.union(v.literal("video"), v.literal("gif")),
     poster: v.optional(v.string()), // Poster/thumbnail image
     alt: v.optional(v.string()), // Alt text for accessibility
+    url: v.optional(v.string()), // Live project URL (e.g., "https://example.com")
     badges: v.optional(
       v.array(
         v.object({

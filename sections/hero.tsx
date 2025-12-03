@@ -10,6 +10,8 @@ import {
 } from "framer-motion";
 import dynamic from "next/dynamic";
 import Image from "next/image";
+import Link from "next/link";
+import Analytics from "@/lib/analytics";
 
 // Detect mobile for performance optimizations
 const isMobileDevice = () => {
@@ -98,29 +100,35 @@ const TextScrambleHoverTrigger = memo(() => {
   }, []);
 
   return (
-    <motion.div
-      className={`flex-shrink-0 cursor-pointer relative inline-block border-b transition-colors duration-300 ${
-        isHovered ? "border-primary" : "border-muted-foreground/50"
-      }`}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      role="button"
-      tabIndex={0}
-      aria-label="Request a project"
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+    <Link
+      href="/contact"
+      onClick={() => Analytics.trackButtonClick("Request a project", "Hero CTA")}
+      className="inline-block"
     >
-      <TextScramble
-        className="pointer-events-auto text-white font-light text-sm sm:text-base uppercase tracking-[0.2em]"
-        trigger={shouldTrigger}
-        duration={ANIMATION_DURATIONS.HOVER_SCRAMBLE}
-        speed={ANIMATION_DURATIONS.HOVER_SCRAMBLE_SPEED}
-        onScrambleComplete={handleScrambleComplete}
-        as="span"
+      <motion.div
+        className={`flex-shrink-0 cursor-pointer relative inline-block border-b transition-colors duration-300 ${
+          isHovered ? "border-primary" : "border-muted-foreground/50"
+        }`}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        role="button"
+        tabIndex={0}
+        aria-label="Request a project"
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
       >
-        Request a project
-      </TextScramble>
-    </motion.div>
+        <TextScramble
+          className="pointer-events-auto text-white font-light text-sm sm:text-base uppercase tracking-[0.2em]"
+          trigger={shouldTrigger}
+          duration={ANIMATION_DURATIONS.HOVER_SCRAMBLE}
+          speed={ANIMATION_DURATIONS.HOVER_SCRAMBLE_SPEED}
+          onScrambleComplete={handleScrambleComplete}
+          as="span"
+        >
+          Request a project
+        </TextScramble>
+      </motion.div>
+    </Link>
   );
 });
 

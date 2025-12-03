@@ -32,6 +32,7 @@ export const getPublishedProjects = query({
       type: v.union(v.literal("video"), v.literal("gif")),
       poster: v.optional(v.string()),
       alt: v.optional(v.string()),
+      url: v.optional(v.string()),
       badges: v.optional(
         v.array(
           v.object({
@@ -77,6 +78,7 @@ export const getAllProjects = internalQuery({
       type: v.union(v.literal("video"), v.literal("gif")),
       poster: v.optional(v.string()),
       alt: v.optional(v.string()),
+      url: v.optional(v.string()),
       badges: v.optional(
         v.array(
           v.object({
@@ -122,6 +124,7 @@ export const getProjectById = query({
       type: v.union(v.literal("video"), v.literal("gif")),
       poster: v.optional(v.string()),
       alt: v.optional(v.string()),
+      url: v.optional(v.string()),
       badges: v.optional(
         v.array(
           v.object({
@@ -165,6 +168,7 @@ export const createProject = internalMutation({
     type: v.union(v.literal("video"), v.literal("gif")),
     poster: v.optional(v.string()),
     alt: v.optional(v.string()),
+    url: v.optional(v.string()),
     badges: v.optional(
       v.array(
         v.object({
@@ -191,6 +195,7 @@ export const createProject = internalMutation({
       type: args.type,
       poster: args.poster,
       alt: args.alt,
+      url: args.url,
       badges: args.badges,
       aspectRatio: args.aspectRatio,
       order: args.order,
@@ -215,6 +220,7 @@ export const updateProject = internalMutation({
     type: v.optional(v.union(v.literal("video"), v.literal("gif"))),
     poster: v.optional(v.string()),
     alt: v.optional(v.string()),
+    url: v.optional(v.string()),
     badges: v.optional(
       v.array(
         v.object({
@@ -299,6 +305,7 @@ export const seedProjects = internalMutation({
         type: v.union(v.literal("video"), v.literal("gif")),
         poster: v.optional(v.string()),
         alt: v.optional(v.string()),
+        url: v.optional(v.string()),
         badges: v.optional(
           v.array(
             v.object({

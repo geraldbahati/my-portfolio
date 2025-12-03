@@ -65,6 +65,7 @@ export const ProjectsGrid: React.FC<ProjectsGridProps> = ({ projects }) => {
               type={project.type}
               poster={project.poster}
               alt={project.alt || project.title}
+              url={project.url}
               aspectRatio={project.aspectRatio}
               className="shadow-lg hover:shadow-xl transition-shadow duration-300"
             />

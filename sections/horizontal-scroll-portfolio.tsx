@@ -176,6 +176,7 @@ export default function ProjectsSectionPinned({
                       type={project.type}
                       title={project.title}
                       alt={project.alt}
+                      url={project.url}
                       badges={project.badges}
                       aspectRatio={project.aspectRatio}
                       className="w-full transition-all duration-500"

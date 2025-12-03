@@ -334,6 +334,7 @@ export default function CombinedProjectsFaqSection({
                           type={project.type}
                           title={project.title}
                           alt={project.alt}
+                          url={project.url}
                           badges={project.badges}
                           aspectRatio="4/3"
                           className="w-full transition-all duration-500"

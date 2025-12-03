@@ -15,6 +15,7 @@ export interface ProjectCardProps {
   poster?: string;
   alt?: string;
   title?: string;
+  url?: string; // Live project URL
   badges?: {
     text: string;
     position?: "bottom-left" | "bottom-right";
@@ -33,6 +34,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   poster,
   alt = "",
   title,
+  url,
   badges = [],
   aspectRatio = "16/9",
   className = "",
@@ -265,11 +267,19 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
         style={{
           ...aspectRatioStyle,
           ...style,
+          cursor: url ? 'pointer' : 'default',
         }}
         role="article"
         aria-label={title || `Project ${id}`}
         onClick={() => {
           Analytics.trackButtonClick(title || `Project ${id}`, 'Project Card');
+
+          // If URL exists, open in new tab
+          if (url) {
+            window.open(url, '_blank', 'noopener,noreferrer');
+          }
+
+          // Call custom onClick handler if provided
           onClick?.();
         }}
         onHoverStart={() => setIsHovered(true)}
@@ -279,6 +289,13 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
+
+            // If URL exists, open in new tab
+            if (url) {
+              window.open(url, '_blank', 'noopener,noreferrer');
+            }
+
+            // Call custom onClick handler if provided
             onClick?.();
           }
         }}

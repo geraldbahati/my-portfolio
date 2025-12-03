@@ -29,6 +29,7 @@ export interface Project {
   type: "video" | "gif";
   poster?: string;
   alt?: string;
+  url?: string;
   badges?: {
     text: string;
     position?: "bottom-left" | "bottom-right";
