@@ -3,6 +3,8 @@
 import { memo, useMemo } from "react";
 import { motion, MotionValue, useTransform } from "framer-motion";
 import dynamic from "next/dynamic";
+import Link from "next/link";
+import Analytics from "@/lib/analytics";
 
 // Lazy load the CutoutMaskImage component for better performance
 const CutoutMaskImage = dynamic(
@@ -214,29 +216,34 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
                 transform: "translateZ(0)",
               }}
             >
-              <motion.button
-                className="group inline-flex items-center gap-3 text-sm font-medium tracking-wider uppercase text-gray-900 transition-colors hover:text-gray-600"
-                whileHover={{ x: 5 }}
-                whileTap={{ scale: 0.98 }}
+              <Link
+                href="/contact"
+                onClick={() => Analytics.trackButtonClick("Arrange a consultation", "Bio Overlay CTA")}
               >
-                <span className="relative">
-                  Arrange a consultation
-                  <span className="absolute bottom-0 left-0 w-full h-px bg-gray-900 origin-left transition-transform duration-300 scale-x-100 group-hover:scale-x-0" />
-                </span>
-                <svg
-                  className="w-4 h-4 transition-transform group-hover:translate-x-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+                <motion.button
+                  className="group inline-flex items-center gap-3 text-sm font-medium tracking-wider uppercase text-gray-900 transition-colors hover:text-gray-600"
+                  whileHover={{ x: 5 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </motion.button>
+                  <span className="relative">
+                    Arrange a consultation
+                    <span className="absolute bottom-0 left-0 w-full h-px bg-gray-900 origin-left transition-transform duration-300 scale-x-100 group-hover:scale-x-0" />
+                  </span>
+                  <svg
+                    className="w-4 h-4 transition-transform group-hover:translate-x-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </motion.button>
+              </Link>
             </motion.div>
           </div>
         </div>

@@ -62,7 +62,7 @@ function AnimatedLink({
   }, []);
 
   const handleClick = useCallback(() => {
-    Analytics.trackLinkClick(String(children), href, 'internal');
+    Analytics.trackLinkClick(String(children), href, "internal");
   }, [children, href]);
 
   return (
@@ -91,14 +91,14 @@ function AnimatedLink({
 
 export function Footer({
   brand = {
-    name: "Gerald.",
+    name: "Gerald Bahati.",
     tagline: "Digital Designer & Developer",
   },
   contact = {
-    location: "Based in 54295, Trier",
+    location: "Based in Nairobi, Kenya",
     link: {
       text: "make contact",
-      url: "#contact",
+      url: "contact",
     },
   },
   accessibility = {
@@ -111,15 +111,13 @@ export function Footer({
   ],
   copyright,
 }: FooterProps) {
-  const [copyrightText, setCopyrightText] = useState<string>(
-    copyright || ""
-  );
+  const [copyrightText, setCopyrightText] = useState<string>(copyright || "");
 
   useEffect(() => {
     // Update copyright with current year on client-side only
     if (!copyright) {
       const currentYear = new Date().getFullYear();
-      setCopyrightText(`©${currentYear} Alexander Klimenko | All rights reserved.`);
+      setCopyrightText(`©${currentYear} Gerald Bahati | All rights reserved.`);
     } else {
       setCopyrightText(copyright);
     }

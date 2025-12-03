@@ -69,8 +69,8 @@ function AnimatedContactButton({
 }
 
 export function ContactLinks({
-  phoneNumber = "0651 17089399",
-  whatsappNumber = "4965117089399", // Include country code for WhatsApp
+  phoneNumber = "0704713070",
+  whatsappNumber = "254704713070", // Include country code for WhatsApp
   className = "",
 }: ContactLinksProps) {
   const handleCall = () => {

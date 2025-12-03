@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Cursor } from "@/components/ui/cursor";
 import { EyeIcon } from "lucide-react";
+import Analytics from "@/lib/analytics";
 
 // Types
 export interface ProjectCardProps {
@@ -14,6 +15,7 @@ export interface ProjectCardProps {
   poster?: string;
   alt?: string;
   title?: string;
+  url?: string; // Live project URL
   badges?: {
     text: string;
     position?: "bottom-left" | "bottom-right";
@@ -32,6 +34,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   poster,
   alt = "",
   title,
+  url,
   badges = [],
   aspectRatio = "16/9",
   className = "",
@@ -47,6 +50,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   const [isHovering, setIsHovering] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const targetRef = useRef<HTMLDivElement>(null);
+  const hasTrackedView = useRef(false);
 
   // Check for reduced motion preference and mobile view
   useEffect(() => {
@@ -85,6 +89,16 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
             entry.isIntersecting && entry.intersectionRatio >= 0.3;
           setIsVisible(visible);
           onVisible?.(visible);
+          
+          // Track project view when it becomes visible
+          if (visible && !hasTrackedView.current) {
+            hasTrackedView.current = true;
+            Analytics.trackMediaInteraction({
+              mediaType: type === 'video' ? 'video' : 'image',
+              action: 'view',
+              mediaId: id,
+            });
+          }
         });
       },
       {
@@ -99,7 +113,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       observer.unobserve(element);
       observer.disconnect();
     };
-  }, [onVisible]);
+  }, [onVisible, id, type]);
 
   // Control video playback based on visibility
   useEffect(() => {
@@ -184,15 +198,15 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
     );
   };
 
-  // Handle cursor position change exactly like the example
-  const handlePositionChange = (x: number, y: number) => {
+  // Handle cursor position change with scroll compensation
+  const handlePositionChange = useCallback((x: number, y: number) => {
     if (targetRef.current) {
       const rect = targetRef.current.getBoundingClientRect();
       const isInside =
         x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
       setIsHovering(isInside);
     }
-  };
+  }, []);
 
   // Animation variants for Framer Motion
   const mediaVariants = {
@@ -253,10 +267,21 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
         style={{
           ...aspectRatioStyle,
           ...style,
+          cursor: url ? 'pointer' : 'default',
         }}
         role="article"
         aria-label={title || `Project ${id}`}
-        onClick={onClick}
+        onClick={() => {
+          Analytics.trackButtonClick(title || `Project ${id}`, 'Project Card');
+
+          // If URL exists, open in new tab
+          if (url) {
+            window.open(url, '_blank', 'noopener,noreferrer');
+          }
+
+          // Call custom onClick handler if provided
+          onClick?.();
+        }}
         onHoverStart={() => setIsHovered(true)}
         onHoverEnd={() => setIsHovered(false)}
         whileTap={{ scale: 0.98 }}
@@ -264,6 +289,13 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
+
+            // If URL exists, open in new tab
+            if (url) {
+              window.open(url, '_blank', 'noopener,noreferrer');
+            }
+
+            // Call custom onClick handler if provided
             onClick?.();
           }
         }}

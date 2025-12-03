@@ -95,10 +95,6 @@ export default function ProjectsSectionPinned({
         {/* Sticky Container */}
         <div
           className="sticky top-0 h-screen overflow-hidden"
-          style={{
-            willChange: "transform",
-            transform: "translateZ(0)",
-          }}
         >
           {/* Header Section - Now Pinned */}
           <motion.div
@@ -163,8 +159,6 @@ export default function ProjectsSectionPinned({
               className="flex gap-6 overflow-hidden relative"
               style={{
                 scrollBehavior: "auto",
-                willChange: "scroll-position",
-                transform: "translateZ(0)",
               }}
             >
               {/* Left spacer to center the first project initially */}
@@ -182,6 +176,7 @@ export default function ProjectsSectionPinned({
                       type={project.type}
                       title={project.title}
                       alt={project.alt}
+                      url={project.url}
                       badges={project.badges}
                       aspectRatio={project.aspectRatio}
                       className="w-full transition-all duration-500"

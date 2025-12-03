@@ -27,6 +27,7 @@ export const getAllProjectsQuery = query({
       type: v.union(v.literal("video"), v.literal("gif")),
       poster: v.optional(v.string()),
       alt: v.optional(v.string()),
+      url: v.optional(v.string()),
       badges: v.optional(
         v.array(
           v.object({
@@ -67,6 +68,7 @@ export const createProject = action({
     type: v.union(v.literal("video"), v.literal("gif")),
     poster: v.optional(v.string()),
     alt: v.optional(v.string()),
+    url: v.optional(v.string()),
     badges: v.optional(
       v.array(
         v.object({
@@ -99,6 +101,7 @@ export const updateProject = action({
     type: v.optional(v.union(v.literal("video"), v.literal("gif"))),
     poster: v.optional(v.string()),
     alt: v.optional(v.string()),
+    url: v.optional(v.string()),
     badges: v.optional(
       v.array(
         v.object({

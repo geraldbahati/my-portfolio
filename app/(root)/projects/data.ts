@@ -16,6 +16,7 @@ export interface Project {
   type: "video" | "gif";
   poster?: string;
   alt?: string;
+  url?: string; // Live project URL
   badges?: {
     text: string;
     position?: "bottom-left" | "bottom-right";
