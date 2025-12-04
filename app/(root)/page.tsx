@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     url: "/",
     images: [
       {
-        url: "/original.jpeg",
+        url: "https://geraldbahati.dev/original.jpeg",
         width: 1200,
         height: 630,
         alt: "Gerald Bahati - Full Stack Developer",
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     title: "Gerald Bahati - Full Stack Developer & Digital Creative",
     description:
       "Experienced full stack developer specializing in modern web technologies, digital solutions, and creative design.",
-    images: ["/original.jpeg"],
+    images: ["https://geraldbahati.dev/original.jpeg"],
   },
   robots: {
     index: true,
