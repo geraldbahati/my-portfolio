@@ -3,6 +3,7 @@ import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { Resend } from "@convex-dev/resend";
 import { RateLimiter, HOUR } from "@convex-dev/rate-limiter";
+import { requireAdmin } from "./auth";
 
 // Initialize Resend with test mode disabled for production
 export const resend = new Resend(components.resend, {
@@ -181,11 +182,13 @@ export const submitContactForm = mutation({
 export const getContactSubmissionCount = query({
   args: {},
   handler: async (ctx) => {
+    await requireAdmin(ctx);
     return await ctx.db
       .query("contactSubmissions")
       .collect()
       .then((s) => s.length);
   },
+  returns: v.number(),
 });
 
 export const getContactSubmissions = query({
@@ -201,6 +204,8 @@ export const getContactSubmissions = query({
     ),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx);
+
     let submissions;
 
     if (args.status) {
@@ -232,6 +237,8 @@ export const getContactSubmissions = query({
 export const getContactSubmission = query({
   args: { id: v.id("contactSubmissions") },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx);
+
     const submission = await ctx.db.get(args.id);
     if (!submission) return null;
 
@@ -245,6 +252,7 @@ export const getContactSubmission = query({
 export const getContactStats = query({
   args: {},
   handler: async (ctx) => {
+    await requireAdmin(ctx);
     const now = Date.now();
     const dayAgo = now - 24 * 60 * 60 * 1000;
     const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
