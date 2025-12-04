@@ -165,78 +165,87 @@ export default function CombinedProjectsFaqSection({
   const horizontalScrollPhase = useMemo(() => 0.5, []);
 
   // Optimized scroll handler with RAF throttling and final update
-  const updateScrollPosition = useCallback((forceFinal = false) => {
-    if (!scrollTriggerRef.current || !scrollContainerRef.current) {
-      return;
-    }
-
-    const now = performance.now();
-
-    // Throttle to ~60fps, but allow forced final updates
-    if (!forceFinal && now - lastUpdateTimeRef.current < 16) {
-      rafIdRef.current = requestAnimationFrame(() => updateScrollPosition(false));
-      return;
-    }
-
-    lastUpdateTimeRef.current = now;
-
-    const triggerSection = scrollTriggerRef.current;
-    const rect = triggerSection.getBoundingClientRect();
-    const sectionHeight = triggerSection.offsetHeight;
-    const viewportHeight = window.innerHeight;
-
-    // Check if header should be visible
-    const isInView = rect.top <= viewportHeight * 0.8;
-    setIsHeaderVisible((prev) => (prev !== isInView ? isInView : prev));
-
-    // Calculate total scrollable distance
-    const scrollableDistance = sectionHeight - viewportHeight;
-    const scrolled = -rect.top;
-    const totalProgress = Math.max(
-      0,
-      Math.min(1, scrolled / scrollableDistance),
-    );
-
-    // Phase breakdown:
-    // 0-50%: horizontal project scrolling
-    // 50-100%: height reduction to push content up
-    if (totalProgress <= horizontalScrollPhase) {
-      // Horizontal scroll phase
-      const horizontalProgress = totalProgress / horizontalScrollPhase;
-      setScrollProgress(horizontalProgress);
-      setHeightReductionProgress(0);
-
-      // Apply horizontal scroll
-      const container = scrollContainerRef.current;
-      const maxHorizontalScroll = container.scrollWidth - container.clientWidth;
-      const targetScrollLeft = horizontalProgress * maxHorizontalScroll;
-
-      // Use smooth scrolling for better visual consistency
-      if (Math.abs(container.scrollLeft - targetScrollLeft) > 1) {
-        container.scrollLeft = targetScrollLeft;
+  const updateScrollPosition = useCallback(
+    (forceFinal = false) => {
+      if (!scrollTriggerRef.current || !scrollContainerRef.current) {
+        return;
       }
-    } else {
-      // Height reduction phase
-      setScrollProgress(1);
-      const reductionProgress =
-        (totalProgress - horizontalScrollPhase) / (1 - horizontalScrollPhase);
-      setHeightReductionProgress(Math.min(reductionProgress, 1));
 
-      // Ensure horizontal scroll is at max during height reduction
-      const container = scrollContainerRef.current;
-      const maxHorizontalScroll = container.scrollWidth - container.clientWidth;
-      if (container.scrollLeft < maxHorizontalScroll - 1) {
-        container.scrollLeft = maxHorizontalScroll;
+      const now = performance.now();
+
+      // Throttle to ~60fps, but allow forced final updates
+      if (!forceFinal && now - lastUpdateTimeRef.current < 16) {
+        rafIdRef.current = requestAnimationFrame(() =>
+          updateScrollPosition(false),
+        );
+        return;
       }
-    }
-  }, [horizontalScrollPhase]);
+
+      lastUpdateTimeRef.current = now;
+
+      const triggerSection = scrollTriggerRef.current;
+      const rect = triggerSection.getBoundingClientRect();
+      const sectionHeight = triggerSection.offsetHeight;
+      const viewportHeight = window.innerHeight;
+
+      // Check if header should be visible
+      const isInView = rect.top <= viewportHeight * 0.8;
+      setIsHeaderVisible((prev) => (prev !== isInView ? isInView : prev));
+
+      // Calculate total scrollable distance
+      const scrollableDistance = sectionHeight - viewportHeight;
+      const scrolled = -rect.top;
+      const totalProgress = Math.max(
+        0,
+        Math.min(1, scrolled / scrollableDistance),
+      );
+
+      // Phase breakdown:
+      // 0-50%: horizontal project scrolling
+      // 50-100%: height reduction to push content up
+      if (totalProgress <= horizontalScrollPhase) {
+        // Horizontal scroll phase
+        const horizontalProgress = totalProgress / horizontalScrollPhase;
+        setScrollProgress(horizontalProgress);
+        setHeightReductionProgress(0);
+
+        // Apply horizontal scroll
+        const container = scrollContainerRef.current;
+        const maxHorizontalScroll =
+          container.scrollWidth - container.clientWidth;
+        const targetScrollLeft = horizontalProgress * maxHorizontalScroll;
+
+        // Use smooth scrolling for better visual consistency
+        if (Math.abs(container.scrollLeft - targetScrollLeft) > 1) {
+          container.scrollLeft = targetScrollLeft;
+        }
+      } else {
+        // Height reduction phase
+        setScrollProgress(1);
+        const reductionProgress =
+          (totalProgress - horizontalScrollPhase) / (1 - horizontalScrollPhase);
+        setHeightReductionProgress(Math.min(reductionProgress, 1));
+
+        // Ensure horizontal scroll is at max during height reduction
+        const container = scrollContainerRef.current;
+        const maxHorizontalScroll =
+          container.scrollWidth - container.clientWidth;
+        if (container.scrollLeft < maxHorizontalScroll - 1) {
+          container.scrollLeft = maxHorizontalScroll;
+        }
+      }
+    },
+    [horizontalScrollPhase],
+  );
 
   useEffect(() => {
     const handleScroll = () => {
       if (rafIdRef.current) {
         cancelAnimationFrame(rafIdRef.current);
       }
-      rafIdRef.current = requestAnimationFrame(() => updateScrollPosition(false));
+      rafIdRef.current = requestAnimationFrame(() =>
+        updateScrollPosition(false),
+      );
 
       // Clear any existing scroll end timeout
       if (scrollEndTimeoutRef.current) {
@@ -387,7 +396,7 @@ export default function CombinedProjectsFaqSection({
                           alt={project.alt}
                           url={project.url}
                           badges={project.badges}
-                          aspectRatio="4/3"
+                          aspectRatio="16/9"
                           className="w-full transition-all duration-500"
                         />
                       </div>

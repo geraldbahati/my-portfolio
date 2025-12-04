@@ -1,11 +1,19 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useCallback } from "react";
-import Image from "next/image";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
+import { CldImage, CldVideoPlayer } from "next-cloudinary";
+import "next-cloudinary/dist/cld-video-player.css";
 import { motion, AnimatePresence } from "framer-motion";
 import { Cursor } from "@/components/ui/cursor";
 import { EyeIcon } from "lucide-react";
 import Analytics from "@/lib/analytics";
+import { optimizeCloudinaryVideo, isCloudinaryUrl } from "@/lib/cloudinary";
 
 // Types
 export interface ProjectCardProps {
@@ -54,7 +62,9 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
 
   // Check for reduced motion preference and mobile view
   useEffect(() => {
-    const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const reducedMotionQuery = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    );
     const mobileQuery = window.matchMedia("(max-width: 768px)");
 
     setPrefersReducedMotion(reducedMotionQuery.matches);
@@ -72,7 +82,10 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
     mobileQuery.addEventListener("change", handleMobileChange);
 
     return () => {
-      reducedMotionQuery.removeEventListener("change", handleReducedMotionChange);
+      reducedMotionQuery.removeEventListener(
+        "change",
+        handleReducedMotionChange,
+      );
       mobileQuery.removeEventListener("change", handleMobileChange);
     };
   }, []);
@@ -85,25 +98,30 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          const visible =
-            entry.isIntersecting && entry.intersectionRatio >= 0.3;
+          // FIX: Simply check isIntersecting.
+          // If it's in the viewport (even 1 pixel), we consider it "visible" enough to start logic,
+          // but usually, a small threshold like 0.2 is better for UX.
+          const visible = entry.isIntersecting;
+
           setIsVisible(visible);
           onVisible?.(visible);
-          
-          // Track project view when it becomes visible
+
           if (visible && !hasTrackedView.current) {
             hasTrackedView.current = true;
             Analytics.trackMediaInteraction({
-              mediaType: type === 'video' ? 'video' : 'image',
-              action: 'view',
+              mediaType: type === "video" ? "video" : "image",
+              action: "view",
               mediaId: id,
             });
           }
         });
       },
       {
-        threshold: [0, 0.25, 0.3, 0.5, 0.75, 1],
-        rootMargin: "100px",
+        // FIX: simplified threshold. 0.2 means "play when 20% visible"
+        threshold: 0.2,
+        // rootMargin: "0px" is usually safer for exact viewports,
+        // but "100px" preloads it slightly before it enters.
+        rootMargin: "50px",
       },
     );
 
@@ -116,21 +134,8 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   }, [onVisible, id, type]);
 
   // Control video playback based on visibility
-  useEffect(() => {
-    if (type !== "video" || prefersReducedMotion) return;
-
-    const video = mediaRef.current as HTMLVideoElement;
-    if (!video) return;
-
-    if (isVisible && !hasError) {
-      video.play().catch((err) => {
-        console.warn(`Failed to autoplay video ${id}:`, err);
-        setHasError(true);
-      });
-    } else {
-      video.pause();
-    }
-  }, [isVisible, type, id, hasError, prefersReducedMotion]);
+  // Note: CldVideoPlayer handles autoplay with 'on-scroll' mode
+  // We only keep the IntersectionObserver above for Analytics tracking
 
   const handleVideoError = useCallback(() => {
     console.error(`Video failed to load: ${id}`);
@@ -143,22 +148,51 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       ? { aspectRatio }
       : { aspectRatio: aspectRatio.toString() };
 
+  // Optimize video URL with Cloudinary transformations
+  // Note: CldVideoPlayer handles this internally now
+  const optimizedVideoSrc = useMemo(() => {
+    return src;
+  }, [src]);
+
+  // Optimize poster URL if it's a Cloudinary URL
+  const optimizedPoster = useMemo(() => {
+    if (poster && isCloudinaryUrl(poster)) {
+      // Poster is already optimized via CldImage, but we can use it for the video tag
+      return poster;
+    }
+    return poster;
+  }, [poster]);
+
   // Render media content
   const renderMedia = () => {
-    // Show poster if reduced motion is preferred or video has error
+    // 1. Handle Fallback / Reduced Motion
     if (prefersReducedMotion || hasError) {
-      if (poster) {
+      // Determine which ID to use: content of 'poster' OR the main 'src' (if it's the video ID)
+      const mediaId = poster || src;
+
+      // If we have a Cloudinary ID (or URL), render the optimized thumbnail
+      // Note: We assume 'src' or 'poster' contains the public ID (e.g., 'teamflow_qduwrr')
+      if (mediaId) {
         return (
-          <Image
-            src={poster}
+          <CldImage
+            src={mediaId}
             alt={alt || title || `Project ${id}`}
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            priority={false}
+            crop="fill"
+            gravity="auto"
+            // CRITICAL FIX:
+            // If the ID belongs to a video, we must tell CldImage to look in the video DB
+            assetType={type === "video" ? "video" : "image"}
+            quality="auto"
+            format="auto"
+            preserveTransformations
           />
         );
       }
+
+      // Fallback if no media ID found
       return (
         <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
           <span className="text-gray-400">Media unavailable</span>
@@ -166,35 +200,44 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       );
     }
 
+    // 2. Handle GIF (Images)
     if (type === "gif") {
       return (
-        <Image
-          ref={mediaRef as React.RefObject<HTMLImageElement>}
+        <CldImage
           src={src}
           alt={alt || title || `Project ${id}`}
           fill
           className="object-cover"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          unoptimized // GIFs should not be optimized by Next.js
+          crop="fill"
+          gravity="auto"
+          quality="auto"
+          format="auto"
+          preserveTransformations
         />
       );
     }
 
+    // 3. Handle Video Player (using CldVideoPlayer for robust autoplay)
     return (
-      <video
-        ref={mediaRef as React.RefObject<HTMLVideoElement>}
-        src={src}
-        poster={poster}
-        muted
-        loop
-        playsInline
-        preload="metadata"
-        className="absolute inset-0 w-full h-full object-cover"
-        onError={handleVideoError}
-        aria-label={alt || title || `Project ${id} video`}
-      >
-        <track kind="captions" label="No audio" />
-      </video>
+      <div className="absolute inset-0 w-full h-full [&_video]:object-cover">
+        <CldVideoPlayer
+          src={src} // Pass public ID directly
+          width="1920"
+          height="1080"
+          autoplay="on-scroll"
+          muted
+          loop
+          controls={false}
+          playsinline
+          className="w-full h-full"
+          poster={poster} // Can be public ID or URL
+          transformation={{
+            quality: "auto",
+            format: "auto",
+          }}
+        />
+      </div>
     );
   };
 
@@ -267,16 +310,16 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
         style={{
           ...aspectRatioStyle,
           ...style,
-          cursor: url ? 'pointer' : 'default',
+          cursor: url ? "pointer" : "default",
         }}
         role="article"
         aria-label={title || `Project ${id}`}
         onClick={() => {
-          Analytics.trackButtonClick(title || `Project ${id}`, 'Project Card');
+          Analytics.trackButtonClick(title || `Project ${id}`, "Project Card");
 
           // If URL exists, open in new tab
           if (url) {
-            window.open(url, '_blank', 'noopener,noreferrer');
+            window.open(url, "_blank", "noopener,noreferrer");
           }
 
           // Call custom onClick handler if provided
@@ -292,7 +335,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
 
             // If URL exists, open in new tab
             if (url) {
-              window.open(url, '_blank', 'noopener,noreferrer');
+              window.open(url, "_blank", "noopener,noreferrer");
             }
 
             // Call custom onClick handler if provided
@@ -368,7 +411,6 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
             </motion.div>
           );
         })}
-
       </motion.div>
     </div>
   );
