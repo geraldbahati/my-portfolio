@@ -396,7 +396,8 @@ export default function CombinedProjectsFaqSection({
                           alt={project.alt}
                           url={project.url}
                           badges={project.badges}
-                          aspectRatio="16/9"
+                          aspectRatio="4/3"
+                          poster={project.poster}
                           className="w-full transition-all duration-500"
                         />
                       </div>

@@ -29,6 +29,8 @@ export interface ProjectCardProps {
     position?: "bottom-left" | "bottom-right";
   }[];
   aspectRatio?: string | number;
+  width?: string | number;
+  height?: string | number;
   className?: string;
   style?: React.CSSProperties;
   onVisible?: (visible: boolean) => void;
@@ -45,6 +47,8 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   url,
   badges = [],
   aspectRatio = "16/9",
+  width,
+  height,
   className = "",
   style,
   onVisible,
@@ -148,6 +152,39 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       ? { aspectRatio }
       : { aspectRatio: aspectRatio.toString() };
 
+  // Calculate dimensions for CldVideoPlayer based on aspect ratio
+  const { playerWidth, playerHeight } = useMemo(() => {
+    // If width and height are explicitly provided, use them
+    if (width && height) {
+      return { playerWidth: width, playerHeight: height };
+    }
+
+    // Default base height (1080p)
+    const baseHeight = 1080;
+    let ratio = 16 / 9;
+
+    if (typeof aspectRatio === "number") {
+      ratio = aspectRatio;
+    } else if (typeof aspectRatio === "string") {
+      const parts = aspectRatio.split("/");
+      if (parts.length === 2) {
+        const w = parseFloat(parts[0]);
+        const h = parseFloat(parts[1]);
+        if (!isNaN(w) && !isNaN(h) && h !== 0) {
+          ratio = w / h;
+        }
+      }
+    }
+
+    // Calculate width based on height and ratio
+    const calculatedWidth = Math.round(baseHeight * ratio);
+
+    return {
+      playerWidth: width || calculatedWidth,
+      playerHeight: height || baseHeight,
+    };
+  }, [width, height, aspectRatio]);
+
   // Optimize video URL with Cloudinary transformations
   // Note: CldVideoPlayer handles this internally now
   const optimizedVideoSrc = useMemo(() => {
@@ -223,8 +260,8 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
       <div className="absolute inset-0 w-full h-full [&_video]:object-cover">
         <CldVideoPlayer
           src={src} // Pass public ID directly
-          width="1920"
-          height="1080"
+          width={playerWidth}
+          height={playerHeight}
           autoplay="on-scroll"
           muted
           loop
@@ -233,8 +270,10 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
           className="w-full h-full"
           poster={poster} // Can be public ID or URL
           transformation={{
-            quality: "auto",
-            format: "auto",
+            width: playerWidth,
+            height: playerHeight,
+            crop: "fill",
+            gravity: "center",
           }}
         />
       </div>

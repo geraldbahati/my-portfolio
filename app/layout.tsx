@@ -109,12 +109,12 @@ export default function RootLayout({
       <body
         className={`${syne.variable} ${jetbrainsMono.variable} antialiased bg-background`}
       >
-        <ClerkProvider>
-          <ConvexClientProvider>
-            {children}
-            <AnalyticsProvider />
-          </ConvexClientProvider>
-        </ClerkProvider>
+        {/*<ClerkProvider>*/}
+        <ConvexClientProvider>
+          {children}
+          <AnalyticsProvider />
+        </ConvexClientProvider>
+        {/*</ClerkProvider>*/}
       </body>
     </html>
   );
