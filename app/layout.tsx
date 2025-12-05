@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Syne, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { ClerkProvider } from "@clerk/nextjs";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { AnalyticsProvider } from "@/components/analytics-provider";
 
@@ -108,10 +109,12 @@ export default function RootLayout({
       <body
         className={`${syne.variable} ${jetbrainsMono.variable} antialiased bg-background`}
       >
+        {/*<ClerkProvider>*/}
         <ConvexClientProvider>
           {children}
           <AnalyticsProvider />
         </ConvexClientProvider>
+        {/*</ClerkProvider>*/}
       </body>
     </html>
   );

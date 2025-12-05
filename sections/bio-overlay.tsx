@@ -8,8 +8,11 @@ import Analytics from "@/lib/analytics";
 
 // Lazy load the CutoutMaskImage component for better performance
 const CutoutMaskImage = dynamic(
-  () => import("@/components/ui/cutout-image-mask").then((mod) => ({ default: mod.CutoutMaskImage })),
-  { ssr: true }
+  () =>
+    import("@/components/ui/cutout-image-mask").then((mod) => ({
+      default: mod.CutoutMaskImage,
+    })),
+  { ssr: true },
 );
 
 // Optimized Character component with simplified transforms
@@ -27,7 +30,11 @@ const Character = memo(
 
     // Handle spaces properly to maintain spacing
     if (children === " ") {
-      return <span className="inline-block" style={{ width: "0.25em" }}> </span>;
+      return (
+        <span className="inline-block" style={{ width: "0.25em" }}>
+          {" "}
+        </span>
+      );
     }
 
     return (
@@ -48,7 +55,7 @@ const Character = memo(
   // Custom comparison to prevent unnecessary re-renders
   (prev, next) => {
     return prev.children === next.children && prev.progress === next.progress;
-  }
+  },
 );
 
 Character.displayName = "Character";
@@ -87,7 +94,7 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
   // Calculate character reveal ranges - Memoized with simplified calculation
   const totalChars = useMemo(
     () => taglineChars.length + numberChars.length + mainChars.length,
-    [taglineChars.length, numberChars.length, mainChars.length]
+    [taglineChars.length, numberChars.length, mainChars.length],
   );
 
   return (
@@ -140,26 +147,46 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
             {/* Tagline and Number */}
             <div className="flex justify-between items-start">
               <div className="text-xs sm:text-sm font-medium tracking-[0.2em] uppercase text-gray-600">
-                {tagline.split(" ").map((word, wordIdx) => (
-                  <span key={`tag-word-${wordIdx}`} className="inline-block whitespace-nowrap">
-                    {word.split("").map((char, charIdx) => {
-                      const charIndex = tagline.substring(0, tagline.indexOf(word)).length + charIdx;
-                      const start = charIndex / totalChars;
-                      const end = (charIndex + 3) / totalChars;
+                {tagline.split(" ").map((word, wordIdx) => {
+                  // Calculate the starting character index for this word within the full tagline
+                  const prevWordsLength = tagline
+                    .split(" ")
+                    .slice(0, wordIdx)
+                    .join(" ").length;
+                  const wordStartCharIndex =
+                    prevWordsLength + (wordIdx > 0 ? 1 : 0); // +1 for space if not the first word
 
-                      return (
-                        <Character
-                          key={`tag-${wordIdx}-${charIdx}`}
-                          progress={contentProgress}
-                          range={[start, end]}
+                  return (
+                    <span
+                      key={`tag-word-${wordIdx}`}
+                      className="inline-block whitespace-nowrap"
+                    >
+                      {word.split("").map((char, charIdx) => {
+                        const charIndex = wordStartCharIndex + charIdx;
+                        const start = charIndex / totalChars;
+                        const end = (charIndex + 3) / totalChars;
+
+                        return (
+                          <Character
+                            key={`tag-${wordIdx}-${charIdx}`}
+                            progress={contentProgress}
+                            range={[start, end]}
+                          >
+                            {char}
+                          </Character>
+                        );
+                      })}
+                      {wordIdx < tagline.split(" ").length - 1 && (
+                        <span
+                          className="inline-block"
+                          style={{ width: "0.25em" }}
                         >
-                          {char}
-                        </Character>
-                      );
-                    })}
-                    {wordIdx < tagline.split(" ").length - 1 && <span className="inline-block" style={{ width: "0.25em" }}> </span>}
-                  </span>
-                ))}
+                          {" "}
+                        </span>
+                      )}
+                    </span>
+                  );
+                })}
               </div>
 
               <div className="text-xs sm:text-sm font-light text-gray-400 whitespace-nowrap">
@@ -183,28 +210,49 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
 
             {/* Main Text */}
             <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl leading-tight font-light text-gray-900">
-              {mainText.split(" ").map((word, wordIdx) => (
-                <span key={`main-word-${wordIdx}`} className="inline-block whitespace-nowrap">
-                  {word.split("").map((char, charIdx) => {
-                    const prevText = mainText.split(" ").slice(0, wordIdx).join(" ");
-                    const charIndex = taglineChars.length + numberChars.length +
-                      (prevText.length > 0 ? prevText.length + 1 : 0) + charIdx;
-                    const start = charIndex / totalChars;
-                    const end = (charIndex + 3) / totalChars;
+              {mainText.split(" ").map((word, wordIdx) => {
+                // Calculate the starting character index for this word within the full mainText
+                const prevMainTextLength = mainText
+                  .split(" ")
+                  .slice(0, wordIdx)
+                  .join(" ").length;
+                const mainTextWordStartCharIndex =
+                  prevMainTextLength + (wordIdx > 0 ? 1 : 0); // +1 for space if not the first word
 
-                    return (
-                      <Character
-                        key={`main-${wordIdx}-${charIdx}`}
-                        progress={contentProgress}
-                        range={[start, end]}
+                const charOffset = taglineChars.length + numberChars.length;
+
+                return (
+                  <span
+                    key={`main-word-${wordIdx}`}
+                    className="inline-block whitespace-nowrap"
+                  >
+                    {word.split("").map((char, charIdx) => {
+                      const charIndex =
+                        charOffset + mainTextWordStartCharIndex + charIdx;
+                      const start = charIndex / totalChars;
+                      const end = (charIndex + 3) / totalChars;
+
+                      return (
+                        <Character
+                          key={`main-${wordIdx}-${charIdx}`}
+                          progress={contentProgress}
+                          range={[start, end]}
+                        >
+                          {char}
+                        </Character>
+                      );
+                    })}
+                    {wordIdx < mainText.split(" ").length - 1 && (
+                      <span
+                        className="inline-block"
+                        style={{ width: "0.25em" }}
                       >
-                        {char}
-                      </Character>
-                    );
-                  })}
-                  {wordIdx < mainText.split(" ").length - 1 && <span className="inline-block" style={{ width: "0.25em" }}> </span>}
-                </span>
-              ))}
+                        {" "}
+                      </span>
+                    )}
+                  </span>
+                );
+              })}
             </h2>
 
             {/* CTA Button - appears after text */}
@@ -218,7 +266,12 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
             >
               <Link
                 href="/contact"
-                onClick={() => Analytics.trackButtonClick("Arrange a consultation", "Bio Overlay CTA")}
+                onClick={() =>
+                  Analytics.trackButtonClick(
+                    "Arrange a consultation",
+                    "Bio Overlay CTA",
+                  )
+                }
               >
                 <motion.button
                   className="group inline-flex items-center gap-3 text-sm font-medium tracking-wider uppercase text-gray-900 transition-colors hover:text-gray-600"

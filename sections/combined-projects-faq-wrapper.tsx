@@ -10,6 +10,7 @@
  */
 
 import { Suspense } from "react";
+import { cacheLife, cacheTag } from "next/cache";
 import CombinedProjectsFaqSection from "./combined-projects-faq";
 import { getCachedProjects } from "@/lib/data/projects";
 
@@ -17,6 +18,10 @@ import { getCachedProjects } from "@/lib/data/projects";
  * Projects Content - Fetches and passes data to client component
  */
 async function ProjectsFaqContent() {
+  "use cache";
+  cacheLife("days");
+  cacheTag("projects");
+
   const projects = await getCachedProjects();
   return <CombinedProjectsFaqSection projects={projects} />;
 }

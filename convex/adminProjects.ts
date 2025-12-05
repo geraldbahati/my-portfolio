@@ -10,6 +10,7 @@ import { v } from "convex/values";
 import { action, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
+import { requireAdmin } from "./auth";
 
 /**
  * Get all projects (including unpublished) as a query - for real-time updates
@@ -46,6 +47,8 @@ export const getAllProjectsQuery = query({
     })
   ),
   handler: async (ctx) => {
+    await requireAdmin(ctx);
+
     const projects = await ctx.db
       .query("projects")
       .withIndex("by_order")
@@ -85,6 +88,7 @@ export const createProject = action({
   },
   returns: v.id("projects"),
   handler: async (ctx, args): Promise<Id<"projects">> => {
+    await requireAdmin(ctx);
     return await ctx.runMutation(internal.projects.createProject, args);
   },
 });
@@ -118,6 +122,7 @@ export const updateProject = action({
   },
   returns: v.null(),
   handler: async (ctx, args): Promise<null> => {
+    await requireAdmin(ctx);
     return await ctx.runMutation(internal.projects.updateProject, args);
   },
 });
@@ -131,6 +136,7 @@ export const deleteProject = action({
   },
   returns: v.null(),
   handler: async (ctx, args): Promise<null> => {
+    await requireAdmin(ctx);
     return await ctx.runMutation(internal.projects.deleteProject, args);
   },
 });
@@ -149,6 +155,7 @@ export const reorderProjects = action({
   },
   returns: v.null(),
   handler: async (ctx, args): Promise<null> => {
+    await requireAdmin(ctx);
     return await ctx.runMutation(internal.projects.reorderProjects, args);
   },
 });

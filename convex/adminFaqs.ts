@@ -9,6 +9,7 @@ import { v } from "convex/values";
 import { action, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
+import { requireAdmin } from "./auth";
 
 /**
  * Get all FAQs (including unpublished) as a query - for real-time updates
@@ -28,6 +29,8 @@ export const getAllFaqsQuery = query({
     })
   ),
   handler: async (ctx) => {
+    await requireAdmin(ctx);
+
     const faqs = await ctx.db
       .query("faqs")
       .withIndex("by_order")
@@ -57,6 +60,7 @@ export const getFaq = action({
     v.null()
   ),
   handler: async (ctx, args): Promise<any> => {
+    await requireAdmin(ctx);
     return await ctx.runQuery(internal.faqs.getFaq, args);
   },
 });
@@ -73,6 +77,7 @@ export const createFaq = action({
   },
   returns: v.id("faqs"),
   handler: async (ctx, args): Promise<Id<"faqs">> => {
+    await requireAdmin(ctx);
     return await ctx.runMutation(internal.faqs.createFaq, args);
   },
 });
@@ -90,6 +95,7 @@ export const updateFaq = action({
   },
   returns: v.null(),
   handler: async (ctx, args): Promise<null> => {
+    await requireAdmin(ctx);
     return await ctx.runMutation(internal.faqs.updateFaq, args);
   },
 });
@@ -103,6 +109,7 @@ export const deleteFaq = action({
   },
   returns: v.null(),
   handler: async (ctx, args): Promise<null> => {
+    await requireAdmin(ctx);
     return await ctx.runMutation(internal.faqs.deleteFaq, args);
   },
 });
@@ -121,6 +128,7 @@ export const reorderFaqs = action({
   },
   returns: v.null(),
   handler: async (ctx, args): Promise<null> => {
+    await requireAdmin(ctx);
     return await ctx.runMutation(internal.faqs.reorderFaqs, args);
   },
 });

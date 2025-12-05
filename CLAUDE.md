@@ -110,11 +110,95 @@ The main page (`app/page.tsx`) uses dynamic imports for performance optimization
 - Resend component for email sending
 - Rate limiter component (5 requests per hour, capacity 3)
 
+### Authentication
+
+This project uses **Clerk** for authentication integrated with Convex.
+
+**Setup:**
+- Authentication configuration: `convex/auth.config.ts`
+- Clerk providers: Wrapped in `app/layout.tsx` (ClerkProvider > ConvexClientProvider)
+- Route protection: Proxy at `proxy.ts` protects all `/admin` routes (Next.js 16 renamed middleware to proxy)
+- Client provider: `components/ConvexClientProvider.tsx` uses `ConvexProviderWithClerk`
+- Auth helpers: `convex/auth.ts` provides `requireAuth()`, `requireAdmin()`, and `isAdmin()` utilities
+
+**Protected Routes:**
+- `/admin/*` - Admin dashboard routes (DEVELOPMENT ONLY)
+  - Blocked in production via proxy middleware
+  - Requires authentication AND admin role in development
+
+**Admin Role Setup:**
+To make a user an admin, you need to set their role in Clerk Dashboard:
+
+1. Go to Clerk Dashboard → Users
+2. Select the user you want to make an admin
+3. Scroll to "Metadata" section
+4. Click "Edit" on "Public metadata"
+5. Add the following JSON:
+```json
+{
+  "role": "admin"
+}
+```
+6. Save changes
+
+The user will now have admin access to `/admin` routes.
+
+**Authentication Flow:**
+1. User attempts to access protected route
+2. Clerk proxy checks if user is authenticated
+3. For `/admin` routes, proxy also checks if user has `role: "admin"` in public metadata
+4. If not admin, user is redirected to home page
+5. Convex queries/mutations can access user identity via `ctx.auth.getUserIdentity()`
+
+**Using Authentication in Convex Functions:**
+```typescript
+import { requireAuth, requireAdmin, isAdmin } from "./auth";
+
+// Require any authenticated user
+export const myQuery = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await requireAuth(ctx);
+    // User is authenticated
+  },
+});
+
+// Require admin user
+export const adminMutation = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await requireAdmin(ctx);
+    // User is authenticated AND is an admin
+  },
+});
+
+// Check if user is admin (returns boolean)
+export const checkAdmin = query({
+  args: {},
+  handler: async (ctx) => {
+    const userIsAdmin = await isAdmin(ctx);
+    return { isAdmin: userIsAdmin };
+  },
+});
+```
+
+**Client-side Authentication:**
+- Use `useConvexAuth()` from `convex/react` to check auth state (NOT Clerk's `useAuth()`)
+- Use `<Authenticated>`, `<Unauthenticated>`, `<AuthLoading>` from `convex/react`
+- Use Clerk's `useUser()` hook for user profile information
+- Use Clerk's `<UserButton />` for user menu/sign out
+
 ### Environment Variables
 
-Required for full functionality:
+**Convex Dashboard (Development deployment only):**
+- `CLERK_JWT_ISSUER_DOMAIN` - Clerk JWT issuer domain
+- `ENABLE_ADMIN` - Set to `true` to enable admin access (DEV ONLY - never set in production)
+
+**Local .env.local:**
 - `CONVEX_DEPLOYMENT` - Convex deployment URL (auto-configured)
 - `NEXT_PUBLIC_CONVEX_URL` - Public Convex URL for client
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` - Clerk publishable key
+- `CLERK_SECRET_KEY` - Clerk secret key
 - `SENDER_EMAIL` - Email address for sending contact form submissions (Resend)
 - `RECIPIENT_EMAIL` - Email address to receive contact form submissions
 
