@@ -97,6 +97,9 @@ export const metadata: Metadata = {
     canonical: "https://geraldbahati.dev",
   },
   category: "technology",
+  other: {
+    "color-scheme": "light only",
+  },
 };
 
 export default function RootLayout({
