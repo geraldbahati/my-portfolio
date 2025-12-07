@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, memo } from "react";
 import { motion, useInView } from "motion/react";
 import { TextScramble } from "@/components/ui/text-scramble";
 
@@ -14,7 +14,15 @@ export type SectionDividerProps = {
   dividerColor?: string;
 };
 
-export function SectionDivider({
+/**
+ * SectionDivider - Optimized with React.memo to prevent unnecessary re-renders.
+ *
+ * Animation flow:
+ * 1. When in view: line animates from 0% to 100% width
+ * 2. During line animation: text is blurred and scrambling
+ * 3. When line finishes: text stops scrambling and blur clears gracefully
+ */
+export const SectionDivider = memo(function SectionDivider({
   label,
   counter,
   duration = 2,
@@ -36,10 +44,13 @@ export function SectionDivider({
       setShouldTriggerScramble(true);
       setBlurAmount(4);
 
-      // Auto-stop scramble after duration
-      setTimeout(() => {
+      // Auto-stop scramble after duration (when line animation completes)
+      const timer = setTimeout(() => {
         setShouldTriggerScramble(false);
+        setBlurAmount(0);
       }, duration * 1000);
+
+      return () => clearTimeout(timer);
     }
   }, [isInView, hasTriggered, duration]);
 
@@ -105,4 +116,6 @@ export function SectionDivider({
       </div>
     </div>
   );
-}
+});
+
+SectionDivider.displayName = "SectionDivider";
