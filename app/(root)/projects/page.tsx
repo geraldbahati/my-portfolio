@@ -100,7 +100,7 @@ async function ProjectsContent() {
  */
 function ProjectsGridSkeleton() {
   return (
-    <section className="max-w-7xl mx-auto px-6 lg:px-8 pb-20">
+    <section className="max-w-7xl mx-auto px-6 lg:px-8 pb-20 md:pt-24 lg:pt-32">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {Array.from({ length: 6 }).map((_, i) => (
           <div
@@ -134,7 +134,7 @@ export default async function ProjectsPage() {
     <main className="min-h-screen bg-background">
       <PageAnalytics trackPageView trackScroll trackTime />
       {/* Page Header - Static, always pre-rendered */}
-      <header className="max-w-7xl mx-auto px-6 lg:px-8 pt-20 pb-12">
+      <header className="max-w-7xl mx-auto px-6 lg:px-8 pt-20 md:pt-24 lg:pt-32 pb-12">
         <h1
           className="text-4xl lg:text-6xl font-bold mb-6 text-foreground"
           style={{ fontSize: "2.25rem" }}

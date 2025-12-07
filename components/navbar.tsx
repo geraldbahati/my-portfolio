@@ -91,8 +91,8 @@ const NavBar = ({ isOpen, setIsOpen }: NavBarProps) => {
         isOpen ? "" : "mix-blend-difference"
       }`}
     >
-      <div className="mx-auto px-6 lg:px-12">
-        <div className="flex items-center justify-between py-6">
+      <div className="relative mx-auto px-6 lg:px-12">
+        <div className="relative flex items-center justify-between py-6">
           {/* Logo */}
           <motion.a
             href="/"
