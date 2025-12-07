@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { Syne, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import { ClerkProvider } from "@clerk/nextjs";
+// import { ClerkProvider } from "@clerk/nextjs";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { AnalyticsProvider } from "@/components/analytics-provider";
+import { ConsoleFilter } from "@/components/console-filter";
 
 const syne = Syne({
   subsets: ["latin"],
@@ -114,6 +115,7 @@ export default function RootLayout({
       >
         {/*<ClerkProvider>*/}
         <ConvexClientProvider>
+          <ConsoleFilter />
           {children}
           <AnalyticsProvider />
         </ConvexClientProvider>

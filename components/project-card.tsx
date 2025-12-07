@@ -142,7 +142,10 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   // We only keep the IntersectionObserver above for Analytics tracking
 
   const handleVideoError = useCallback(() => {
-    console.error(`Video failed to load: ${id}`);
+    // Only log errors in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error(`Media failed to load: ${id}`);
+    }
     setHasError(true);
   }, [id]);
 
@@ -225,6 +228,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
             quality="auto"
             format="auto"
             preserveTransformations
+            onError={handleVideoError}
           />
         );
       }
@@ -251,6 +255,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
           quality="auto"
           format="auto"
           preserveTransformations
+          onError={handleVideoError}
         />
       );
     }

@@ -4,6 +4,9 @@ import { Analytics, type BeforeSendEvent } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
 export function AnalyticsProvider() {
+  // Only load analytics in production (when deployed on Vercel)
+  const isProduction = process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_VERCEL_ENV === 'production';
+
   // Custom beforeSend hook for data privacy and filtering
   const handleBeforeSend = (event: BeforeSendEvent) => {
     // Filter out sensitive query parameters
@@ -32,15 +35,15 @@ export function AnalyticsProvider() {
     };
   };
 
+  // Don't render analytics in local development
+  if (!isProduction) {
+    return null;
+  }
+
   return (
     <>
-      <Analytics
-        beforeSend={handleBeforeSend}
-        debug={process.env.NODE_ENV === 'development'}
-      />
-      <SpeedInsights
-        debug={process.env.NODE_ENV === 'development'}
-      />
+      <Analytics beforeSend={handleBeforeSend} />
+      <SpeedInsights />
     </>
   );
 }
