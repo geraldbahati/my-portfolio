@@ -91,8 +91,10 @@ const SocialSidebar = memo(function SocialSidebar() {
           <motion.a
             key={social.label}
             href={social.href}
+            target="_blank"
+            rel="noopener noreferrer"
             aria-label={social.label}
-            className="text-gray-400 hover:text-white transition-colors duration-300"
+            className="text-gray-400 hover:text-white transition-colors duration-300 cursor-pointer"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.1 }}

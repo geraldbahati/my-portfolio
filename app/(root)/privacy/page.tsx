@@ -61,7 +61,7 @@ export default function PrivacyPolicyPage() {
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "Privacy Inquiries",
-      email: "contact@geraldbahati.dev",
+      email: "bahatigerald0@gmail.com",
     },
   });
 

@@ -1,0 +1,17 @@
+{
+  "name": "Gerald Bahati",
+  "address": {
+    "street": "Kahawa Sukari",
+    "city": "Nairobi",
+    "country": "Kenya"
+  },
+  "contact": {
+    "email": "admin@geraldbahati.dev",
+    "phone": "+254 704 713 070"
+  },
+  "responsibleForContent": {
+    "name": "Gerald Bahati",
+    "street": "Kahawa Sukari",
+    "city": "Nairobi, Kenya"
+  }
+}
