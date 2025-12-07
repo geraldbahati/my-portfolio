@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
@@ -12,7 +12,7 @@ interface ContactSectionProps {
   className?: string;
 }
 
-export default function ContactSection({
+const ContactSection = memo(function ContactSection({
   className = "",
 }: ContactSectionProps) {
   const [isHovered, setIsHovered] = useState(false);
@@ -147,4 +147,8 @@ export default function ContactSection({
       </div>
     </section>
   );
-}
+});
+
+ContactSection.displayName = "ContactSection";
+
+export default ContactSection;

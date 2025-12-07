@@ -1,13 +1,6 @@
 "use client";
 
-import React, {
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo,
-  useState,
-  useId,
-} from "react";
+import React, { useEffect, useRef, useCallback, useMemo, useId } from "react";
 import { cn } from "@/lib/utils";
 
 interface HighlightSquare {
@@ -35,6 +28,12 @@ interface GridPatternProps {
   [key: string]: unknown;
 }
 
+/**
+ * GridPattern component with optimized hover effects.
+ *
+ * Uses direct DOM manipulation for interactive squares instead of React state
+ * to prevent parent component re-renders during mouse movement.
+ */
 export default function GridPattern({
   width = 40,
   height = 40,
@@ -52,16 +51,13 @@ export default function GridPattern({
 }: GridPatternProps) {
   const id = useId();
   const svgRef = useRef<SVGSVGElement>(null);
+  const interactiveGroupRef = useRef<SVGGElement>(null);
   const highlightSquaresRef = useRef<HighlightSquare[]>([]);
   const currentCellRef = useRef<{ x: number; y: number } | null>(null);
   const currentSurroundingRef = useRef<Array<{ x: number; y: number }>>([]);
   const isMovingRef = useRef(false);
   const rafIdRef = useRef<number | null>(null);
   const mouseMoveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  const [interactiveSquares, setInteractiveSquares] = useState<
-    Array<{ x: number; y: number; opacity: number; scale: number; isCenter: boolean }>
-  >([]);
 
   // Memoize static squares
   const staticSquares = useMemo(() => squares || [], [squares]);
@@ -104,67 +100,126 @@ export default function GridPattern({
 
       return cells;
     },
-    [surroundingCells, surroundingRadius]
+    [surroundingCells, surroundingRadius],
   );
 
-  // Animation loop using RAF - updates interactive squares state
+  // Cache the primary color to avoid repeated DOM queries
+  const primaryColorRef = useRef<string | null>(null);
+
+  // Get computed primary color from CSS - converts to RGB for SVG compatibility
+  const getPrimaryColor = useCallback(() => {
+    // Return cached value if available
+    if (primaryColorRef.current) return primaryColorRef.current;
+
+    if (typeof window === "undefined") return "rgb(249, 115, 22)"; // fallback orange
+
+    // Create a temporary element to compute the actual color value
+    const tempEl = document.createElement("div");
+    tempEl.style.color = "var(--primary)";
+    tempEl.style.display = "none";
+    document.body.appendChild(tempEl);
+
+    const computedColor = getComputedStyle(tempEl).color;
+    document.body.removeChild(tempEl);
+
+    // Cache the result
+    primaryColorRef.current = computedColor || "rgb(249, 115, 22)";
+    return primaryColorRef.current;
+  }, []);
+
+  // Animation loop using RAF - uses direct DOM manipulation, NO React state updates
   const animate = useCallback(() => {
-    if (disableInteraction) {
+    if (disableInteraction || !interactiveGroupRef.current) {
       rafIdRef.current = requestAnimationFrame(animate);
       return;
     }
 
     const now = Date.now();
-    const highlights = highlightSquaresRef.current;
+    const group = interactiveGroupRef.current;
 
     // Remove expired highlights
-    highlightSquaresRef.current = highlights.filter(
-      (square) => now - square.timestamp < 800
+    highlightSquaresRef.current = highlightSquaresRef.current.filter(
+      (square) => now - square.timestamp < 800,
     );
 
-    // Get current cell and surrounding cells
-    let currentActiveCells: Array<{ x: number; y: number; opacity: number; scale: number; isCenter: boolean }> = [];
+    // Build array of squares to render
+    type RenderSquare = {
+      x: number;
+      y: number;
+      opacity: number;
+      scale: number;
+      isCenter: boolean;
+    };
+    const squaresToRender: RenderSquare[] = [];
 
-    // Add current active cell ONLY when mouse is moving (not stationary)
+    // Add current active cells if moving
     if (currentCellRef.current && isMovingRef.current) {
       const { x: cx, y: cy } = currentCellRef.current;
-      currentActiveCells = [
-        { x: cx, y: cy, opacity: 1, scale: 1, isCenter: true },
-        ...currentSurroundingRef.current.map(cell => ({
+      squaresToRender.push({
+        x: cx,
+        y: cy,
+        opacity: 1,
+        scale: 1,
+        isCenter: true,
+      });
+      currentSurroundingRef.current.forEach((cell) => {
+        squaresToRender.push({
           ...cell,
           opacity: 0.8,
           scale: 1,
-          isCenter: false
-        }))
-      ];
+          isCenter: false,
+        });
+      });
     }
 
-    // Add animated trail highlights (skip if matches current active cells)
-    const trailSquares = highlightSquaresRef.current
-      .filter(square => {
-        return !currentActiveCells.some(
-          cell => cell.x === square.x && cell.y === square.y
-        );
-      })
-      .map(square => {
-        const age = Math.min(1, (now - square.timestamp) / 800);
-        const opacity = Math.max(0, (square.isCenter ? 0.7 : 0.5) * (1 - age));
-        const scale = 1 + age * 0.2;
-        return {
+    // Add trail highlights
+    highlightSquaresRef.current.forEach((square) => {
+      // Skip if already in active cells
+      if (squaresToRender.some((s) => s.x === square.x && s.y === square.y))
+        return;
+
+      const age = Math.min(1, (now - square.timestamp) / 800);
+      const opacity = Math.max(0, (square.isCenter ? 0.7 : 0.5) * (1 - age));
+      if (opacity > 0) {
+        squaresToRender.push({
           x: square.x,
           y: square.y,
           opacity,
-          scale,
-          isCenter: square.isCenter
-        };
-      })
-      .filter(square => square.opacity > 0);
+          scale: 1 + age * 0.2,
+          isCenter: square.isCenter,
+        });
+      }
+    });
 
-    // Update state with combined squares
-    setInteractiveSquares([...currentActiveCells, ...trailSquares]);
+    // Get primary color
+    const primaryColor = getPrimaryColor();
+
+    // Update DOM directly - clear and rebuild
+    // This is more efficient than tracking individual elements for this use case
+    while (group.firstChild) {
+      group.removeChild(group.firstChild);
+    }
+
+    squaresToRender.forEach((square) => {
+      const rect = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "rect",
+      );
+      rect.setAttribute("x", String(square.x * width + 0.5));
+      rect.setAttribute("y", String(square.y * height + 0.5));
+      rect.setAttribute("width", String(width - 1));
+      rect.setAttribute("height", String(height - 1));
+      rect.setAttribute("fill", "none");
+      rect.setAttribute("stroke", primaryColor);
+      rect.setAttribute("stroke-width", square.isCenter ? "2" : "1.5");
+      rect.setAttribute("opacity", String(square.opacity));
+      rect.style.transform = `scale(${square.scale})`;
+      rect.style.transformOrigin = `${square.x * width + width / 2}px ${square.y * height + height / 2}px`;
+      group.appendChild(rect);
+    });
 
     rafIdRef.current = requestAnimationFrame(animate);
-  }, [disableInteraction]);
+  }, [disableInteraction, width, height, getPrimaryColor]);
 
   // Throttled mouse handler
   const handleMouseMove = useCallback(
@@ -196,7 +251,7 @@ export default function GridPattern({
           currentCellRef.current.x === gridX &&
           currentCellRef.current.y === gridY;
 
-        // Set moving state to true (will be set to false after timeout)
+        // Set moving state to true
         isMovingRef.current = true;
 
         // Clear existing timeout
@@ -204,16 +259,15 @@ export default function GridPattern({
           clearTimeout(mouseMoveTimeoutRef.current);
         }
 
-        // Set timeout to detect when mouse stops moving (100ms without cell change)
+        // Set timeout to detect when mouse stops moving
         mouseMoveTimeoutRef.current = setTimeout(() => {
           isMovingRef.current = false;
-          // Also clear current cell so no highlight shows when stationary
           currentCellRef.current = null;
           currentSurroundingRef.current = [];
         }, 100);
 
         if (!isSameCell) {
-          // Add old cell to trail ONLY when actually moving between cells
+          // Add old cell to trail
           if (currentCellRef.current) {
             const timestamp = Date.now();
             const fadeSquares: HighlightSquare[] = [
@@ -227,7 +281,6 @@ export default function GridPattern({
               },
             ];
 
-            // Use cached surrounding cells for the trail
             currentSurroundingRef.current.forEach((pos) => {
               fadeSquares.push({
                 x: pos.x,
@@ -239,33 +292,33 @@ export default function GridPattern({
               });
             });
 
-            // Keep only recent highlights
             const now = Date.now();
             highlightSquaresRef.current = [
               ...highlightSquaresRef.current.filter(
-                (s) => now - s.timestamp < 800
+                (s) => now - s.timestamp < 800,
               ),
               ...fadeSquares,
             ];
           }
 
-          // Generate new surrounding cells ONLY when entering a new cell
-          currentSurroundingRef.current = generateSurroundingCells(gridX, gridY);
+          // Generate new surrounding cells
+          currentSurroundingRef.current = generateSurroundingCells(
+            gridX,
+            gridY,
+          );
           currentCellRef.current = { x: gridX, y: gridY };
         }
       }
     },
-    [width, height, generateSurroundingCells, disableInteraction]
+    [width, height, generateSurroundingCells, disableInteraction],
   );
 
   // Mouse leave handler
   const handleMouseLeave = useCallback(() => {
-    // Clear timeout
     if (mouseMoveTimeoutRef.current) {
       clearTimeout(mouseMoveTimeoutRef.current);
     }
 
-    // Only add to trail if we were actually moving when leaving
     if (currentCellRef.current && isMovingRef.current) {
       const timestamp = Date.now();
       const fadeSquares: HighlightSquare[] = [
@@ -279,7 +332,6 @@ export default function GridPattern({
         },
       ];
 
-      // Use cached surrounding cells (no need to regenerate)
       currentSurroundingRef.current.forEach((pos) => {
         fadeSquares.push({
           x: pos.x,
@@ -343,7 +395,7 @@ export default function GridPattern({
       className={cn(
         "pointer-events-none absolute inset-0 h-full w-full",
         gridClassName,
-        className
+        className,
       )}
       style={style}
       {...props}
@@ -383,27 +435,9 @@ export default function GridPattern({
         </svg>
       )}
 
-      {/* Interactive hover squares */}
-      {!disableInteraction && interactiveSquares.length > 0 && (
-        <g className="interactive-squares">
-          {interactiveSquares.map((square, index) => (
-            <rect
-              key={`${square.x}-${square.y}-${index}`}
-              x={square.x * width + 0.5}
-              y={square.y * height + 0.5}
-              width={width - 1}
-              height={height - 1}
-              fill="none"
-              className="stroke-primary"
-              strokeWidth={square.isCenter ? 2 : 1.5}
-              opacity={square.opacity}
-              style={{
-                transform: `scale(${square.scale})`,
-                transformOrigin: `${square.x * width + width / 2}px ${square.y * height + height / 2}px`,
-              }}
-            />
-          ))}
-        </g>
+      {/* Interactive hover squares - rendered via direct DOM manipulation */}
+      {!disableInteraction && (
+        <g ref={interactiveGroupRef} className="interactive-squares" />
       )}
     </svg>
   );

@@ -1,65 +1,67 @@
 "use client";
 
+import React, { memo } from "react";
 import { StickyScrollReveal } from "@/components/ui/sticky-scroll-reveal";
 import GridPattern from "@/components/ui/shadcn-io/grid-pattern";
 import { motion } from "framer-motion";
 
-export default function InfoSection() {
-  const sections = [
-    {
-      label: "FOUNDATION",
-      title: "Web Design",
-      description:
-        "Guaranteed uniqueness – I create the optimal foundation for your digital presence with an eye for detail and aesthetics.",
-      bullets: [
-        "Web design and development",
-        "Design implementation (e.g., Figma)",
-        "Creation of interactive designs for development",
-        "E-commerce platforms and online stores",
-        "Website redesign and relaunch",
-        "UI and UX optimization",
-      ],
-      image: "/web-design.jpg",
-    },
-    {
-      label: "PHASE 1",
-      title: "Branding",
-      description:
-        "Whether redesigning a systematic brand message or developing a fresh digital presence – your brand is in the best hands with me.",
-      bullets: [
-        "Corporate (Re)Design",
-        "Brand strategy and positioning",
-        "Brand messaging and communication",
-      ],
-      image: "/branding.jpg",
-    },
-    {
-      label: "PHASE 2",
-      title: "Advertising",
-      description:
-        "Quick results through conversion-optimized digital campaigns – tailored to your goals and precisely targeted to the right platforms.",
-      bullets: [
-        "E-commerce, lead generation, recruiting, etc.",
-        "Landing page and creative development",
-        "GDPR-compliant and data-driven tracking",
-        "Ad creation and optimization",
-      ],
-      image: "/advertising.jpg",
-    },
-    {
-      label: "PHASE 3",
-      title: "Visibility",
-      description:
-        "Long-term and sustainable visibility through search engine optimization and content management.",
-      bullets: [
-        "Search engine optimization (SEO)",
-        "Content strategy and copywriting",
-        "Digital placements and affiliates",
-      ],
-      image: "/visibility.webp",
-    },
-  ];
+// Static sections data - defined outside component to prevent recreation on each render
+const sections = [
+  {
+    label: "FOUNDATION",
+    title: "Web Design",
+    description:
+      "Guaranteed uniqueness – I create the optimal foundation for your digital presence with an eye for detail and aesthetics.",
+    bullets: [
+      "Web design and development",
+      "Design implementation (e.g., Figma)",
+      "Creation of interactive designs for development",
+      "E-commerce platforms and online stores",
+      "Website redesign and relaunch",
+      "UI and UX optimization",
+    ],
+    image: "/web-design.jpg",
+  },
+  {
+    label: "PHASE 1",
+    title: "Branding",
+    description:
+      "Whether redesigning a systematic brand message or developing a fresh digital presence – your brand is in the best hands with me.",
+    bullets: [
+      "Corporate (Re)Design",
+      "Brand strategy and positioning",
+      "Brand messaging and communication",
+    ],
+    image: "/branding.jpg",
+  },
+  {
+    label: "PHASE 2",
+    title: "Advertising",
+    description:
+      "Quick results through conversion-optimized digital campaigns – tailored to your goals and precisely targeted to the right platforms.",
+    bullets: [
+      "E-commerce, lead generation, recruiting, etc.",
+      "Landing page and creative development",
+      "GDPR-compliant and data-driven tracking",
+      "Ad creation and optimization",
+    ],
+    image: "/advertising.jpg",
+  },
+  {
+    label: "PHASE 3",
+    title: "Visibility",
+    description:
+      "Long-term and sustainable visibility through search engine optimization and content management.",
+    bullets: [
+      "Search engine optimization (SEO)",
+      "Content strategy and copywriting",
+      "Digital placements and affiliates",
+    ],
+    image: "/visibility.webp",
+  },
+];
 
+const InfoSection = memo(function InfoSection() {
   return (
     <div className="relative bg-white">
       {/* Grid Background Layer - Behind everything */}
@@ -102,4 +104,8 @@ export default function InfoSection() {
       </div>
     </div>
   );
-}
+});
+
+InfoSection.displayName = "InfoSection";
+
+export default InfoSection;

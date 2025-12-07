@@ -71,6 +71,7 @@ export default async function Home() {
   return (
     <>
       <PageAnalytics trackPageView trackScroll trackTime />
+
       {/* Hero and Bio with scroll-triggered overlay effect */}
       <HeroBioOverlay />
 
@@ -85,7 +86,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* InfoSection and other sections - normal scrolling */}
+      {/* Info Section */}
       <InfoSection />
 
       {/* Section Divider */}
@@ -99,18 +100,17 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Combined Projects and FAQ Section */}
       <div id="CombinedProjectsFaqSection">
         <CombinedProjectsFaqWrapper />
       </div>
 
+      {/* Contact Section */}
       <div className="bg-black">
         <div id="ContactSection">
           <ContactSection />
         </div>
       </div>
-
-      {/* Debug Info - Remove in production */}
-      {/*<BackgroundDebugInfo />*/}
     </>
   );
 }
