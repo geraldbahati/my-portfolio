@@ -97,10 +97,23 @@ export function TextScramble({
         clearInterval(intervalRef);
       }
     };
-  }, [trigger, duration, speed, characterSet, text, isAnimating, intervalRef, onScrambleComplete]);
+  }, [
+    trigger,
+    duration,
+    speed,
+    characterSet,
+    text,
+    isAnimating,
+    intervalRef,
+    onScrambleComplete,
+  ]);
 
   return (
-    <MotionComponent className={className} {...props}>
+    <MotionComponent
+      className={className}
+      style={{ pointerEvents: "none" }}
+      {...props}
+    >
       {displayText}
     </MotionComponent>
   );

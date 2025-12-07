@@ -374,12 +374,14 @@ const MenuOverlay = ({ setIsOpen }: MenuOverlayProps) => {
                 <motion.a
                   key={social.label}
                   href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={social.label}
-                  className="text-white hover:opacity-70 transition-opacity duration-300"
+                  className="text-white hover:opacity-70 transition-opacity duration-300 cursor-pointer"
                   variants={socialVariants}
                   whileHover={{ scale: 1.2, rotate: 5 }}
                   whileTap={{ scale: 0.9 }}
-                  onClick={() => {
+                  onClick={(e) => {
                     Analytics.trackSocialShare(
                       social.label,
                       "profile-link",
@@ -452,12 +454,14 @@ const MenuOverlay = ({ setIsOpen }: MenuOverlayProps) => {
                 <motion.a
                   key={social.label}
                   href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={social.label}
-                  className="text-white hover:opacity-70 transition-opacity duration-300"
+                  className="text-white hover:opacity-70 transition-opacity duration-300 cursor-pointer"
                   variants={socialVariants}
                   whileHover={{ scale: 1.2, rotate: 5 }}
                   whileTap={{ scale: 0.9 }}
-                  onClick={() => {
+                  onClick={(e) => {
                     Analytics.trackSocialShare(
                       social.label,
                       "profile-link",
