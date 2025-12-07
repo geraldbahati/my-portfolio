@@ -50,3 +50,6 @@ next-env.d.ts
 codebuff.json
 knowledge.md
 logs/
+
+
+proxy.ts

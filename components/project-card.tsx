@@ -6,6 +6,7 @@ import React, {
   useState,
   useCallback,
   useMemo,
+  memo,
 } from "react";
 import { CldImage, CldVideoPlayer } from "next-cloudinary";
 import "next-cloudinary/dist/cld-video-player.css";
@@ -13,7 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Cursor } from "@/components/ui/cursor";
 import { EyeIcon } from "lucide-react";
 import Analytics from "@/lib/analytics";
-import { optimizeCloudinaryVideo, isCloudinaryUrl } from "@/lib/cloudinary";
+import { generateVideoPosterUrl } from "@/lib/cloudinary";
 
 // Types
 export interface ProjectCardProps {
@@ -54,7 +55,6 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   onVisible,
   onClick,
 }) => {
-  const mediaRef = useRef<HTMLVideoElement | HTMLImageElement>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
@@ -142,7 +142,10 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   // We only keep the IntersectionObserver above for Analytics tracking
 
   const handleVideoError = useCallback(() => {
-    console.error(`Video failed to load: ${id}`);
+    // Only log errors in development
+    if (process.env.NODE_ENV === "development") {
+      console.error(`Media failed to load: ${id}`);
+    }
     setHasError(true);
   }, [id]);
 
@@ -185,21 +188,6 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
     };
   }, [width, height, aspectRatio]);
 
-  // Optimize video URL with Cloudinary transformations
-  // Note: CldVideoPlayer handles this internally now
-  const optimizedVideoSrc = useMemo(() => {
-    return src;
-  }, [src]);
-
-  // Optimize poster URL if it's a Cloudinary URL
-  const optimizedPoster = useMemo(() => {
-    if (poster && isCloudinaryUrl(poster)) {
-      // Poster is already optimized via CldImage, but we can use it for the video tag
-      return poster;
-    }
-    return poster;
-  }, [poster]);
-
   // Render media content
   const renderMedia = () => {
     // 1. Handle Fallback / Reduced Motion
@@ -225,6 +213,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
             quality="auto"
             format="auto"
             preserveTransformations
+            onError={handleVideoError}
           />
         );
       }
@@ -251,11 +240,21 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
           quality="auto"
           format="auto"
           preserveTransformations
+          onError={handleVideoError}
         />
       );
     }
 
     // 3. Handle Video Player (using CldVideoPlayer for robust autoplay)
+    // Generate smart poster URL using video/upload instead of image/upload
+    // Use poster ID if provided, otherwise use video src
+    const posterPublicId = poster || src;
+    const smartPosterUrl = generateVideoPosterUrl(posterPublicId, {
+      width: typeof playerWidth === "number" ? playerWidth : 700,
+      height: typeof playerHeight === "number" ? playerHeight : 500,
+      quality: "auto",
+    });
+
     return (
       <div className="absolute inset-0 w-full h-full [&_video]:object-cover">
         <CldVideoPlayer
@@ -268,7 +267,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
           controls={false}
           playsinline
           className="w-full h-full"
-          poster={poster} // Can be public ID or URL
+          poster={smartPosterUrl} // Use full URL with video/upload
           transformation={{
             width: playerWidth,
             height: playerHeight,
@@ -455,4 +454,5 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
   );
 };
 
-export default ProjectCard;
+// Memoize to prevent unnecessary re-renders during scroll
+export default memo(ProjectCard);

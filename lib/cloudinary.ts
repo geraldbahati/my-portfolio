@@ -137,3 +137,29 @@ export function generateCloudinarySrcSet(
     })
     .join(', ');
 }
+
+/**
+ * Generates a smart poster URL from a Cloudinary video public ID
+ * Uses video/upload instead of image/upload to extract frames from videos
+ * @param publicId - The Cloudinary video public ID
+ * @param options - Optional transformation parameters
+ * @returns Optimized poster URL
+ */
+export function generateVideoPosterUrl(
+  publicId: string,
+  options?: {
+    width?: number;
+    height?: number;
+    quality?: 'auto' | 'auto:low' | 'auto:good' | 'auto:best';
+  }
+): string {
+  const { width = 700, height = 500, quality = 'auto' } = options || {};
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dan7oa2bw';
+
+  // Use video/upload instead of image/upload
+  // so_auto: Automatically picks the best frame
+  // f_auto: Optimizes format (WebP, AVIF, etc.)
+  // q_auto: Optimizes quality
+  // .jpg: Extracts a frame as JPEG
+  return `https://res.cloudinary.com/${cloudName}/video/upload/so_auto,f_auto,q_${quality},c_limit,h_${height},w_${width}/${publicId}.jpg`;
+}
