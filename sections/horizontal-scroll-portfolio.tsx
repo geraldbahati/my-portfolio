@@ -93,9 +93,7 @@ export default function ProjectsSectionPinned({
         style={{ height: calculateSectionHeight() }}
       >
         {/* Sticky Container */}
-        <div
-          className="sticky top-0 h-screen overflow-hidden"
-        >
+        <div className="sticky top-0 h-screen overflow-hidden">
           {/* Header Section - Now Pinned */}
           <motion.div
             className="absolute top-0 left-0 right-0 z-40 pt-16"
@@ -117,9 +115,8 @@ export default function ProjectsSectionPinned({
                   transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
                 >
                   <h1
-                    className="text-4xl lg:text-5xl font-medium leading-tight tracking-tight"
+                    className="text-4xl lg:text-5xl font-medium leading-tight tracking-tight text-text-primary"
                     style={{
-                      color: "var(--page-text-auto, #000000)",
                       fontSize: "2.25rem",
                     }}
                   >
@@ -136,13 +133,7 @@ export default function ProjectsSectionPinned({
                   }
                   transition={{ duration: 0.5, ease: "easeOut", delay: 0.2 }}
                 >
-                  <p
-                    className="text-base leading-relaxed"
-                    style={{
-                      color: "var(--page-text-auto, #666666)",
-                      opacity: 0.8,
-                    }}
-                  >
+                  <p className="text-base leading-relaxed text-text-tertiary opacity-80">
                     Get to know me, my work style and my values through an
                     insight into my projects that stand for quality, structure
                     and sustainable solutions.
@@ -187,21 +178,10 @@ export default function ProjectsSectionPinned({
                 {/* End Message */}
                 <div className="w-[90vw] md:w-[600px] lg:w-[800px] flex-shrink-0 flex items-center justify-center">
                   <div className="text-center">
-                    <h3
-                      className="text-3xl font-light mb-4"
-                      style={{
-                        color: "var(--page-text-auto, #666666)",
-                        opacity: 0.8,
-                      }}
-                    >
+                    <h3 className="text-3xl font-light mb-4 text-text-tertiary opacity-80">
                       More Projects Coming Soon
                     </h3>
-                    <p
-                      style={{
-                        color: "var(--page-text-auto, #999999)",
-                        opacity: 0.6,
-                      }}
-                    >
+                    <p className="text-gray-400 opacity-60">
                       Continue scrolling to explore more content
                     </p>
                   </div>
@@ -212,10 +192,7 @@ export default function ProjectsSectionPinned({
 
           {/* Navigation Hints */}
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-center">
-            <p
-              className="text-sm mb-2"
-              style={{ color: "var(--page-text-auto, #666666)", opacity: 0.7 }}
-            >
+            <p className="text-sm mb-2 text-text-tertiary opacity-70">
               {scrollProgress < 0.1
                 ? "Scroll down to explore"
                 : scrollProgress > 0.9
@@ -224,11 +201,7 @@ export default function ProjectsSectionPinned({
             </p>
             <div className="animate-bounce">
               <svg
-                className="w-6 h-6 mx-auto"
-                style={{
-                  color: "var(--page-text-auto, #999999)",
-                  opacity: 0.6,
-                }}
+                className="w-6 h-6 mx-auto text-gray-400 opacity-60"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

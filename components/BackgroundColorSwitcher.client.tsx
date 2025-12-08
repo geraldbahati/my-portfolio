@@ -41,7 +41,7 @@ export interface BackgroundColorSwitcherProps {
  */
 export default function BackgroundColorSwitcher({
   targets,
-  defaultColor = "#ffffff",
+  defaultColor = "var(--surface-light)",
   animationDuration = 0.6,
   animationEasing = "easeInOut",
   updateCSSVariables = true,
@@ -52,7 +52,9 @@ export default function BackgroundColorSwitcher({
   const prefersReducedMotion = usePrefersReducedMotion();
 
   // Track which sections are currently visible
-  const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
+  const [visibleSections, setVisibleSections] = useState<Set<string>>(
+    new Set(),
+  );
 
   // Memoized intersection handler with improved logic
   const handleIntersection = useCallback(
@@ -98,7 +100,9 @@ export default function BackgroundColorSwitcher({
 
         // Apply the determined color (or fallback to default)
         const targetColor = activeTarget ? activeTarget.color : defaultColor;
-        const targetTextColor = activeTarget ? (activeTarget.textColor || "") : "";
+        const targetTextColor = activeTarget
+          ? activeTarget.textColor || ""
+          : "";
 
         setActiveColor(targetColor);
         setActiveTextColor(targetTextColor);
@@ -112,12 +116,20 @@ export default function BackgroundColorSwitcher({
             {
               duration: animationDuration,
               ease: animationEasing as Easing,
-            }
+            },
           );
         }
       }
     },
-    [targets, controls, prefersReducedMotion, animationDuration, animationEasing, visibleSections, defaultColor]
+    [
+      targets,
+      controls,
+      prefersReducedMotion,
+      animationDuration,
+      animationEasing,
+      visibleSections,
+      defaultColor,
+    ],
   );
 
   // Setup intersection observers
@@ -127,24 +139,23 @@ export default function BackgroundColorSwitcher({
     const observers: IntersectionObserver[] = [];
 
     targets.forEach((target) => {
-      const element = document.querySelector(`[data-section-id="${target.id}"]`);
+      const element = document.querySelector(
+        `[data-section-id="${target.id}"]`,
+      );
       if (!element) {
-        console.warn(`BackgroundColorSwitcher: Section with id "${target.id}" not found`);
+        console.warn(
+          `BackgroundColorSwitcher: Section with id "${target.id}" not found`,
+        );
         return;
       }
 
       // Use multiple thresholds for better detection during fast/slow scrolling
-      const thresholds = [
-        0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0
-      ];
+      const thresholds = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
 
-      const observer = new IntersectionObserver(
-        handleIntersection,
-        {
-          threshold: thresholds,
-          rootMargin: "-10px 0px -10px 0px", // Small margin for better detection
-        }
-      );
+      const observer = new IntersectionObserver(handleIntersection, {
+        threshold: thresholds,
+        rootMargin: "-10px 0px -10px 0px", // Small margin for better detection
+      });
 
       observer.observe(element);
       observers.push(observer);
@@ -169,7 +180,10 @@ export default function BackgroundColorSwitcher({
 
     // Determine if background is dark for automatic text color
     const isDark = isColorDark(activeColor);
-    root.style.setProperty("--page-text-auto", isDark ? "#ffffff" : "#000000");
+    root.style.setProperty(
+      "--page-text-auto",
+      isDark ? "var(--text-inverted)" : "var(--text-primary)",
+    );
     root.setAttribute("data-theme", isDark ? "dark" : "light");
   }, [activeColor, activeTextColor, updateCSSVariables]);
 
@@ -219,5 +233,5 @@ function isColorDark(color: string): boolean {
 
   // Handle named colors (basic implementation)
   const darkColors = ["black", "dark", "navy", "maroon"];
-  return darkColors.some(dark => color.toLowerCase().includes(dark));
+  return darkColors.some((dark) => color.toLowerCase().includes(dark));
 }
