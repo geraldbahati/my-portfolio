@@ -1,7 +1,12 @@
 "use client";
 
-import { memo, useMemo } from "react";
-import { motion, MotionValue, useTransform } from "framer-motion";
+import { memo, useEffect, useMemo, useState } from "react";
+import {
+  motion,
+  MotionValue,
+  useReducedMotion,
+  useTransform,
+} from "framer-motion";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import Analytics from "@/lib/analytics";
@@ -14,6 +19,20 @@ const CutoutMaskImage = dynamic(
     })),
   { ssr: true },
 );
+
+// Cached mobile detection
+let cachedIsMobile: boolean | null = null;
+const isMobileDevice = () => {
+  if (typeof window === "undefined") return false;
+  if (cachedIsMobile === null) {
+    cachedIsMobile =
+      window.innerWidth < 768 ||
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent,
+      );
+  }
+  return cachedIsMobile;
+};
 
 // Optimized Character component with simplified transforms
 interface CharacterProps {
@@ -65,20 +84,41 @@ interface BioOverlayProps {
 }
 
 export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
+  const [isMobile, setIsMobile] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    setIsMobile(isMobileDevice());
+  }, []);
+
+  // Determine if we should use simplified animations
+  const useSimplifiedAnimations = isMobile || prefersReducedMotion;
+
   // Transform scroll progress to control content animations
   // Content animations trigger as bio slides into view (last 60% of scroll)
   // useTransform is already optimized internally by Framer Motion
   const contentProgress = useTransform(scrollProgress, [0.4, 1], [0, 1]);
 
-  // Transform values for the cutout image
-  // Image scales and moves as bio section slides up
-  const imageScale = useTransform(contentProgress, [0, 1], [0.6, 1]);
+  // Transform values for the cutout image - simplified for mobile
+  const imageScale = useTransform(
+    contentProgress,
+    [0, 1],
+    useSimplifiedAnimations ? [1, 1] : [0.6, 1],
+  );
   const imageOpacity = useTransform(contentProgress, [0, 0.2], [0, 1]);
-  const imageY = useTransform(contentProgress, [0, 1], [100, 0]);
+  const imageY = useTransform(
+    contentProgress,
+    [0, 1],
+    useSimplifiedAnimations ? [0, 0] : [100, 0],
+  );
 
   // CTA button visibility based on scroll progress
   const ctaOpacity = useTransform(contentProgress, [0.7, 1], [0, 1]);
-  const ctaY = useTransform(contentProgress, [0.7, 1], [20, 0]);
+  const ctaY = useTransform(
+    contentProgress,
+    [0.7, 1],
+    useSimplifiedAnimations ? [0, 0] : [20, 0],
+  );
 
   // Text content - Memoized to prevent re-splitting on every render
   const tagline = "What I can do for you";
@@ -146,29 +186,124 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
           <div className="space-y-8">
             {/* Tagline and Number */}
             <div className="flex justify-between items-start">
-              <div className="text-xs sm:text-sm font-medium tracking-[0.2em] uppercase text-gray-600">
-                {tagline.split(" ").map((word, wordIdx) => {
-                  // Calculate the starting character index for this word within the full tagline
-                  const prevWordsLength = tagline
+              {useSimplifiedAnimations ? (
+                // Mobile: Simple fade-in for tagline
+                <motion.div
+                  className="text-xs sm:text-sm font-medium tracking-[0.2em] uppercase text-gray-600"
+                  style={{ opacity: contentProgress }}
+                >
+                  {tagline}
+                </motion.div>
+              ) : (
+                <div className="text-xs sm:text-sm font-medium tracking-[0.2em] uppercase text-gray-600">
+                  {tagline.split(" ").map((word, wordIdx) => {
+                    // Calculate the starting character index for this word within the full tagline
+                    const prevWordsLength = tagline
+                      .split(" ")
+                      .slice(0, wordIdx)
+                      .join(" ").length;
+                    const wordStartCharIndex =
+                      prevWordsLength + (wordIdx > 0 ? 1 : 0); // +1 for space if not the first word
+
+                    return (
+                      <span
+                        key={`tag-word-${wordIdx}`}
+                        className="inline-block whitespace-nowrap"
+                      >
+                        {word.split("").map((char, charIdx) => {
+                          const charIndex = wordStartCharIndex + charIdx;
+                          const start = charIndex / totalChars;
+                          const end = (charIndex + 3) / totalChars;
+
+                          return (
+                            <Character
+                              key={`tag-${wordIdx}-${charIdx}`}
+                              progress={contentProgress}
+                              range={[start, end]}
+                            >
+                              {char}
+                            </Character>
+                          );
+                        })}
+                        {wordIdx < tagline.split(" ").length - 1 && (
+                          <span
+                            className="inline-block"
+                            style={{ width: "0.25em" }}
+                          >
+                            {" "}
+                          </span>
+                        )}
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+
+              {useSimplifiedAnimations ? (
+                // Mobile: Simple fade-in for number
+                <motion.div
+                  className="text-xs sm:text-sm font-light text-gray-400 whitespace-nowrap"
+                  style={{ opacity: contentProgress }}
+                >
+                  {numberText}
+                </motion.div>
+              ) : (
+                <div className="text-xs sm:text-sm font-light text-gray-400 whitespace-nowrap">
+                  {numberChars.map((char, i) => {
+                    const charIndex = taglineChars.length + i;
+                    const start = charIndex / totalChars;
+                    const end = (charIndex + 3) / totalChars;
+
+                    return (
+                      <Character
+                        key={`num-${i}`}
+                        progress={contentProgress}
+                        range={[start, end]}
+                      >
+                        {char}
+                      </Character>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Main Text */}
+            {useSimplifiedAnimations ? (
+              // Mobile: Simple fade-in for main text - no per-character animation
+              <motion.h2
+                className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl leading-tight font-light text-gray-900"
+                style={{ opacity: contentProgress }}
+              >
+                {mainText}
+              </motion.h2>
+            ) : (
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl leading-tight font-light text-gray-900">
+                {mainText.split(" ").map((word, wordIdx) => {
+                  // Calculate the starting character index for this word within the full mainText
+                  const prevMainTextLength = mainText
                     .split(" ")
                     .slice(0, wordIdx)
                     .join(" ").length;
-                  const wordStartCharIndex =
-                    prevWordsLength + (wordIdx > 0 ? 1 : 0); // +1 for space if not the first word
+                  const mainTextWordStartCharIndex =
+                    prevMainTextLength + (wordIdx > 0 ? 1 : 0); // +1 for space if not the first word
+
+                  const charOffset = taglineChars.length + numberChars.length;
 
                   return (
                     <span
-                      key={`tag-word-${wordIdx}`}
+                      key={`main-word-${wordIdx}`}
                       className="inline-block whitespace-nowrap"
                     >
                       {word.split("").map((char, charIdx) => {
-                        const charIndex = wordStartCharIndex + charIdx;
+                        const charIndex =
+                          charOffset + mainTextWordStartCharIndex + charIdx;
                         const start = charIndex / totalChars;
                         const end = (charIndex + 3) / totalChars;
 
                         return (
                           <Character
-                            key={`tag-${wordIdx}-${charIdx}`}
+                            key={`main-${wordIdx}-${charIdx}`}
                             progress={contentProgress}
                             range={[start, end]}
                           >
@@ -176,7 +311,7 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
                           </Character>
                         );
                       })}
-                      {wordIdx < tagline.split(" ").length - 1 && (
+                      {wordIdx < mainText.split(" ").length - 1 && (
                         <span
                           className="inline-block"
                           style={{ width: "0.25em" }}
@@ -187,73 +322,8 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
                     </span>
                   );
                 })}
-              </div>
-
-              <div className="text-xs sm:text-sm font-light text-gray-400 whitespace-nowrap">
-                {numberChars.map((char, i) => {
-                  const charIndex = taglineChars.length + i;
-                  const start = charIndex / totalChars;
-                  const end = (charIndex + 3) / totalChars;
-
-                  return (
-                    <Character
-                      key={`num-${i}`}
-                      progress={contentProgress}
-                      range={[start, end]}
-                    >
-                      {char}
-                    </Character>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Main Text */}
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl leading-tight font-light text-gray-900">
-              {mainText.split(" ").map((word, wordIdx) => {
-                // Calculate the starting character index for this word within the full mainText
-                const prevMainTextLength = mainText
-                  .split(" ")
-                  .slice(0, wordIdx)
-                  .join(" ").length;
-                const mainTextWordStartCharIndex =
-                  prevMainTextLength + (wordIdx > 0 ? 1 : 0); // +1 for space if not the first word
-
-                const charOffset = taglineChars.length + numberChars.length;
-
-                return (
-                  <span
-                    key={`main-word-${wordIdx}`}
-                    className="inline-block whitespace-nowrap"
-                  >
-                    {word.split("").map((char, charIdx) => {
-                      const charIndex =
-                        charOffset + mainTextWordStartCharIndex + charIdx;
-                      const start = charIndex / totalChars;
-                      const end = (charIndex + 3) / totalChars;
-
-                      return (
-                        <Character
-                          key={`main-${wordIdx}-${charIdx}`}
-                          progress={contentProgress}
-                          range={[start, end]}
-                        >
-                          {char}
-                        </Character>
-                      );
-                    })}
-                    {wordIdx < mainText.split(" ").length - 1 && (
-                      <span
-                        className="inline-block"
-                        style={{ width: "0.25em" }}
-                      >
-                        {" "}
-                      </span>
-                    )}
-                  </span>
-                );
-              })}
-            </h2>
+              </h2>
+            )}
 
             {/* CTA Button - appears after text */}
             <motion.div

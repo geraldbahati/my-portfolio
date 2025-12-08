@@ -1,9 +1,23 @@
 "use client";
 
-import { useRef } from "react";
-import { useScroll } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { useReducedMotion, useScroll } from "framer-motion";
 import HeroSection from "@/sections/hero";
 import BioOverlay from "@/sections/bio-overlay";
+
+// Cached mobile detection for performance
+let cachedIsMobile: boolean | null = null;
+const isMobileDevice = () => {
+  if (typeof window === "undefined") return false;
+  if (cachedIsMobile === null) {
+    cachedIsMobile =
+      window.innerWidth < 768 ||
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent,
+      );
+  }
+  return cachedIsMobile;
+};
 
 /**
  * HeroBioOverlay Component
@@ -13,8 +27,22 @@ import BioOverlay from "@/sections/bio-overlay";
  * - The bio section slides up from the bottom as the user scrolls
  * - The bio section's position is directly tied to scroll progress
  * - Animation is smooth and performance-optimized using Framer Motion
+ *
+ * Mobile optimizations:
+ * - Reduced willChange usage to minimize GPU memory
+ * - Simplified transforms for better mobile performance
  */
 export default function HeroBioOverlay() {
+  const [isMobile, setIsMobile] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    setIsMobile(isMobileDevice());
+  }, []);
+
+  // Determine if we should use simplified rendering
+  const useSimplifiedMode = isMobile || prefersReducedMotion;
+
   // Reference to the scroll container that triggers the animation
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -51,16 +79,21 @@ export default function HeroBioOverlay() {
           // Scroll >200vh: Container ends, next section appears naturally
           height: "200vh",
           contain: "layout style paint",
-          willChange: "transform",
+          // Only use willChange on desktop - reduces GPU memory on mobile
+          ...(useSimplifiedMode ? {} : { willChange: "transform" }),
         }}
       >
         {/* Fixed Hero Section - stays in place during scroll */}
         <div
           className="sticky top-0 h-screen w-full"
-          style={{
-            willChange: "transform",
-            transform: "translateZ(0)",
-          }}
+          style={
+            useSimplifiedMode
+              ? {}
+              : {
+                  willChange: "transform",
+                  transform: "translateZ(0)",
+                }
+          }
         >
           <HeroSection scrollProgress={scrollYProgress} />
         </div>
@@ -75,8 +108,13 @@ export default function HeroBioOverlay() {
             top: "100vh",
             // Ensure bio appears above hero
             zIndex: 10,
-            willChange: "transform",
-            transform: "translateZ(0)",
+            // Only use willChange on desktop - reduces GPU memory on mobile
+            ...(useSimplifiedMode
+              ? {}
+              : {
+                  willChange: "transform",
+                  transform: "translateZ(0)",
+                }),
           }}
         >
           <BioOverlay scrollProgress={scrollYProgress} />

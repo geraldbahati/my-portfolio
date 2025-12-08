@@ -6,6 +6,7 @@ import {
   motion,
   motionValue,
   MotionValue,
+  useReducedMotion,
   useTransform,
 } from "framer-motion";
 import dynamic from "next/dynamic";
@@ -13,10 +14,18 @@ import Image from "next/image";
 import Link from "next/link";
 import Analytics from "@/lib/analytics";
 
-// Detect mobile for performance optimizations
+// Detect mobile for performance optimizations - cached value
+let cachedIsMobile: boolean | null = null;
 const isMobileDevice = () => {
   if (typeof window === "undefined") return false;
-  return window.innerWidth < 768;
+  if (cachedIsMobile === null) {
+    cachedIsMobile =
+      window.innerWidth < 768 ||
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent,
+      );
+  }
+  return cachedIsMobile;
 };
 
 // Lazy load heavy components with loading optimization
@@ -136,7 +145,7 @@ const TextScrambleHoverTrigger = memo(() => {
 
 TextScrambleHoverTrigger.displayName = "TextScrambleHoverTrigger";
 
-// Animation variants for better organization
+// Animation variants for better organization - with mobile-optimized versions
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -144,6 +153,17 @@ const containerVariants = {
     transition: {
       staggerChildren: 0.2,
       delayChildren: 0.1,
+    },
+  },
+};
+
+// Simplified variants for mobile/reduced motion
+const containerVariantsMobile = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      duration: 0.3,
     },
   },
 };
@@ -169,6 +189,22 @@ const itemVariants = {
   }),
 };
 
+// Simplified item variants for mobile - no blur, faster animations
+const itemVariantsMobile = {
+  hidden: {
+    opacity: 0,
+    y: 10,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.3,
+      ease: "easeOut" as const,
+    },
+  },
+};
+
 const nameVariants = {
   initial: {
     opacity: 0,
@@ -186,6 +222,19 @@ const nameVariants = {
   },
 };
 
+// Mobile name variants - no blur filter for better performance
+const nameVariantsMobile = {
+  initial: {
+    opacity: 0,
+  },
+  animate: {
+    opacity: 1,
+    transition: {
+      duration: 0.3,
+    },
+  },
+};
+
 interface HeroSectionProps {
   scrollProgress?: MotionValue<number>;
 }
@@ -196,13 +245,17 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
   const [nameScrambling, setNameScrambling] = useState(false);
   const stopScrambleTimeoutRef = useRef<NodeJS.Timeout>(null);
 
-  // Scale image down as user scrolls (from 1 to 0.85) - disabled on mobile for performance
+  // Respect user's reduced motion preference
+  const prefersReducedMotion = useReducedMotion();
+
+  // Scale image down as user scrolls (from 1 to 0.85) - disabled on mobile/reduced motion for performance
   const defaultProgress = useRef(motionValue(0));
   const activeProgress = scrollProgress ?? defaultProgress.current;
+  const shouldDisableParallax = isMobile || prefersReducedMotion;
   const imageScale = useTransform(
     activeProgress,
     [0, 1],
-    [1, isMobile ? 1 : 0.85],
+    [1, shouldDisableParallax ? 1 : 0.85],
   );
 
   useEffect(() => {
@@ -210,8 +263,8 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
     const mobile = isMobileDevice();
     setIsMobile(mobile);
 
-    // Mobile performance: Skip scramble animation on mobile devices
-    if (!mobile) {
+    // Mobile/reduced motion performance: Skip scramble animation
+    if (!mobile && !prefersReducedMotion) {
       setNameScrambling(true);
       stopScrambleTimeoutRef.current = setTimeout(() => {
         setNameScrambling(false);
@@ -223,13 +276,12 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
         clearTimeout(stopScrambleTimeoutRef.current);
       }
     };
-  }, []);
+  }, [prefersReducedMotion]);
 
   return (
     <section
-      className="relative min-h-screen overflow-hidden"
+      className="relative min-h-screen overflow-hidden bg-hero-bg"
       style={{
-        backgroundColor: "#0a0a0a",
         contain: "layout style paint",
       }}
       role="banner"
@@ -264,19 +316,19 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
         className="absolute inset-0 z-[5]"
         style={{
           background:
-            "linear-gradient(to right, #0a0a0a 0%, transparent 20%, transparent 80%, #0a0a0a 100%)",
+            "linear-gradient(to right, var(--hero-overlay) 0%, transparent 20%, transparent 80%, var(--hero-overlay) 100%)",
         }}
       />
       <div
         className="absolute inset-0 z-[5]"
         style={{
           background:
-            "linear-gradient(to bottom, #0a0a0a 0%, transparent 20%, transparent 80%, #0a0a0a 100%)",
+            "linear-gradient(to bottom, var(--hero-overlay) 0%, transparent 20%, transparent 80%, var(--hero-overlay) 100%)",
         }}
       />
 
       {/* Grid Pattern Background - Disabled on mobile for performance */}
-      {mounted && (
+      {mounted && !isMobile && !prefersReducedMotion && (
         <GridPattern
           className="absolute inset-0 z-10"
           gridClassName="stroke-current/20"
@@ -295,31 +347,37 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
               <motion.div
                 initial="hidden"
                 animate="visible"
-                variants={containerVariants}
+                variants={
+                  shouldDisableParallax
+                    ? containerVariantsMobile
+                    : containerVariants
+                }
               >
                 {/* Name - Continuously scrambles while other content appears */}
                 <motion.div
                   className="mb-8 sm:mb-12 lg:mb-16"
-                  variants={nameVariants}
+                  variants={
+                    shouldDisableParallax ? nameVariantsMobile : nameVariants
+                  }
                   initial="initial"
                   animate="animate"
                 >
-                  <motion.div
-                    className="will-change-[filter]"
-                    animate={{
-                      filter: nameScrambling ? "blur(1px)" : "blur(0px)",
-                    }}
-                    transition={{
-                      duration: 0.3,
-                      ease: "easeInOut",
-                    }}
-                  >
-                    {/* Show plain text on mobile, TextScramble on desktop for performance */}
-                    {isMobile ? (
-                      <p className="text-xs sm:text-sm lg:text-base font-light text-primary tracking-[0.2em] sm:tracking-[0.3em] uppercase">
-                        Gerald Bahati
-                      </p>
-                    ) : (
+                  {/* Skip blur animation on mobile for performance */}
+                  {shouldDisableParallax ? (
+                    <p className="text-xs sm:text-sm lg:text-base font-light text-primary tracking-[0.2em] sm:tracking-[0.3em] uppercase">
+                      Gerald Bahati
+                    </p>
+                  ) : (
+                    <motion.div
+                      className="will-change-[filter]"
+                      animate={{
+                        filter: nameScrambling ? "blur(1px)" : "blur(0px)",
+                      }}
+                      transition={{
+                        duration: 0.3,
+                        ease: "easeInOut",
+                      }}
+                    >
                       <TextScramble
                         key={nameScrambling ? "scrambling" : "stopped"}
                         className="text-xs sm:text-sm lg:text-base font-light text-primary tracking-[0.2em] sm:tracking-[0.3em] uppercase"
@@ -330,49 +388,71 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
                       >
                         Gerald Bahati
                       </TextScramble>
-                    )}
-                  </motion.div>
+                    </motion.div>
+                  )}
                 </motion.div>
 
                 {/* Main Title */}
                 <motion.div
                   className="mb-8 sm:mb-10 lg:mb-12"
                   custom={ANIMATION_DELAYS.TITLE}
-                  variants={itemVariants}
+                  variants={
+                    shouldDisableParallax ? itemVariantsMobile : itemVariants
+                  }
                 >
                   <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-thin leading-[0.9] sm:leading-none tracking-tight grid-interaction-blocked pointer-events-auto text-white">
-                    <motion.span
-                      className="inline-block font-medium"
-                      style={{ willChange: "auto" }}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{
-                        duration: 0.4,
-                        delay: 0,
-                        ease: [0.22, 1, 0.36, 1],
-                      }}
-                    >
-                      Web design
-                    </motion.span>
-                    <span
-                      className="text-muted-foreground mx-2 sm:mx-3"
-                      aria-hidden="true"
-                    >
-                      /
-                    </span>
-                    <motion.span
-                      className="inline-block text-transparent [text-stroke:1px_white] [-webkit-text-stroke:1px_white]"
-                      style={{ willChange: "auto" }}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{
-                        duration: 0.4,
-                        delay: 0.1,
-                        ease: [0.22, 1, 0.36, 1],
-                      }}
-                    >
-                      Digital Marketing
-                    </motion.span>
+                    {shouldDisableParallax ? (
+                      // Static render for mobile - no individual span animations
+                      <>
+                        <span className="inline-block font-medium">
+                          Web design
+                        </span>
+                        <span
+                          className="text-muted-foreground mx-2 sm:mx-3"
+                          aria-hidden="true"
+                        >
+                          /
+                        </span>
+                        <span className="inline-block text-transparent [text-stroke:1px_white] [-webkit-text-stroke:1px_white]">
+                          Digital Marketing
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <motion.span
+                          className="inline-block font-medium"
+                          style={{ willChange: "auto" }}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{
+                            duration: 0.4,
+                            delay: 0,
+                            ease: [0.22, 1, 0.36, 1],
+                          }}
+                        >
+                          Web design
+                        </motion.span>
+                        <span
+                          className="text-muted-foreground mx-2 sm:mx-3"
+                          aria-hidden="true"
+                        >
+                          /
+                        </span>
+                        <motion.span
+                          className="inline-block text-transparent [text-stroke:1px_white] [-webkit-text-stroke:1px_white]"
+                          style={{ willChange: "auto" }}
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{
+                            duration: 0.4,
+                            delay: 0.1,
+                            ease: [0.22, 1, 0.36, 1],
+                          }}
+                        >
+                          Digital Marketing
+                        </motion.span>
+                      </>
+                    )}
                   </h1>
                 </motion.div>
 
@@ -380,7 +460,9 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
                 <motion.div
                   className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 sm:gap-8"
                   custom={ANIMATION_DELAYS.DESCRIPTION}
-                  variants={itemVariants}
+                  variants={
+                    shouldDisableParallax ? itemVariantsMobile : itemVariants
+                  }
                 >
                   {/* Description - LCP element, no animation delay for performance */}
                   <div className="flex-1 lg:max-w-2xl">
@@ -393,16 +475,19 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
                   {/* CTA Text */}
                   <motion.div
                     className="flex-shrink-0"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{
-                      duration: 0.6,
-                      delay: 1.2,
-                      ease: [0.22, 1, 0.36, 1],
-                      type: "spring",
-                      stiffness: 200,
-                      damping: 20,
-                    }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={
+                      shouldDisableParallax
+                        ? {
+                            duration: 0.3,
+                          }
+                        : {
+                            duration: 0.6,
+                            delay: 1.2,
+                            ease: [0.22, 1, 0.36, 1],
+                          }
+                    }
                   >
                     <TextScrambleHoverTrigger />
                   </motion.div>
