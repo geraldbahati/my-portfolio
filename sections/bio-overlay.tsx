@@ -1,12 +1,7 @@
 "use client";
 
-import { memo, useEffect, useMemo, useState } from "react";
-import {
-  motion,
-  MotionValue,
-  useReducedMotion,
-  useTransform,
-} from "framer-motion";
+import { memo, useMemo } from "react";
+import { motion, MotionValue, useTransform } from "framer-motion";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import Analytics from "@/lib/analytics";
@@ -19,20 +14,6 @@ const CutoutMaskImage = dynamic(
     })),
   { ssr: true },
 );
-
-// Cached mobile detection
-let cachedIsMobile: boolean | null = null;
-const isMobileDevice = () => {
-  if (typeof window === "undefined") return false;
-  if (cachedIsMobile === null) {
-    cachedIsMobile =
-      window.innerWidth < 768 ||
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent,
-      );
-  }
-  return cachedIsMobile;
-};
 
 // Optimized Character component with simplified transforms
 interface CharacterProps {
@@ -84,41 +65,19 @@ interface BioOverlayProps {
 }
 
 export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
-  const [isMobile, setIsMobile] = useState(false);
-  const prefersReducedMotion = useReducedMotion();
-
-  useEffect(() => {
-    setIsMobile(isMobileDevice());
-  }, []);
-
-  // Determine if we should use simplified animations
-  const useSimplifiedAnimations = isMobile || prefersReducedMotion;
-
   // Transform scroll progress to control content animations
   // Content animations trigger as bio slides into view (last 60% of scroll)
   // useTransform is already optimized internally by Framer Motion
   const contentProgress = useTransform(scrollProgress, [0.4, 1], [0, 1]);
 
-  // Transform values for the cutout image - simplified for mobile
-  const imageScale = useTransform(
-    contentProgress,
-    [0, 1],
-    useSimplifiedAnimations ? [1, 1] : [0.6, 1],
-  );
+  // Transform values for the cutout image
+  const imageScale = useTransform(contentProgress, [0, 1], [0.6, 1]);
   const imageOpacity = useTransform(contentProgress, [0, 0.2], [0, 1]);
-  const imageY = useTransform(
-    contentProgress,
-    [0, 1],
-    useSimplifiedAnimations ? [0, 0] : [100, 0],
-  );
+  const imageY = useTransform(contentProgress, [0, 1], [100, 0]);
 
   // CTA button visibility based on scroll progress
   const ctaOpacity = useTransform(contentProgress, [0.7, 1], [0, 1]);
-  const ctaY = useTransform(
-    contentProgress,
-    [0.7, 1],
-    useSimplifiedAnimations ? [0, 0] : [20, 0],
-  );
+  const ctaY = useTransform(contentProgress, [0.7, 1], [20, 0]);
 
   // Text content - Memoized to prevent re-splitting on every render
   const tagline = "What I can do for you";
