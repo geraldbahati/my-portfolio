@@ -94,7 +94,7 @@ const SocialSidebar = memo(function SocialSidebar() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label={social.label}
-            className="text-gray-400 hover:text-white transition-colors duration-300 cursor-pointer"
+            className="text-gray-400 hover:text-text-inverted transition-colors duration-300 cursor-pointer"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.1 }}
@@ -273,16 +273,14 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
       {/* PROJECTS SECTION */}
       <div
         ref={scrollTriggerRef}
-        className="relative transition-colors duration-500"
+        className={`relative transition-colors duration-500 ${isFaqShowing ? "bg-surface-dark" : "bg-surface-light"}`}
         style={{
           height: "200vh",
-          backgroundColor: isFaqShowing ? "#000000" : "#ffffff",
         }}
       >
         <div
           ref={stickyContainerRef}
-          className="sticky top-0 h-screen overflow-hidden transition-colors duration-500"
-          style={{ backgroundColor: isFaqShowing ? "#000000" : "#ffffff" }}
+          className={`sticky top-0 h-screen overflow-hidden transition-colors duration-500 ${isFaqShowing ? "bg-surface-dark" : "bg-surface-light"}`}
         >
           {/* Header */}
           <motion.div
@@ -305,10 +303,9 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
                   transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
                 >
                   <h1
-                    className="text-4xl lg:text-5xl font-medium leading-tight tracking-tight transition-colors duration-500"
+                    className={`text-4xl lg:text-5xl font-medium leading-tight tracking-tight transition-colors duration-500 ${isFaqShowing ? "text-text-inverted" : "text-text-primary"}`}
                     style={{
                       fontSize: "2.25rem",
-                      color: isFaqShowing ? "#ffffff" : "#000000",
                     }}
                   >
                     Website Creations and Client Projects
@@ -325,8 +322,7 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
                   transition={{ duration: 0.5, ease: "easeOut", delay: 0.2 }}
                 >
                   <p
-                    className="text-base leading-relaxed transition-colors duration-500"
-                    style={{ color: isFaqShowing ? "#cccccc" : "#4b5563" }}
+                    className={`text-base leading-relaxed transition-colors duration-500 ${isFaqShowing ? "text-text-muted" : "text-text-secondary"}`}
                   >
                     Get to know me, my work style and my values through an
                     insight into my projects that stand for quality, structure

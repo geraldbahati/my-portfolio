@@ -68,7 +68,7 @@ export const CutoutMaskImage: React.FC<CutoutMaskImageProps> = ({
       <div
         className="relative"
         style={{
-          filter: "drop-shadow(0 10px 20px rgba(0,0,0,0.2))",
+          filter: "drop-shadow(0 10px 20px oklch(0 0 0 / 0.2))",
           cursor: clickToChangeImage ? "pointer" : "default",
           aspectRatio: "316 / 424",
         }}

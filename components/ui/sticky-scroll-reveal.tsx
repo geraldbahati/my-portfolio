@@ -27,7 +27,12 @@ const TextSection = ({
   const color = useTransform(
     scrollYProgress,
     [0, 0.1, 0.9, 1],
-    ["#9ca3af", "#000000", "#000000", "#9ca3af"],
+    [
+      "var(--gray-400)",
+      "var(--text-primary)",
+      "var(--text-primary)",
+      "var(--gray-400)",
+    ],
   );
 
   return (
@@ -44,11 +49,11 @@ const TextSection = ({
             className="mb-8 grid-interaction-blocked"
             style={{ opacity }}
           >
-            <span className="inline-block text-sm font-medium uppercase tracking-[0.2em] text-orange-500">
+            <span className="inline-block text-sm font-medium uppercase tracking-[0.2em] text-accent-orange">
               {section.label}
             </span>
             <motion.div
-              className="mt-3 h-[1px] bg-orange-500/30"
+              className="mt-3 h-[1px] bg-accent-orange-muted"
               style={{
                 width: useTransform(scrollYProgress, [0, 1], ["0%", "100%"]),
               }}
@@ -70,7 +75,12 @@ const TextSection = ({
               color: useTransform(
                 scrollYProgress,
                 [0, 0.1, 0.9, 1],
-                ["#9ca3af", "#374151", "#374151", "#9ca3af"],
+                [
+                  "var(--gray-400)",
+                  "var(--gray-700)",
+                  "var(--gray-700)",
+                  "var(--gray-400)",
+                ],
               ),
             }}
           >
@@ -100,7 +110,12 @@ const TextSection = ({
                     color: useTransform(
                       scrollYProgress,
                       [0, 0.1, 0.9, 1],
-                      ["#9ca3af", "#374151", "#374151", "#9ca3af"],
+                      [
+                        "var(--gray-400)",
+                        "var(--gray-700)",
+                        "var(--gray-700)",
+                        "var(--gray-400)",
+                      ],
                     ),
                   }}
                 >
@@ -196,7 +211,7 @@ const ImagePanel = ({
         </div>
       ) : (
         <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-          <span className="text-gray-600 text-xl font-medium">
+          <span className="text-text-tertiary text-xl font-medium">
             {section.title}
           </span>
         </div>
@@ -315,7 +330,7 @@ export const StickyScrollReveal = ({
                     </div>
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                      <span className="text-gray-600 text-lg font-medium text-center px-4">
+                      <span className="text-text-tertiary text-lg font-medium text-center px-4">
                         {section.title}
                       </span>
                     </div>
@@ -339,11 +354,11 @@ export const StickyScrollReveal = ({
                     viewport={{ once: false }}
                     transition={{ duration: 0.5 }}
                   >
-                    <span className="inline-block text-sm font-medium uppercase tracking-[0.2em] text-orange-500">
+                    <span className="inline-block text-sm font-medium uppercase tracking-[0.2em] text-accent-orange">
                       {section.label}
                     </span>
                     <motion.div
-                      className="mt-3 h-[1px] bg-orange-500/30"
+                      className="mt-3 h-[1px] bg-accent-orange-muted"
                       initial={{ width: 0 }}
                       whileInView={{ width: 120 }}
                       viewport={{ once: false }}
@@ -353,7 +368,7 @@ export const StickyScrollReveal = ({
                 )}
 
                 <motion.h2
-                  className="text-4xl sm:text-5xl font-bold mb-8 tracking-tight text-black grid-interaction-blocked"
+                  className="text-4xl sm:text-5xl font-bold mb-8 tracking-tight text-text-primary grid-interaction-blocked"
                   style={{ lineHeight: "1" }}
                 >
                   {section.title}
@@ -380,7 +395,7 @@ export const StickyScrollReveal = ({
                         }}
                       >
                         <svg
-                          className="w-4 h-4 mt-1.5 mr-3 flex-shrink-0 text-black"
+                          className="w-4 h-4 mt-1.5 mr-3 flex-shrink-0 text-text-primary"
                           fill="currentColor"
                           viewBox="0 0 16 16"
                         >
@@ -459,10 +474,10 @@ export const StickyScrollReveal = ({
                   ))}
 
                   {/* Progress indicator - Simplified for performance */}
-                  {/* We could implement this with useScroll on the container if needed, 
-                      but for now we'll omit the complex global progress bar to save performance 
-                      or implement it simply if requested. 
-                      Since we removed global state, we can't easily show global progress 
+                  {/* We could implement this with useScroll on the container if needed,
+                      but for now we'll omit the complex global progress bar to save performance
+                      or implement it simply if requested.
+                      Since we removed global state, we can't easily show global progress
                       without a global useScroll, which is fine to omit for pure performance. */}
                 </div>
               </motion.div>
