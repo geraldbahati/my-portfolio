@@ -36,7 +36,7 @@
     "date-fns": "^4.1.0",
     "lucide-react": "^0.544.0",
     "motion": "^12.23.22",
-    "next": "^16.0.7",
+    "next": "16.0.10",
     "next-cloudinary": "^6.17.5",
     "next-mdx-remote": "^5.0.0",
     "postprocessing": "^6.37.8",
