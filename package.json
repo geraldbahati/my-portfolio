@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.35.6",
+    "@convex-dev/r2": "^0.8.1",
     "@convex-dev/rate-limiter": "^0.2.13",
     "@convex-dev/resend": "^0.1.13",
     "@dnd-kit/core": "^6.3.1",

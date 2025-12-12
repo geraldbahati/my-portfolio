@@ -34,17 +34,17 @@ export const getAllProjectsQuery = query({
           v.object({
             text: v.string(),
             position: v.optional(
-              v.union(v.literal("bottom-left"), v.literal("bottom-right"))
+              v.union(v.literal("bottom-left"), v.literal("bottom-right")),
             ),
-          })
-        )
+          }),
+        ),
       ),
       aspectRatio: v.optional(v.string()),
       order: v.number(),
       isPublished: v.boolean(),
       createdAt: v.number(),
       updatedAt: v.number(),
-    })
+    }),
   ),
   handler: async (ctx) => {
     await requireAdmin(ctx);
@@ -77,10 +77,10 @@ export const createProject = action({
         v.object({
           text: v.string(),
           position: v.optional(
-            v.union(v.literal("bottom-left"), v.literal("bottom-right"))
+            v.union(v.literal("bottom-left"), v.literal("bottom-right")),
           ),
-        })
-      )
+        }),
+      ),
     ),
     aspectRatio: v.optional(v.string()),
     order: v.number(),
@@ -111,10 +111,10 @@ export const updateProject = action({
         v.object({
           text: v.string(),
           position: v.optional(
-            v.union(v.literal("bottom-left"), v.literal("bottom-right"))
+            v.union(v.literal("bottom-left"), v.literal("bottom-right")),
           ),
-        })
-      )
+        }),
+      ),
     ),
     aspectRatio: v.optional(v.string()),
     order: v.optional(v.number()),
@@ -129,6 +129,7 @@ export const updateProject = action({
 
 /**
  * Delete a project - DEV ONLY
+ * Also cleans up associated media from Cloudflare Stream and R2
  */
 export const deleteProject = action({
   args: {
@@ -137,9 +138,82 @@ export const deleteProject = action({
   returns: v.null(),
   handler: async (ctx, args): Promise<null> => {
     await requireAdmin(ctx);
+
+    // Get project data first to extract media URLs
+    const project = await ctx.runQuery(internal.projects.getProjectByDocId, {
+      projectId: args.projectId,
+    });
+
+    if (project) {
+      // Clean up video from Stream if it's a Stream URL
+      if (project.src && project.src.includes("cloudflarestream.com")) {
+        const streamUid = extractStreamUid(project.src);
+        if (streamUid) {
+          try {
+            await ctx.runAction(internal.stream.deleteVideoInternal, {
+              uid: streamUid,
+            });
+            console.log(`[Delete] Removed video from Stream: ${streamUid}`);
+          } catch (error) {
+            console.warn(`[Delete] Failed to delete Stream video: ${error}`);
+          }
+        }
+      }
+      // Clean up video from R2 if it's an R2 URL
+      else if (project.src && project.src.includes("media.geraldbahati.dev")) {
+        const key = extractR2Key(project.src);
+        if (key) {
+          try {
+            await ctx.runAction(internal.r2.deleteObjectInternal, { key });
+            console.log(`[Delete] Removed video from R2: ${key}`);
+          } catch (error) {
+            console.warn(`[Delete] Failed to delete R2 video: ${error}`);
+          }
+        }
+      }
+
+      // Clean up poster image from R2 if it exists
+      if (project.poster && project.poster.includes("media.geraldbahati.dev")) {
+        const posterKey = extractR2Key(project.poster);
+        if (posterKey) {
+          try {
+            await ctx.runAction(internal.r2.deleteObjectInternal, {
+              key: posterKey,
+            });
+            console.log(`[Delete] Removed poster from R2: ${posterKey}`);
+          } catch (error) {
+            console.warn(`[Delete] Failed to delete R2 poster: ${error}`);
+          }
+        }
+      }
+    }
+
+    // Delete the project from database
     return await ctx.runMutation(internal.projects.deleteProject, args);
   },
 });
+
+/**
+ * Extract Stream video UID from URL
+ */
+function extractStreamUid(url: string): string | null {
+  // Format: https://customer-xxx.cloudflarestream.com/{uid}/...
+  const match = url.match(/cloudflarestream\.com\/([a-f0-9]+)/i);
+  return match ? match[1] : null;
+}
+
+/**
+ * Extract R2 key from media URL
+ */
+function extractR2Key(url: string): string | null {
+  // Format: https://media.geraldbahati.dev/{key}
+  try {
+    const urlObj = new URL(url);
+    return urlObj.pathname.slice(1); // Remove leading /
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Reorder projects - DEV ONLY
@@ -150,7 +224,7 @@ export const reorderProjects = action({
       v.object({
         projectId: v.id("projects"),
         order: v.number(),
-      })
+      }),
     ),
   },
   returns: v.null(),
