@@ -243,7 +243,10 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
 
           {/* Main Title - Clip reveal animation (text slides up together from greater distance) */}
           <div className="mb-8 sm:mb-10 lg:mb-12">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-thin leading-tight sm:leading-none tracking-tight grid-interaction-blocked pointer-events-auto text-white">
+            <h1
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-thin leading-tight sm:leading-none tracking-tight grid-interaction-blocked pointer-events-auto text-white"
+              style={{ fontSize: "clamp(2.25rem, 8vw, 6rem)" }}
+            >
               {/* "Web design" with clip reveal */}
               <span className="inline-block overflow-hidden align-bottom">
                 <span className="inline-block font-medium reveal-up-title">
