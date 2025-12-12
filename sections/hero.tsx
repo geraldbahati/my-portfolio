@@ -1,39 +1,18 @@
 "use client";
 
 import { memo, useCallback, useEffect, useRef, useState } from "react";
-import {
-  AnimatePresence,
-  motion,
-  motionValue,
-  MotionValue,
-  useReducedMotion,
-  useTransform,
-} from "framer-motion";
+import { MotionValue } from "framer-motion";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import Analytics from "@/lib/analytics";
-
-// Detect mobile for performance optimizations - cached value
-let cachedIsMobile: boolean | null = null;
-const isMobileDevice = () => {
-  if (typeof window === "undefined") return false;
-  if (cachedIsMobile === null) {
-    cachedIsMobile =
-      window.innerWidth < 768 ||
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent,
-      );
-  }
-  return cachedIsMobile;
-};
 
 // Lazy load heavy components with loading optimization
 const GridPattern = dynamic(
   () => import("@/components/ui/shadcn-io/grid-pattern"),
   {
     ssr: false,
-    loading: () => null, // No loading state to avoid layout shift
+    loading: () => null,
   },
 );
 const TextScramble = dynamic(
@@ -43,26 +22,16 @@ const TextScramble = dynamic(
     })),
   {
     ssr: false,
-    loading: () => <span>Gerald Bahati</span>, // Show text immediately
+    loading: () => null,
   },
 );
 
 // Animation timing constants
-const ANIMATION_DELAYS = {
-  INITIAL: 0,
-  TITLE: 300,
-  DESCRIPTION: 600,
-  CTA: 1200, // CTA appears last
-  NAME_SCRAMBLE_STOP: 1500, // Stop scrambling when all content appears
-} as const;
-
 const ANIMATION_DURATIONS = {
-  FADE_IN: 800,
-  NAME_SCRAMBLE: 500, // Each scramble cycle
+  NAME_SCRAMBLE: 500,
   NAME_SCRAMBLE_SPEED: 0.05,
-  HOVER_SCRAMBLE: 500, // Duration for hover scramble
+  HOVER_SCRAMBLE: 500,
   HOVER_SCRAMBLE_SPEED: 0.04,
-  NAME_BLUR_CLEAR: 1200,
 } as const;
 
 // Memoized CTA component with optimized hover handling
@@ -74,13 +43,9 @@ const TextScrambleHoverTrigger = memo(() => {
 
   const handleMouseEnter = useCallback(() => {
     setIsHovered(true);
-
-    // Only trigger if we haven't already triggered for this hover session
     if (!hasTriggered) {
       setHasTriggered(true);
       setShouldTrigger(true);
-
-      // Force stop after 500ms regardless of hover state
       scrambleTimeoutRef.current = setTimeout(() => {
         setShouldTrigger(false);
       }, ANIMATION_DURATIONS.HOVER_SCRAMBLE);
@@ -93,7 +58,7 @@ const TextScrambleHoverTrigger = memo(() => {
     }
     setIsHovered(false);
     setShouldTrigger(false);
-    setHasTriggered(false); // Reset for next hover
+    setHasTriggered(false);
   }, []);
 
   const handleScrambleComplete = useCallback(() => {
@@ -114,10 +79,10 @@ const TextScrambleHoverTrigger = memo(() => {
       onClick={() =>
         Analytics.trackButtonClick("Request a project", "Hero CTA")
       }
-      className="inline-block"
+      className="inline-block pointer-events-auto"
     >
-      <motion.div
-        className={`flex-shrink-0 cursor-pointer relative inline-block border-b transition-colors duration-300 ${
+      <div
+        className={`flex-shrink-0 cursor-pointer relative inline-block border-b transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ${
           isHovered ? "border-primary" : "border-muted-foreground/50"
         }`}
         onMouseEnter={handleMouseEnter}
@@ -125,11 +90,9 @@ const TextScrambleHoverTrigger = memo(() => {
         role="button"
         tabIndex={0}
         aria-label="Request a project"
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
       >
         <TextScramble
-          className="pointer-events-auto text-white font-light text-sm sm:text-base uppercase tracking-[0.2em]"
+          className="text-white font-light text-sm sm:text-base uppercase tracking-[0.2em]"
           trigger={shouldTrigger}
           duration={ANIMATION_DURATIONS.HOVER_SCRAMBLE}
           speed={ANIMATION_DURATIONS.HOVER_SCRAMBLE_SPEED}
@@ -138,102 +101,12 @@ const TextScrambleHoverTrigger = memo(() => {
         >
           Request a project
         </TextScramble>
-      </motion.div>
+      </div>
     </Link>
   );
 });
 
 TextScrambleHoverTrigger.displayName = "TextScrambleHoverTrigger";
-
-// Animation variants for better organization - with mobile-optimized versions
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.2,
-      delayChildren: 0.1,
-    },
-  },
-};
-
-// Simplified variants for mobile/reduced motion
-const containerVariantsMobile = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      duration: 0.3,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: {
-    opacity: 0,
-    y: 30,
-    filter: "blur(10px)",
-  },
-  visible: (delay: number = 0) => ({
-    opacity: 1,
-    y: 0,
-    filter: "blur(0px)",
-    transition: {
-      duration: ANIMATION_DURATIONS.FADE_IN / 1000,
-      delay: delay / 1000,
-      ease: [0.22, 1, 0.36, 1] as const,
-      filter: {
-        duration: (ANIMATION_DURATIONS.FADE_IN / 1000) * 1.2,
-      },
-    },
-  }),
-};
-
-// Simplified item variants for mobile - no blur, faster animations
-const itemVariantsMobile = {
-  hidden: {
-    opacity: 0,
-    y: 10,
-  },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.3,
-      ease: "easeOut" as const,
-    },
-  },
-};
-
-const nameVariants = {
-  initial: {
-    opacity: 0,
-    scale: 0.95,
-    filter: "blur(4px)",
-  },
-  animate: {
-    opacity: 1,
-    scale: 1,
-    filter: "blur(0px)",
-    transition: {
-      duration: 0.6,
-      ease: [0.22, 1, 0.36, 1] as const,
-    },
-  },
-};
-
-// Mobile name variants - no blur filter for better performance
-const nameVariantsMobile = {
-  initial: {
-    opacity: 0,
-  },
-  animate: {
-    opacity: 1,
-    transition: {
-      duration: 0.3,
-    },
-  },
-};
 
 interface HeroSectionProps {
   scrollProgress?: MotionValue<number>;
@@ -241,42 +114,51 @@ interface HeroSectionProps {
 
 export default function HeroSection({ scrollProgress }: HeroSectionProps) {
   const [mounted, setMounted] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const [nameScrambling, setNameScrambling] = useState(false);
+  const [imageScale, setImageScale] = useState(1);
   const stopScrambleTimeoutRef = useRef<NodeJS.Timeout>(null);
 
-  // Respect user's reduced motion preference
-  const prefersReducedMotion = useReducedMotion();
-
-  // Scale image down as user scrolls (from 1 to 0.85) - disabled on mobile/reduced motion for performance
-  const defaultProgress = useRef(motionValue(0));
-  const activeProgress = scrollProgress ?? defaultProgress.current;
-  const shouldDisableParallax = isMobile || prefersReducedMotion;
-  const imageScale = useTransform(
-    activeProgress,
-    [0, 1],
-    [1, shouldDisableParallax ? 1 : 0.85],
-  );
+  // Check for reduced motion preference
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    const mobile = isMobileDevice();
-    setIsMobile(mobile);
+    // Check reduced motion preference
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setPrefersReducedMotion(mediaQuery.matches);
 
-    // Mobile/reduced motion performance: Skip scramble animation
-    if (!mobile && !prefersReducedMotion) {
+    setMounted(true);
+
+    // Start scramble, then stop after 800ms
+    if (!mediaQuery.matches) {
       setNameScrambling(true);
       stopScrambleTimeoutRef.current = setTimeout(() => {
         setNameScrambling(false);
       }, 800);
+    } else {
+      setNameScrambling(false);
+    }
+
+    // Subscribe to scroll progress for image scaling
+    let unsubscribe: (() => void) | undefined;
+    if (scrollProgress && !mediaQuery.matches) {
+      unsubscribe = scrollProgress.on("change", (progress: number) => {
+        // Scale from 1 to 0.85 as user scrolls (0 to 1)
+        const newScale = 1 - progress * 0.15;
+        setImageScale(newScale);
+      });
+      // Set initial value
+      setImageScale(1 - scrollProgress.get() * 0.15);
     }
 
     return () => {
       if (stopScrambleTimeoutRef.current) {
         clearTimeout(stopScrambleTimeoutRef.current);
       }
+      if (unsubscribe) {
+        unsubscribe();
+      }
     };
-  }, [prefersReducedMotion]);
+  }, [scrollProgress]);
 
   return (
     <section
@@ -286,14 +168,13 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
       }}
       role="banner"
     >
-      {/* Profile Background Image */}
+      {/* Profile Background Image - scales on scroll */}
       <div className="absolute inset-0 z-0 flex items-center justify-center">
-        <motion.div
-          className="relative w-full h-full"
+        <div
+          className="relative w-full h-full transition-transform duration-100 ease-out"
           style={{
-            scale: imageScale,
+            transform: `scale(${imageScale}) translateZ(0)`,
             willChange: "transform",
-            transform: "translateZ(0)", // Force GPU acceleration
           }}
         >
           <Image
@@ -301,14 +182,12 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
             alt="Gerald Bahati - Web Designer"
             fill
             priority
+            fetchPriority="high"
             className="object-cover sm:object-contain sm:mix-blend-screen"
             sizes="(max-width: 640px) 100vw, (max-width: 1280px) 100vw, 1920px"
             quality={60}
-            style={{
-              transform: "translateZ(0)", // Force GPU layer
-            }}
           />
-        </motion.div>
+        </div>
       </div>
 
       {/* Edge Fade Overlay - Gentle vignette effect */}
@@ -327,8 +206,8 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
         }}
       />
 
-      {/* Grid Pattern Background - Disabled on mobile for performance */}
-      {mounted && !isMobile && !prefersReducedMotion && (
+      {/* Grid Pattern Background */}
+      {mounted && !prefersReducedMotion && (
         <GridPattern
           className="absolute inset-0 z-10"
           gridClassName="stroke-current/20"
@@ -339,162 +218,73 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
         />
       )}
 
-      {/* Hero Content */}
-      <div className="relative z-10 min-h-screen flex items-end justify-end px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12 lg:pb-16 pointer-events-none">
-        <div className="w-full max-w-7xl mx-auto">
-          <AnimatePresence mode="wait">
-            {mounted && (
-              <motion.div
-                initial="hidden"
-                animate="visible"
-                variants={
-                  shouldDisableParallax
-                    ? containerVariantsMobile
-                    : containerVariants
-                }
+      {/* Hero Content - Renders immediately for fast LCP */}
+      <div className="relative z-10 min-h-screen flex items-end justify-center lg:justify-end px-4 sm:px-6 lg:px-8 sm:pb-12 pb-16 pointer-events-none">
+        <div className="w-full max-w-7xl mx-auto text-center lg:text-left">
+          {/* Name section - Single render with CSS animation + TextScramble */}
+          <div className="mb-8 overflow-hidden">
+            <div
+              className={`reveal-up transition-[filter] duration-700 ease-out ${
+                nameScrambling ? "blur-[1px]" : "blur-0"
+              }`}
+            >
+              <TextScramble
+                key={nameScrambling ? "scrambling" : "stopped"}
+                className="text-xs sm:text-sm lg:text-base font-light text-primary tracking-[0.2em] sm:tracking-[0.3em] uppercase"
+                trigger={nameScrambling}
+                duration={ANIMATION_DURATIONS.NAME_SCRAMBLE}
+                speed={ANIMATION_DURATIONS.NAME_SCRAMBLE_SPEED}
+                as="p"
               >
-                {/* Name - Continuously scrambles while other content appears */}
-                <motion.div
-                  className="mb-8 sm:mb-12 lg:mb-16"
-                  variants={
-                    shouldDisableParallax ? nameVariantsMobile : nameVariants
-                  }
-                  initial="initial"
-                  animate="animate"
-                >
-                  {/* Skip blur animation on mobile for performance */}
-                  {shouldDisableParallax ? (
-                    <p className="text-xs sm:text-sm lg:text-base font-light text-primary tracking-[0.2em] sm:tracking-[0.3em] uppercase">
-                      Gerald Bahati
-                    </p>
-                  ) : (
-                    <motion.div
-                      className="will-change-[filter]"
-                      animate={{
-                        filter: nameScrambling ? "blur(1px)" : "blur(0px)",
-                      }}
-                      transition={{
-                        duration: 0.3,
-                        ease: "easeInOut",
-                      }}
-                    >
-                      <TextScramble
-                        key={nameScrambling ? "scrambling" : "stopped"}
-                        className="text-xs sm:text-sm lg:text-base font-light text-primary tracking-[0.2em] sm:tracking-[0.3em] uppercase"
-                        trigger={nameScrambling}
-                        duration={ANIMATION_DURATIONS.NAME_SCRAMBLE}
-                        speed={ANIMATION_DURATIONS.NAME_SCRAMBLE_SPEED}
-                        as="p"
-                      >
-                        Gerald Bahati
-                      </TextScramble>
-                    </motion.div>
-                  )}
-                </motion.div>
+                Gerald Bahati
+              </TextScramble>
+            </div>
+          </div>
 
-                {/* Main Title */}
-                <motion.div
-                  className="mb-8 sm:mb-10 lg:mb-12"
-                  custom={ANIMATION_DELAYS.TITLE}
-                  variants={
-                    shouldDisableParallax ? itemVariantsMobile : itemVariants
-                  }
+          {/* Main Title - Clip reveal animation (text slides up together from greater distance) */}
+          <div className="mb-8 sm:mb-10 lg:mb-12">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-thin leading-tight sm:leading-none tracking-tight grid-interaction-blocked pointer-events-auto text-white">
+              {/* "Web design" with clip reveal */}
+              <span className="inline-block overflow-hidden align-bottom">
+                <span className="inline-block font-medium reveal-up-title">
+                  Web design
+                </span>
+              </span>
+              {/* "/" separator with clip reveal */}
+              <span className="inline-block overflow-hidden align-bottom">
+                <span
+                  className="inline-block mx-2 sm:mx-3 reveal-up-title text-white"
+                  aria-hidden="true"
                 >
-                  <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-thin leading-[0.9] sm:leading-none tracking-tight grid-interaction-blocked pointer-events-auto text-white">
-                    {shouldDisableParallax ? (
-                      // Static render for mobile - no individual span animations
-                      <>
-                        <span className="inline-block font-medium">
-                          Web design
-                        </span>
-                        <span
-                          className="text-muted-foreground mx-2 sm:mx-3"
-                          aria-hidden="true"
-                        >
-                          /
-                        </span>
-                        <span className="inline-block text-transparent [text-stroke:1px_white] [-webkit-text-stroke:1px_white]">
-                          Digital Marketing
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <motion.span
-                          className="inline-block font-medium"
-                          style={{ willChange: "auto" }}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{
-                            duration: 0.4,
-                            delay: 0,
-                            ease: [0.22, 1, 0.36, 1],
-                          }}
-                        >
-                          Web design
-                        </motion.span>
-                        <span
-                          className="text-muted-foreground mx-2 sm:mx-3"
-                          aria-hidden="true"
-                        >
-                          /
-                        </span>
-                        <motion.span
-                          className="inline-block text-transparent [text-stroke:1px_white] [-webkit-text-stroke:1px_white]"
-                          style={{ willChange: "auto" }}
-                          initial={{ opacity: 0, x: 20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{
-                            duration: 0.4,
-                            delay: 0.1,
-                            ease: [0.22, 1, 0.36, 1],
-                          }}
-                        >
-                          Digital Marketing
-                        </motion.span>
-                      </>
-                    )}
-                  </h1>
-                </motion.div>
+                  /
+                </span>
+              </span>
+              {/* "Digital Marketing" with clip reveal - same timing */}
+              <span className="inline-block overflow-hidden align-bottom">
+                <span className="inline-block text-transparent [text-stroke:1px_white] [-webkit-text-stroke:1px_white] reveal-up-title italic">
+                  Digital Marketing
+                </span>
+              </span>
+            </h1>
+          </div>
 
-                {/* Description and CTA */}
-                <motion.div
-                  className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 sm:gap-8"
-                  custom={ANIMATION_DELAYS.DESCRIPTION}
-                  variants={
-                    shouldDisableParallax ? itemVariantsMobile : itemVariants
-                  }
-                >
-                  {/* Description - LCP element, no animation delay for performance */}
-                  <div className="flex-1 lg:max-w-2xl">
-                    <p className="text-sm sm:text-base lg:text-lg text-muted-foreground font-light leading-relaxed tracking-wide grid-interaction-blocked pointer-events-auto">
-                      Design meets Performance – creative web design and digital
-                      marketing delivered precisely.
-                    </p>
-                  </div>
+          {/* Description and CTA - Centered on mobile, row on large */}
+          <div className="flex flex-col items-center lg:items-start lg:flex-row lg:justify-between gap-6 sm:gap-8">
+            {/* Description with clip reveal */}
+            <div className="max-w-xl lg:max-w-2xl overflow-hidden">
+              <p className="text-sm sm:text-base lg:text-lg text-muted-foreground font-light leading-relaxed tracking-wide grid-interaction-blocked pointer-events-auto reveal-up">
+                Design meets Performance – creative web design and digital
+                marketing delivered precisely.
+              </p>
+            </div>
 
-                  {/* CTA Text */}
-                  <motion.div
-                    className="flex-shrink-0"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={
-                      shouldDisableParallax
-                        ? {
-                            duration: 0.3,
-                          }
-                        : {
-                            duration: 0.6,
-                            delay: 1.2,
-                            ease: [0.22, 1, 0.36, 1],
-                          }
-                    }
-                  >
-                    <TextScrambleHoverTrigger />
-                  </motion.div>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+            {/* CTA Text with clip reveal - Single render */}
+            <div className="flex-shrink-0 overflow-hidden">
+              <div className="reveal-up">
+                <TextScrambleHoverTrigger />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>

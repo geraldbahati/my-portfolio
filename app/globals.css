@@ -255,126 +255,6 @@
   --tracking-normal: 0rem;
 }
 
-.dark {
-  /* ===== CORE THEME COLORS (Dark Mode) ===== */
-  --background: oklch(0.1797 0.0043 308.1928);
-  --foreground: oklch(0.8109 0 0);
-
-  /* Card & Popover */
-  --card: oklch(0.1822 0 0);
-  --card-foreground: oklch(0.8109 0 0);
-  --popover: oklch(0.1797 0.0043 308.1928);
-  --popover-foreground: oklch(0.8109 0 0);
-
-  /* Primary - Brighter in dark mode */
-  --primary: oklch(0.7214 0.1337 49.9802);
-  --primary-foreground: oklch(0.1797 0.0043 308.1928);
-
-  /* Secondary */
-  --secondary: oklch(0.594 0.0443 196.0233);
-  --secondary-foreground: oklch(0.1797 0.0043 308.1928);
-
-  /* Muted */
-  --muted: oklch(0.252 0 0);
-  --muted-foreground: oklch(0.6268 0 0);
-
-  /* Accent */
-  --accent: oklch(0.3211 0 0);
-  --accent-foreground: oklch(0.8109 0 0);
-
-  /* Destructive */
-  --destructive: oklch(0.594 0.0443 196.0233);
-  --destructive-foreground: oklch(0.1797 0.0043 308.1928);
-
-  /* Border & Input */
-  --border: oklch(0.252 0 0);
-  --input: oklch(0.252 0 0);
-  --ring: oklch(0.7214 0.1337 49.9802);
-
-  /* Chart Colors */
-  --chart-1: oklch(0.594 0.0443 196.0233);
-  --chart-2: oklch(0.7214 0.1337 49.9802);
-  --chart-3: oklch(0.8721 0.0864 68.5474);
-  --chart-4: oklch(0.6268 0 0);
-  --chart-5: oklch(0.683 0 0);
-
-  /* Sidebar */
-  --sidebar: oklch(0.1822 0 0);
-  --sidebar-foreground: oklch(0.8109 0 0);
-  --sidebar-primary: oklch(0.7214 0.1337 49.9802);
-  --sidebar-primary-foreground: oklch(0.1797 0.0043 308.1928);
-  --sidebar-accent: oklch(0.3211 0 0);
-  --sidebar-accent-foreground: oklch(0.8109 0 0);
-  --sidebar-border: oklch(0.252 0 0);
-  --sidebar-ring: oklch(0.7214 0.1337 49.9802);
-
-  /* ===== CUSTOM THEME COLORS (Dark Mode) ===== */
-
-  /* Hero Section - Same in dark mode */
-  --hero-bg: oklch(0.1451 0 0);
-  --hero-overlay: oklch(0.1451 0 0);
-
-  /* Surface Colors - Inverted */
-  --surface-light: oklch(0.1822 0 0);
-  --surface-dark: oklch(0 0 0);
-
-  /* Text Colors - Inverted for dark mode */
-  --text-primary: oklch(1 0 0);
-  --text-secondary: oklch(0.8235 0 0);
-  --text-tertiary: oklch(0.6268 0 0);
-  --text-inverted: oklch(0 0 0);
-  --text-muted: oklch(0.6268 0 0);
-
-  /* Accent Orange - Same */
-  --accent-orange: oklch(0.705 0.167 41.29);
-  --accent-orange-muted: oklch(0.705 0.167 41.29 / 0.3);
-
-  /* Gray Scale - Inverted */
-  --gray-50: oklch(0.2101 0 0);
-  --gray-100: oklch(0.252 0 0);
-  --gray-200: oklch(0.3211 0 0);
-  --gray-300: oklch(0.451 0 0);
-  --gray-400: oklch(0.551 0 0);
-  --gray-500: oklch(0.6268 0 0);
-  --gray-600: oklch(0.702 0 0);
-  --gray-700: oklch(0.8235 0 0);
-  --gray-800: oklch(0.9276 0 0);
-  --gray-900: oklch(0.967 0 0);
-
-  /* Interactive States */
-  --hover: oklch(0.252 0 0);
-  --active: oklch(0.3211 0 0);
-  --focus: oklch(0.7214 0.1337 49.9802);
-
-  /* Typography */
-  --radius: 0.75rem;
-  --font-sans: Syne, ui-sans-serif, sans-serif, system-ui;
-  --font-serif: serif;
-  --font-mono: JetBrains Mono, monospace;
-
-  /* Shadow System */
-  --shadow-color: oklch(0 0 0);
-  --shadow-opacity: 0.05;
-  --shadow-blur: 4px;
-  --shadow-spread: 0px;
-  --shadow-offset-x: 0px;
-  --shadow-offset-y: 1px;
-  --letter-spacing: 0rem;
-  --spacing: 0.25rem;
-  --shadow-2xs: 0px 1px 4px 0px oklch(0 0 0 / 0.03);
-  --shadow-xs: 0px 1px 4px 0px oklch(0 0 0 / 0.03);
-  --shadow-sm:
-    0px 1px 4px 0px oklch(0 0 0 / 0.05), 0px 1px 2px -1px oklch(0 0 0 / 0.05);
-  --shadow:
-    0px 1px 4px 0px oklch(0 0 0 / 0.05), 0px 1px 2px -1px oklch(0 0 0 / 0.05);
-  --shadow-md:
-    0px 1px 4px 0px oklch(0 0 0 / 0.05), 0px 2px 4px -1px oklch(0 0 0 / 0.05);
-  --shadow-lg:
-    0px 1px 4px 0px oklch(0 0 0 / 0.05), 0px 4px 6px -1px oklch(0 0 0 / 0.05);
-  --shadow-xl:
-    0px 1px 4px 0px oklch(0 0 0 / 0.05), 0px 8px 10px -1px oklch(0 0 0 / 0.05);
-  --shadow-2xl: 0px 1px 4px 0px oklch(0 0 0 / 0.13);
-}
 
 @layer base {
   * {
@@ -393,6 +273,51 @@
   }
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Hero text reveal animation - slides up from below with clip */
+  /* Uses expo-out easing: fast entry, smooth slow stop */
+  
+  /* For title - comes from greater distance (150%) */
+  .reveal-up-title {
+    animation: reveal-up-title 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  
+  /* For other content - comes from shorter distance (60%) */
+  .reveal-up {
+    animation: reveal-up 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .reveal-up-delay-1 {
+    animation: reveal-up 1.4s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+  }
+
+  .reveal-up-delay-2 {
+    animation: reveal-up 1.4s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+  }
+
+  .reveal-up-delay-3 {
+    animation: reveal-up 1.4s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+  }
+}
+
+/* Title reveal - from greater distance */
+@keyframes reveal-up-title {
+  from {
+    transform: translateY(200%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Standard reveal - from shorter distance */
+@keyframes reveal-up {
+  from {
+    transform: translateY(60%);
+  }
+  to {
+    transform: translateY(0);
   }
 }
 

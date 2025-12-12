@@ -184,7 +184,7 @@ const ImagePanel = ({
               }}
               priority={index === 0}
               quality={50}
-              sizes="600px"
+              sizes="(max-width: 1024px) 500px, 600px"
             />
           </div>
 
@@ -204,7 +204,7 @@ const ImagePanel = ({
                 }}
                 priority={index === 0}
                 quality={95}
-                sizes="450px"
+                sizes="(max-width: 1024px) 320px, 450px"
               />
             </div>
           </div>
@@ -303,7 +303,7 @@ export const StickyScrollReveal = ({
                           }}
                           priority={index === 0}
                           quality={50}
-                          sizes="500px"
+                          sizes="(max-width: 640px) 90vw, 500px"
                         />
                       </div>
 
@@ -323,7 +323,7 @@ export const StickyScrollReveal = ({
                             }}
                             priority={index === 0}
                             quality={95}
-                            sizes="320px"
+                            sizes="(max-width: 640px) 70vw, 320px"
                           />
                         </div>
                       </div>

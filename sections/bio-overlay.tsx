@@ -70,14 +70,17 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
   // useTransform is already optimized internally by Framer Motion
   const contentProgress = useTransform(scrollProgress, [0.4, 1], [0, 1]);
 
+  // Text reveal starts later so image appears first
+  const textProgress = useTransform(scrollProgress, [0.55, 1], [0, 1]);
+
   // Transform values for the cutout image
   const imageScale = useTransform(contentProgress, [0, 1], [0.6, 1]);
   const imageOpacity = useTransform(contentProgress, [0, 0.2], [0, 1]);
   const imageY = useTransform(contentProgress, [0, 1], [100, 0]);
 
   // CTA button visibility based on scroll progress
-  const ctaOpacity = useTransform(contentProgress, [0.7, 1], [0, 1]);
-  const ctaY = useTransform(contentProgress, [0.7, 1], [20, 0]);
+  const ctaOpacity = useTransform(textProgress, [0.7, 1], [0, 1]);
+  const ctaY = useTransform(textProgress, [0.7, 1], [20, 0]);
 
   // Text content - Memoized to prevent re-splitting on every render
   const tagline = "What I can do for you";
@@ -137,7 +140,7 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
               alt="Profile portrait"
               priority={true}
               quality={75}
-              sizes="(max-width: 640px) 282px, 282px"
+              sizes="(max-width: 640px) 282px, (max-width: 1024px) 400px, 500px"
             />
           </motion.div>
 
@@ -168,7 +171,7 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
                         return (
                           <Character
                             key={`tag-${wordIdx}-${charIdx}`}
-                            progress={contentProgress}
+                            progress={textProgress}
                             range={[start, end]}
                           >
                             {char}
@@ -197,7 +200,7 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
                   return (
                     <Character
                       key={`num-${i}`}
-                      progress={contentProgress}
+                      progress={textProgress}
                       range={[start, end]}
                     >
                       {char}
@@ -234,7 +237,7 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
                       return (
                         <Character
                           key={`main-${wordIdx}-${charIdx}`}
-                          progress={contentProgress}
+                          progress={textProgress}
                           range={[start, end]}
                         >
                           {char}
