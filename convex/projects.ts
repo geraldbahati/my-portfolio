@@ -38,17 +38,17 @@ export const getPublishedProjects = query({
           v.object({
             text: v.string(),
             position: v.optional(
-              v.union(v.literal("bottom-left"), v.literal("bottom-right"))
+              v.union(v.literal("bottom-left"), v.literal("bottom-right")),
             ),
-          })
-        )
+          }),
+        ),
       ),
       aspectRatio: v.optional(v.string()),
       order: v.number(),
       isPublished: v.boolean(),
       createdAt: v.number(),
       updatedAt: v.number(),
-    })
+    }),
   ),
   handler: async (ctx) => {
     // Use index for efficient querying - don't use .filter()
@@ -84,17 +84,17 @@ export const getAllProjects = internalQuery({
           v.object({
             text: v.string(),
             position: v.optional(
-              v.union(v.literal("bottom-left"), v.literal("bottom-right"))
+              v.union(v.literal("bottom-left"), v.literal("bottom-right")),
             ),
-          })
-        )
+          }),
+        ),
       ),
       aspectRatio: v.optional(v.string()),
       order: v.number(),
       isPublished: v.boolean(),
       createdAt: v.number(),
       updatedAt: v.number(),
-    })
+    }),
   ),
   handler: async (ctx) => {
     const projects = await ctx.db
@@ -130,10 +130,10 @@ export const getProjectById = query({
           v.object({
             text: v.string(),
             position: v.optional(
-              v.union(v.literal("bottom-left"), v.literal("bottom-right"))
+              v.union(v.literal("bottom-left"), v.literal("bottom-right")),
             ),
-          })
-        )
+          }),
+        ),
       ),
       aspectRatio: v.optional(v.string()),
       order: v.number(),
@@ -141,7 +141,7 @@ export const getProjectById = query({
       createdAt: v.number(),
       updatedAt: v.number(),
     }),
-    v.null()
+    v.null(),
   ),
   handler: async (ctx, args) => {
     // Use index for efficient lookup by project ID
@@ -174,10 +174,10 @@ export const createProject = internalMutation({
         v.object({
           text: v.string(),
           position: v.optional(
-            v.union(v.literal("bottom-left"), v.literal("bottom-right"))
+            v.union(v.literal("bottom-left"), v.literal("bottom-right")),
           ),
-        })
-      )
+        }),
+      ),
     ),
     aspectRatio: v.optional(v.string()),
     order: v.number(),
@@ -226,10 +226,10 @@ export const updateProject = internalMutation({
         v.object({
           text: v.string(),
           position: v.optional(
-            v.union(v.literal("bottom-left"), v.literal("bottom-right"))
+            v.union(v.literal("bottom-left"), v.literal("bottom-right")),
           ),
-        })
-      )
+        }),
+      ),
     ),
     aspectRatio: v.optional(v.string()),
     order: v.optional(v.number()),
@@ -246,6 +246,48 @@ export const updateProject = internalMutation({
     });
 
     return null;
+  },
+});
+
+/**
+ * Get a project by document ID (internal use for deletion)
+ */
+export const getProjectByDocId = internalQuery({
+  args: {
+    projectId: v.id("projects"),
+  },
+  returns: v.union(
+    v.object({
+      _id: v.id("projects"),
+      _creationTime: v.number(),
+      id: v.string(),
+      title: v.string(),
+      description: v.optional(v.string()),
+      src: v.string(),
+      type: v.union(v.literal("video"), v.literal("gif")),
+      poster: v.optional(v.string()),
+      alt: v.optional(v.string()),
+      url: v.optional(v.string()),
+      badges: v.optional(
+        v.array(
+          v.object({
+            text: v.string(),
+            position: v.optional(
+              v.union(v.literal("bottom-left"), v.literal("bottom-right")),
+            ),
+          }),
+        ),
+      ),
+      aspectRatio: v.optional(v.string()),
+      order: v.number(),
+      isPublished: v.boolean(),
+      createdAt: v.number(),
+      updatedAt: v.number(),
+    }),
+    v.null(),
+  ),
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.projectId);
   },
 });
 
@@ -272,7 +314,7 @@ export const reorderProjects = internalMutation({
       v.object({
         projectId: v.id("projects"),
         order: v.number(),
-      })
+      }),
     ),
   },
   returns: v.null(),
@@ -311,13 +353,13 @@ export const seedProjects = internalMutation({
             v.object({
               text: v.string(),
               position: v.optional(
-                v.union(v.literal("bottom-left"), v.literal("bottom-right"))
+                v.union(v.literal("bottom-left"), v.literal("bottom-right")),
               ),
-            })
-          )
+            }),
+          ),
         ),
         aspectRatio: v.optional(v.string()),
-      })
+      }),
     ),
   },
   returns: v.array(v.id("projects")),
