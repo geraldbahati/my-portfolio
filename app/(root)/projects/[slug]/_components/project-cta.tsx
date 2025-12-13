@@ -133,12 +133,11 @@ export function ProjectCTA() {
       <div className="relative z-10 w-full flex justify-center px-4">
         <div className="max-w-2xl space-y-6 text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
-            Sie möchten auch hier zu finden sein?
+            Would you like to be featured here as well?
           </h2>
 
           <p className="text-base md:text-lg text-white/70">
-            Nutzen Sie unverbindlich das Kontaktformular oder weitere
-            Kontaktmöglichkeiten.
+            Feel free to use the contact form or other contact options.
           </p>
 
           <div className="pt-4">
