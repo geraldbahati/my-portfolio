@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useRef, useState, useCallback, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { EyeIcon } from "lucide-react";
 import { Cursor } from "@/components/ui/cursor";
@@ -276,27 +276,11 @@ function ProjectCardComponent({
     }
   }, []);
 
-  // Handle card click - navigate to project details page
-  const router = useRouter();
+  // Handle card click - track analytics
   const handleClick = useCallback(() => {
     Analytics.trackButtonClick(title || `Project ${id}`, "Project Card");
-
-    // Navigate to project details page
-    router.push(`/projects/${id}`);
-
     onClick?.();
-  }, [id, title, router, onClick]);
-
-  // Handle keyboard interaction
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        handleClick();
-      }
-    },
-    [handleClick],
-  );
+  }, [id, title, onClick]);
 
   // Animation variants
   const mediaVariants = {
@@ -309,7 +293,7 @@ function ProjectCardComponent({
   };
 
   return (
-    <div className="relative">
+    <Link href={`/projects/${id}`} className="block relative" prefetch={true}>
       {/* Custom cursor */}
       <Cursor
         attachToParent
@@ -336,9 +320,7 @@ function ProjectCardComponent({
         }}
         role="article"
         aria-label={title || `Project ${id}`}
-        tabIndex={0}
         onClick={handleClick}
-        onKeyDown={handleKeyDown}
         onHoverStart={() => setIsHovered(true)}
         onHoverEnd={() => setIsHovered(false)}
         whileTap={{ scale: 0.98 }}
@@ -392,7 +374,7 @@ function ProjectCardComponent({
           />
         ))}
       </motion.div>
-    </div>
+    </Link>
   );
 }
 
