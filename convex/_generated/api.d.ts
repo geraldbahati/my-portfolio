@@ -9,6 +9,11 @@
  */
 
 import type * as adminFaqs from "../adminFaqs.js";
+import type * as adminProjectChallenges from "../adminProjectChallenges.js";
+import type * as adminProjectDetails from "../adminProjectDetails.js";
+import type * as adminProjectGallery from "../adminProjectGallery.js";
+import type * as adminProjectMetrics from "../adminProjectMetrics.js";
+import type * as adminProjectTestimonials from "../adminProjectTestimonials.js";
 import type * as adminProjects from "../adminProjects.js";
 import type * as auth from "../auth.js";
 import type * as contactForm from "../contactForm.js";
@@ -31,6 +36,11 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   adminFaqs: typeof adminFaqs;
+  adminProjectChallenges: typeof adminProjectChallenges;
+  adminProjectDetails: typeof adminProjectDetails;
+  adminProjectGallery: typeof adminProjectGallery;
+  adminProjectMetrics: typeof adminProjectMetrics;
+  adminProjectTestimonials: typeof adminProjectTestimonials;
   adminProjects: typeof adminProjects;
   auth: typeof auth;
   contactForm: typeof contactForm;

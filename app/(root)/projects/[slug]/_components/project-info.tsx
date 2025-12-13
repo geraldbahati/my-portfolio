@@ -15,20 +15,32 @@ export function ProjectInfo({ details }: ProjectInfoProps) {
 
   const description = details.fullDescription;
 
-  const metadata = [
-    {
-      label: "Perfomance:",
-      value: details.services,
-    },
+  const simpleMetadata = [
     { label: "Customer:", value: details.client },
     { label: "Period:", value: details.period },
-    {
-      label: "Features:",
-      value: details.features,
-    },
   ];
 
   const colors = details.colorPalette;
+
+  // Helper component for rendering array items as styled tags
+  const TagList = ({ items }: { items: string[] | undefined }) => {
+    if (!items || items.length === 0) return null;
+    return (
+      <div className="flex flex-wrap gap-2">
+        {items.map((item, index) => (
+          <span
+            key={index}
+            className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium 
+                       bg-primary/10 text-primary border border-primary/20
+                       hover:bg-primary/15 hover:border-primary/30 
+                       transition-all duration-200 cursor-default"
+          >
+            {item}
+          </span>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <section className="py-20 md:py-24 bg-background relative z-20 max-w-6xl mx-auto">
@@ -48,9 +60,9 @@ export function ProjectInfo({ details }: ProjectInfoProps) {
               </ReactMarkdown>
             </div>
 
-            {/* Metadata List */}
+            {/* Simple Metadata (Customer, Period) */}
             <div className="pt-8 space-y-4">
-              {metadata.map((item, index) => (
+              {simpleMetadata.map((item, index) => (
                 <div key={index} className="flex gap-2 items-baseline">
                   <h3 className="text-xs font-bold uppercase tracking-widest text-foreground shrink-0">
                     {item.label}
@@ -60,6 +72,26 @@ export function ProjectInfo({ details }: ProjectInfoProps) {
                   </span>
                 </div>
               ))}
+
+              {/* Performance (Services) */}
+              {details.services && details.services.length > 0 && (
+                <div className="space-y-3 pt-2">
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-foreground">
+                    Performance:
+                  </h3>
+                  <TagList items={details.services} />
+                </div>
+              )}
+
+              {/* Features */}
+              {details.features && details.features.length > 0 && (
+                <div className="space-y-3 pt-2">
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-foreground">
+                    Features:
+                  </h3>
+                  <TagList items={details.features} />
+                </div>
+              )}
             </div>
           </div>
 

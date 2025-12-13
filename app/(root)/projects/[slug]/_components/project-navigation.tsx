@@ -34,7 +34,7 @@ export function ProjectNavigation({
               >
                 <span className="flex items-center gap-2 text-sm font-medium uppercase tracking-wider">
                   <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-                  Vorheriges Projekt
+                  Previous Project
                 </span>
                 <span className="text-xl font-semibold text-foreground line-clamp-2">
                   {previousProject.title}
@@ -47,10 +47,10 @@ export function ProjectNavigation({
               >
                 <span className="flex items-center gap-2 text-sm font-medium uppercase tracking-wider">
                   <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-                  Alle Projekte
+                  All Projects
                 </span>
                 <span className="text-xl font-semibold text-foreground">
-                  Zurück zur Übersicht
+                  Back to Overview
                 </span>
               </Link>
             )}
@@ -64,7 +64,7 @@ export function ProjectNavigation({
                 className="group flex flex-col items-end gap-2 text-muted-foreground hover:text-foreground transition-colors text-right h-full animate-in fade-in slide-in-from-right-4 duration-500"
               >
                 <span className="flex items-center gap-2 text-sm font-medium uppercase tracking-wider">
-                  Nächstes Projekt
+                  Next Project
                   <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                 </span>
                 <span className="text-xl font-semibold text-foreground line-clamp-2">
@@ -77,11 +77,11 @@ export function ProjectNavigation({
                 className="group flex flex-col items-end gap-2 text-muted-foreground hover:text-foreground transition-colors text-right h-full animate-in fade-in slide-in-from-right-4 duration-500"
               >
                 <span className="flex items-center gap-2 text-sm font-medium uppercase tracking-wider">
-                  Alle Projekte
+                  All Projects
                   <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                 </span>
                 <span className="text-xl font-semibold text-foreground">
-                  Zurück zur Übersicht
+                  Back to Overview
                 </span>
               </Link>
             )}

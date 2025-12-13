@@ -22,7 +22,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "klmnko.de",
+        hostname: "media.geraldbahati.dev",
       },
     ],
     formats: ["image/webp", "image/avif"], // Use modern formats
