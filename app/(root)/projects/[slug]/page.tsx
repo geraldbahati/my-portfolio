@@ -3,15 +3,38 @@ import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { fetchQuery } from "convex/nextjs";
 import { cacheLife, cacheTag } from "next/cache";
+import dynamic from "next/dynamic";
 import { api } from "@/convex/_generated/api";
 import { ProjectHero } from "./_components/project-hero";
 import { ProjectInfo } from "./_components/project-info";
-import { ProjectMetrics } from "./_components/project-metrics";
 import { ProjectGallery } from "./_components/project-gallery";
 import { ProjectChallenges } from "./_components/project-challenges";
 import { ProjectTestimonial } from "./_components/project-testimonial";
-import { ProjectVideo } from "./_components/project-video";
 import { ProjectDetailSkeleton } from "./_components/project-detail-skeleton";
+
+// Dynamic imports only for Client Components (have 'use client' directive)
+const ProjectMetrics = dynamic(
+  () =>
+    import("./_components/project-metrics").then((mod) => ({
+      default: mod.ProjectMetrics,
+    })),
+  {
+    loading: () => (
+      <div className="h-48 animate-pulse bg-muted/30 rounded-lg" />
+    ),
+  },
+);
+const ProjectVideo = dynamic(
+  () =>
+    import("./_components/project-video").then((mod) => ({
+      default: mod.ProjectVideo,
+    })),
+  {
+    loading: () => (
+      <div className="h-96 animate-pulse bg-muted/30 rounded-lg" />
+    ),
+  },
+);
 
 interface PageProps {
   params: Promise<{ slug: string }>;
