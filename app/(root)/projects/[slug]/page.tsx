@@ -31,9 +31,8 @@ export async function generateMetadata({
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
 
-  const data = await fetchQuery(api.projects.getFullProjectDetails, {
-    projectSlug: slug,
-  });
+  // Use the same cached function as the page component
+  const data = await getProjectData(slug);
 
   if (!data?.project) {
     return {
