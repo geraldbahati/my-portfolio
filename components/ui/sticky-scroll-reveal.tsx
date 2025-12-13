@@ -1,8 +1,76 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useMemo } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useMemo,
+  useCallback,
+} from "react";
 import { motion, useScroll, useTransform, MotionValue } from "framer-motion";
 import Image from "next/image";
+
+// ============================================================================
+// Image Preloading Hook - Preloads upcoming images before they're needed
+// ============================================================================
+
+function useImagePreloader(
+  images: (string | undefined)[],
+  currentIndex: number,
+  preloadAhead = 2,
+) {
+  const preloadedRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    // Preload current and next N images
+    const indicesToPreload = Array.from(
+      { length: preloadAhead + 1 },
+      (_, i) => currentIndex + i,
+    ).filter((i) => i < images.length);
+
+    indicesToPreload.forEach((index) => {
+      const src = images[index];
+      if (src && !preloadedRef.current.has(src)) {
+        const img = new window.Image();
+        img.src = src;
+        preloadedRef.current.add(src);
+      }
+    });
+  }, [currentIndex, images, preloadAhead]);
+}
+
+// Hook to track which section is currently active based on scroll position
+function useActiveSectionIndex(
+  sectionRefs: React.RefObject<HTMLDivElement | null>[],
+): number {
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    const observers: IntersectionObserver[] = [];
+
+    sectionRefs.forEach((ref, index) => {
+      if (!ref.current) return;
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting && entry.intersectionRatio > 0.3) {
+              setActiveIndex(index);
+            }
+          });
+        },
+        { threshold: [0.3, 0.5, 0.7], rootMargin: "-20% 0px -20% 0px" },
+      );
+
+      observer.observe(ref.current);
+      observers.push(observer);
+    });
+
+    return () => observers.forEach((obs) => obs.disconnect());
+  }, [sectionRefs]);
+
+  return activeIndex;
+}
 
 // Optimized Text Section Component
 const TextSection = ({
@@ -130,17 +198,19 @@ const TextSection = ({
   );
 };
 
-// Optimized Image Panel Component
+// Optimized Image Panel Component with smart loading
 const ImagePanel = ({
   section,
   index,
   sectionRef,
   contentClassName,
+  shouldLoad,
 }: {
   section: any;
   index: number;
   sectionRef: React.RefObject<HTMLDivElement | null>;
   contentClassName?: string;
+  shouldLoad: boolean; // Whether this image should be loaded (based on proximity)
 }) => {
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -183,6 +253,7 @@ const ImagePanel = ({
                 transform: "scale(1.1)",
               }}
               priority={index === 0}
+              loading={shouldLoad ? "eager" : "lazy"}
               quality={50}
               sizes="(max-width: 1024px) 500px, 600px"
             />
@@ -203,6 +274,7 @@ const ImagePanel = ({
                   filter: "none",
                 }}
                 priority={index === 0}
+                loading={shouldLoad ? "eager" : "lazy"}
                 quality={95}
                 sizes="(max-width: 1024px) 320px, 450px"
               />
@@ -244,6 +316,15 @@ export const StickyScrollReveal = ({
     () => sections.map(() => React.createRef<HTMLDivElement>()),
     [sections.length],
   );
+
+  // Extract image URLs for preloading
+  const imageUrls = useMemo(() => sections.map((s) => s.image), [sections]);
+
+  // Track active section for preloading
+  const activeIndex = useActiveSectionIndex(sectionRefs);
+
+  // Preload upcoming images (current + next 2)
+  useImagePreloader(imageUrls, activeIndex, 2);
 
   // Detect mobile/desktop
   useEffect(() => {
@@ -470,6 +551,7 @@ export const StickyScrollReveal = ({
                       index={index}
                       sectionRef={sectionRefs[index]}
                       contentClassName={contentClassName}
+                      shouldLoad={index <= activeIndex + 2}
                     />
                   ))}
 
