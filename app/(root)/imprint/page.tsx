@@ -1,6 +1,8 @@
 import { Metadata } from "next";
+import { Suspense } from "react";
 // Client Component for interaction separation
 import { ContactWrapper } from "@/components/imprint/contact-wrapper";
+import { ContactSkeleton } from "@/components/imprint/contact-skeleton";
 import imprintData from "@/constants/imprint.json";
 
 export const metadata: Metadata = {
@@ -54,6 +56,7 @@ export default function ImprintPage() {
   return (
     <main className="min-h-screen pt-32 pb-20 px-6 lg:px-12 bg-background">
       <div className="max-w-3xl mx-auto">
+        {/* Header - Static content */}
         <header className="mb-16">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-sans font-bold text-gray-900 dark:text-white mb-6">
             Imprint
@@ -62,7 +65,7 @@ export default function ImprintPage() {
         </header>
 
         <section className="space-y-12 font-sans text-gray-600 dark:text-zinc-400">
-          {/* Information */}
+          {/* Legal Notice - Static */}
           <div className="space-y-4">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-zinc-100">
               Legal Notice
@@ -81,7 +84,7 @@ export default function ImprintPage() {
             </div>
           </div>
 
-          {/* Contact */}
+          {/* Contact - With Suspense for client component */}
           <div className="space-y-4">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-zinc-100">
               Contact Information
@@ -90,11 +93,13 @@ export default function ImprintPage() {
               Please use the contact form or the information below to get in
               touch.
             </p>
-            {/* Client Component for interaction separation */}
-            <ContactWrapper />
+            {/* Client Component wrapped in Suspense */}
+            <Suspense fallback={<ContactSkeleton />}>
+              <ContactWrapper />
+            </Suspense>
           </div>
 
-          {/* Additional Legal Info */}
+          {/* Responsible for Content - Static */}
           <div className="space-y-6">
             <div className="space-y-3">
               <h3 className="text-xl font-semibold text-gray-900 dark:text-zinc-100">
@@ -112,7 +117,7 @@ export default function ImprintPage() {
             </div>
           </div>
 
-          {/* Dispute Resolution */}
+          {/* Dispute Resolution - Static */}
           <div className="space-y-4 pt-8 border-t border-gray-100 dark:border-zinc-800">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-zinc-100">
               Dispute Resolution
