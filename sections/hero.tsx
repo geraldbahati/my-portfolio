@@ -210,7 +210,7 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
       {mounted && !prefersReducedMotion && (
         <GridPattern
           className="absolute inset-0 z-10"
-          gridClassName="stroke-current/20"
+          gridClassName="stroke-current/10"
           width={32}
           height={32}
           surroundingCells={4}

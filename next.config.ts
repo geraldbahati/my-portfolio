@@ -12,6 +12,18 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "videos.pexels.com",
       },
+      {
+        protocol: "https",
+        hostname: "customer-pdxnd9di8ybc2kur.cloudflarestream.com",
+      },
+      {
+        protocol: "https",
+        hostname: "cdn.dribbble.com",
+      },
+      {
+        protocol: "https",
+        hostname: "klmnko.de",
+      },
     ],
     formats: ["image/webp", "image/avif"], // Use modern formats
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],

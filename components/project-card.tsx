@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useRef, useState, useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { EyeIcon } from "lucide-react";
 import { Cursor } from "@/components/ui/cursor";
@@ -275,16 +276,16 @@ function ProjectCardComponent({
     }
   }, []);
 
-  // Handle card click
+  // Handle card click - navigate to project details page
+  const router = useRouter();
   const handleClick = useCallback(() => {
     Analytics.trackButtonClick(title || `Project ${id}`, "Project Card");
 
-    if (url) {
-      window.open(url, "_blank", "noopener,noreferrer");
-    }
+    // Navigate to project details page
+    router.push(`/projects/${id}`);
 
     onClick?.();
-  }, [id, title, url, onClick]);
+  }, [id, title, router, onClick]);
 
   // Handle keyboard interaction
   const handleKeyDown = useCallback(
@@ -332,7 +333,6 @@ function ProjectCardComponent({
         style={{
           ...aspectRatioStyle,
           ...style,
-          cursor: url ? "pointer" : "default",
         }}
         role="article"
         aria-label={title || `Project ${id}`}
