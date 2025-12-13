@@ -13,7 +13,7 @@ export function ProjectHero({ project, details }: ProjectHeroProps) {
   const title = project.title;
 
   return (
-    <section className="relative w-full pt-32 bg-background max-w-6xl mx-auto">
+    <section className="relative w-full pt-32 bg-background max-w-6xl mx-auto px-4 md:px-6">
       <div className="container relative z-10">
         {/* Header Content */}
         <div className="max-w-4xl mb-8 md:mb-12">
@@ -44,6 +44,7 @@ export function ProjectHero({ project, details }: ProjectHeroProps) {
               fill
               className="object-cover"
               priority
+              fetchPriority="high"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
             />
           </div>

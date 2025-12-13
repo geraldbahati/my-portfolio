@@ -43,7 +43,7 @@ export function ProjectInfo({ details }: ProjectInfoProps) {
   };
 
   return (
-    <section className="py-20 md:py-24 bg-background relative z-20 max-w-6xl mx-auto">
+    <section className="py-20 md:py-24 bg-background relative z-20 max-w-6xl mx-auto px-4 md:px-6">
       <div className="container">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24">
           {/* Main Content (Left) */}

@@ -18,7 +18,7 @@ export function ProjectGallery({ gallery }: ProjectGalleryProps) {
 
   return (
     <section className="bg-muted py-24 ">
-      <div className="container overflow-hidden max-w-6xl mx-auto">
+      <div className="container overflow-hidden max-w-6xl mx-auto px-4 md:px-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           {/* Left Column: Long Scrolling Screenshot */}
           {featureImage && (

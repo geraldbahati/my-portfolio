@@ -13,7 +13,7 @@ export function ProjectChallenges({ challenges }: ProjectChallengesProps) {
 
   return (
     <section className="py-24 bg-background">
-      <div className="container max-w-4xl mx-auto">
+      <div className="container max-w-4xl mx-auto px-4 md:px-6">
         {/* SVG Line Separator */}
         <div className="mb-12 opacity-40">
           <svg
