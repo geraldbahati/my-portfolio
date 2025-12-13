@@ -17,19 +17,29 @@ export const metadata: Metadata = {
     "project inquiry",
     "freelancer contact",
     "trier developer",
-    "germany web design"
+    "germany web design",
   ],
   openGraph: {
     title: "Contact Gerald - Request a Project",
-    description: "Get in touch with Gerald for your next digital project. Available via contact form, phone, and WhatsApp.",
+    description:
+      "Get in touch with Gerald for your next digital project. Available via contact form, phone, and WhatsApp.",
     type: "website",
     locale: "en_US",
     siteName: "Gerald Bahati Portfolio",
+    images: [
+      {
+        url: "https://media.geraldbahati.dev/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Contact Gerald Bahati",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Contact Gerald - Request a Project",
-    description: "Get in touch with Gerald for your next digital project. Available via contact form, phone, and WhatsApp.",
+    description:
+      "Get in touch with Gerald for your next digital project. Available via contact form, phone, and WhatsApp.",
   },
   robots: {
     index: true,
@@ -37,9 +47,9 @@ export const metadata: Metadata = {
     googleBot: {
       index: true,
       follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
     },
   },
   alternates: {
@@ -51,32 +61,32 @@ export default function ContactPage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ContactPage",
-    "name": "Contact Gerald Bahati",
-    "description": "Get in touch with Gerald for your next digital project",
-    "url": "/contact",
-    "mainEntity": {
+    name: "Contact Gerald Bahati",
+    description: "Get in touch with Gerald for your next digital project",
+    url: "/contact",
+    mainEntity: {
       "@type": "Person",
-      "name": "Gerald Bahati",
-      "jobTitle": "Digital Designer & Developer",
-      "address": {
+      name: "Gerald Bahati",
+      jobTitle: "Digital Designer & Developer",
+      address: {
         "@type": "PostalAddress",
-        "addressLocality": "Trier",
-        "postalCode": "54295",
-        "addressCountry": "DE"
+        addressLocality: "Trier",
+        postalCode: "54295",
+        addressCountry: "DE",
       },
-      "contactPoint": {
+      contactPoint: {
         "@type": "ContactPoint",
-        "telephone": "+49-651-17089399",
-        "contactType": "customer service",
-        "availableLanguage": ["English", "German"],
-        "hoursAvailable": {
+        telephone: "+49-651-17089399",
+        contactType: "customer service",
+        availableLanguage: ["English", "German"],
+        hoursAvailable: {
           "@type": "OpeningHoursSpecification",
-          "dayOfWeek": ["Monday", "Friday"],
-          "opens": "08:00",
-          "closes": "18:00"
-        }
-      }
-    }
+          dayOfWeek: ["Monday", "Friday"],
+          opens: "08:00",
+          closes: "18:00",
+        },
+      },
+    },
   };
 
   return (
@@ -119,28 +129,41 @@ export default function ContactPage() {
                     Request a project
                   </h1>
                   <p className="text-gray-600 text-base leading-relaxed">
-                    Every message is 100% received and guaranteed to be answered.
-                    If you can&apos;t reach me, please leave a request for a
-                    callback.
+                    Every message is 100% received and guaranteed to be
+                    answered. If you can&apos;t reach me, please leave a request
+                    for a callback.
                   </p>
                 </div>
 
                 <div className="flex flex-col lg:flex-row gap-8 lg:gap-32 pointer-events-auto grid-interaction-blocked">
                   {/* Office hours */}
-                  <div itemScope itemType="https://schema.org/OpeningHoursSpecification">
+                  <div
+                    itemScope
+                    itemType="https://schema.org/OpeningHoursSpecification"
+                  >
                     <h2 className="text-lg font-semibold text-black mb-4">
                       Office hours
                     </h2>
                     <div className="space-y-2">
                       <p className="text-gray-600">Monday & Friday:</p>
                       <p className="text-gray-800 font-medium">
-                        <time itemProp="opens" dateTime="08:00">8:00 a.m.</time> - <time itemProp="closes" dateTime="18:00">6:00 p.m.</time>
+                        <time itemProp="opens" dateTime="08:00">
+                          8:00 a.m.
+                        </time>{" "}
+                        -{" "}
+                        <time itemProp="closes" dateTime="18:00">
+                          6:00 p.m.
+                        </time>
                       </p>
                     </div>
                   </div>
 
                   {/* Direct contact */}
-                  <address className="not-italic" itemScope itemType="https://schema.org/ContactPoint">
+                  <address
+                    className="not-italic"
+                    itemScope
+                    itemType="https://schema.org/ContactPoint"
+                  >
                     <h2 className="text-lg font-semibold text-black mb-4">
                       Direct contact
                     </h2>
@@ -152,7 +175,9 @@ export default function ContactPage() {
               {/* Right column - Contact form */}
               <aside className="lg:pl-8" aria-labelledby="contact-form-heading">
                 <div className="bg-white">
-                  <h2 id="contact-form-heading" className="sr-only">Contact Form</h2>
+                  <h2 id="contact-form-heading" className="sr-only">
+                    Contact Form
+                  </h2>
                   <ContactForm />
                 </div>
               </aside>
