@@ -1,17 +1,34 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback, memo } from "react";
+import { useRef, useState, useEffect, useCallback, memo, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { EyeIcon } from "lucide-react";
+import Image from "next/image";
 import { MediaRenderer } from "@/components/media";
 import { Cursor } from "@/components/ui/cursor";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ProjectVideoProps {
   videoUrl?: string | null;
   posterUrl?: string | null;
   alt?: string;
-  url?: string | null; // External link URL
+  url?: string | null;
 }
+
+// Static filter style for arrow GIFs - extracted to avoid recreation
+const ARROW_FILTER_STYLE = {
+  filter: "sepia(100%) saturate(300%) brightness(90%) hue-rotate(-10deg)",
+} as const;
+
+// Animation variants - extracted outside component to prevent recreation
+const CURSOR_VARIANTS = {
+  initial: { scale: 0.3, opacity: 0 },
+  animate: { scale: 1, opacity: 1 },
+  exit: { scale: 0.3, opacity: 0 },
+} as const;
+
+const CURSOR_SPRING_CONFIG = { bounce: 0.001 } as const;
+const CURSOR_TRANSITION = { ease: "easeInOut" as const, duration: 0.15 };
 
 /**
  * Hook for intersection observer visibility tracking
@@ -61,7 +78,7 @@ function useReducedMotion(): boolean {
   return prefersReducedMotion;
 }
 
-// Custom cursor component with "View" text
+// Custom cursor component - memoized for performance
 const HoverCursor = memo(function HoverCursor({
   isHovering,
 }: {
@@ -73,7 +90,7 @@ const HoverCursor = memo(function HoverCursor({
         width: isHovering ? 80 : 16,
         height: isHovering ? 32 : 16,
       }}
-      className="flex items-center justify-center rounded-[24px] bg-black/90 backdrop-blur-md"
+      className="flex items-center justify-center rounded-[24px] bg-primary/90 backdrop-blur-md will-change-transform"
     >
       <AnimatePresence>
         {isHovering && (
@@ -83,12 +100,93 @@ const HoverCursor = memo(function HoverCursor({
             exit={{ opacity: 0, scale: 0.6 }}
             className="inline-flex w-full items-center justify-center"
           >
-            <div className="inline-flex items-center text-sm text-white font-medium">
+            <div className="inline-flex items-center text-sm text-primary-foreground font-medium">
               View <EyeIcon className="ml-1 h-4 w-4" />
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+    </motion.div>
+  );
+});
+
+// Left arrow indicator - memoized to prevent re-renders
+const LeftArrowIndicator = memo(function LeftArrowIndicator() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.8, delay: 0.2 }}
+      className="absolute -left-4 top-24 md:-left-56 md:top-8 hidden lg:flex items-center justify-center pointer-events-none z-10 will-change-transform"
+    >
+      <span className="font-handwriting text-xl md:text-2xl font-medium text-primary whitespace-nowrap drop-shadow-[0_0_12px_hsl(var(--primary)/0.6)] mb-32 -mr-20">
+        Check it out!
+      </span>
+      <Image
+        src="/arrow-left.gif"
+        alt=""
+        width={120}
+        height={120}
+        className="drop-shadow-[0_0_8px_hsl(var(--primary))]"
+        style={ARROW_FILTER_STYLE}
+        unoptimized
+        loading="lazy"
+      />
+    </motion.div>
+  );
+});
+
+// Right arrow indicator - memoized to prevent re-renders
+const RightArrowIndicator = memo(function RightArrowIndicator() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.8, delay: 0.4 }}
+      className="absolute -right-4 top-1/2 md:-right-32 hidden lg:flex flex-col items-end justify-center gap-4 pointer-events-none z-10 will-change-transform"
+    >
+      <span className="font-handwriting text-xl md:text-2xl font-medium text-primary whitespace-nowrap drop-shadow-[0_0_12px_hsl(var(--primary)/0.6)] -mr-16">
+        Click to visit
+      </span>
+      <Image
+        src="/arrow.gif"
+        alt=""
+        width={120}
+        height={120}
+        className="drop-shadow-[0_0_8px_hsl(var(--primary))] rotate-[290deg]"
+        style={ARROW_FILTER_STYLE}
+        unoptimized
+        loading="lazy"
+      />
+    </motion.div>
+  );
+});
+
+// Mobile arrow indicator - centered above video, only visible on mobile
+const MobileArrowIndicator = memo(function MobileArrowIndicator() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6, delay: 0.3 }}
+      className="flex lg:hidden flex-col items-center justify-center pointer-events-none"
+    >
+      <span className="font-handwriting text-lg font-medium text-primary whitespace-nowrap drop-shadow-[0_0_12px_hsl(var(--primary)/0.6)]">
+        Tap to visit
+      </span>
+      <Image
+        src="/arrow-down.gif"
+        alt=""
+        width={80}
+        height={80}
+        className="drop-shadow-[0_0_8px_hsl(var(--primary))]"
+        style={ARROW_FILTER_STYLE}
+        unoptimized
+        loading="lazy"
+      />
     </motion.div>
   );
 });
@@ -105,6 +203,21 @@ export function ProjectVideo({
 
   const prefersReducedMotion = useReducedMotion();
   const isVisible = useVisibility(containerRef, 0.3);
+
+  // Memoized floating animation config
+  const floatingAnimation = useMemo(
+    () => (url && !prefersReducedMotion ? { y: [0, -15, 0] } : {}),
+    [url, prefersReducedMotion],
+  );
+
+  const floatingTransition = useMemo(
+    () => ({
+      duration: 4,
+      repeat: Infinity,
+      ease: "easeInOut" as const,
+    }),
+    [],
+  );
 
   // Handle cursor position for hover state
   const handlePositionChange = useCallback((x: number, y: number) => {
@@ -134,61 +247,75 @@ export function ProjectVideo({
     [handleClick],
   );
 
-  // Don't render if no video URL
-  if (!videoUrl) {
+  // Memoized error handler
+  const handleError = useCallback(() => setHasError(true), []);
+
+  // Early returns for null states
+  if (!videoUrl || hasError) {
     return null;
   }
 
-  // Show nothing on error
-  if (hasError) {
-    return null;
-  }
+  const hasInteractiveUrl = Boolean(url);
+  const showAnimations = hasInteractiveUrl && !prefersReducedMotion;
 
   return (
     <section className="py-24 bg-background">
-      <div className="max-w-6xl mx-auto px-4">
+      <div className="max-w-4xl mx-auto px-2">
         <div className="relative">
           {/* Custom cursor - only show if there's a URL */}
-          {url && (
+          {hasInteractiveUrl && (
             <Cursor
               attachToParent
-              variants={{
-                initial: { scale: 0.3, opacity: 0 },
-                animate: { scale: 1, opacity: 1 },
-                exit: { scale: 0.3, opacity: 0 },
-              }}
-              springConfig={{ bounce: 0.001 }}
-              transition={{ ease: "easeInOut", duration: 0.15 }}
+              variants={CURSOR_VARIANTS}
+              springConfig={CURSOR_SPRING_CONFIG}
+              transition={CURSOR_TRANSITION}
               onPositionChange={handlePositionChange}
             >
               <HoverCursor isHovering={isHovering} />
             </Cursor>
           )}
 
-          {/* Video container */}
-          <div
-            ref={containerRef}
-            role={url ? "button" : undefined}
-            tabIndex={url ? 0 : undefined}
-            onClick={url ? handleClick : undefined}
-            onKeyDown={url ? handleKeyDown : undefined}
-            className="relative w-full rounded-lg overflow-hidden shadow-lg border border-border/30 animate-in fade-in slide-in-from-bottom-4 duration-700"
-            style={{ cursor: url ? "none" : "default" }}
-            aria-label={url ? `View ${alt || "project"} website` : undefined}
+          {/* Video container with Floating Animation */}
+          <motion.div
+            animate={floatingAnimation}
+            transition={floatingTransition}
+            className="relative will-change-transform"
           >
-            <MediaRenderer
-              src={videoUrl}
-              type="video"
-              poster={posterUrl || undefined}
-              alt={alt || "Project showcase video"}
-              aspectRatio="16/9"
-              autoPlay={isVisible && !prefersReducedMotion}
-              muted
-              loop
-              className="w-full"
-              onError={() => setHasError(true)}
-            />
-          </div>
+            {/* Mobile arrow indicator - above video */}
+            {showAnimations && <MobileArrowIndicator />}
+
+            {/* Arrow indicators - desktop only */}
+            {showAnimations && <LeftArrowIndicator />}
+            {showAnimations && <RightArrowIndicator />}
+
+            <div
+              ref={containerRef}
+              role={hasInteractiveUrl ? "button" : undefined}
+              tabIndex={hasInteractiveUrl ? 0 : undefined}
+              onClick={hasInteractiveUrl ? handleClick : undefined}
+              onKeyDown={hasInteractiveUrl ? handleKeyDown : undefined}
+              className="relative w-full rounded-lg overflow-hidden shadow-2xl border border-border/30 hover:shadow-primary/20 transition-shadow duration-500"
+              style={{ cursor: hasInteractiveUrl ? "none" : "default" }}
+              aria-label={
+                hasInteractiveUrl
+                  ? `View ${alt || "project"} website`
+                  : undefined
+              }
+            >
+              <MediaRenderer
+                src={videoUrl}
+                type="video"
+                poster={posterUrl || undefined}
+                alt={alt || "Project showcase video"}
+                aspectRatio="16/9"
+                autoPlay={isVisible && !prefersReducedMotion}
+                muted
+                loop
+                className="w-full"
+                onError={handleError}
+              />
+            </div>
+          </motion.div>
         </div>
       </div>
     </section>
