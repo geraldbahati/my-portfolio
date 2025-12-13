@@ -113,13 +113,13 @@ export default function RootLayout({
       <body
         className={`${syne.variable} ${jetbrainsMono.variable} antialiased bg-background`}
       >
-        {/*<ClerkProvider>*/}
+        {/* <ClerkProvider> */}
         <ConvexClientProvider>
           <ConsoleFilter />
           {children}
           <AnalyticsProvider />
         </ConvexClientProvider>
-        {/*</ClerkProvider>*/}
+        {/* </ClerkProvider> */}
       </body>
     </html>
   );

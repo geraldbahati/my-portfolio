@@ -9,11 +9,21 @@
  */
 
 import type * as adminFaqs from "../adminFaqs.js";
+import type * as adminProjectChallenges from "../adminProjectChallenges.js";
+import type * as adminProjectDetails from "../adminProjectDetails.js";
+import type * as adminProjectGallery from "../adminProjectGallery.js";
+import type * as adminProjectMetrics from "../adminProjectMetrics.js";
+import type * as adminProjectTestimonials from "../adminProjectTestimonials.js";
 import type * as adminProjects from "../adminProjects.js";
 import type * as auth from "../auth.js";
 import type * as contactForm from "../contactForm.js";
 import type * as faqs from "../faqs.js";
 import type * as http from "../http.js";
+import type * as projectChallenges from "../projectChallenges.js";
+import type * as projectDetails from "../projectDetails.js";
+import type * as projectGallery from "../projectGallery.js";
+import type * as projectMetrics from "../projectMetrics.js";
+import type * as projectTestimonials from "../projectTestimonials.js";
 import type * as projects from "../projects.js";
 import type * as r2 from "../r2.js";
 import type * as stream from "../stream.js";
@@ -26,11 +36,21 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   adminFaqs: typeof adminFaqs;
+  adminProjectChallenges: typeof adminProjectChallenges;
+  adminProjectDetails: typeof adminProjectDetails;
+  adminProjectGallery: typeof adminProjectGallery;
+  adminProjectMetrics: typeof adminProjectMetrics;
+  adminProjectTestimonials: typeof adminProjectTestimonials;
   adminProjects: typeof adminProjects;
   auth: typeof auth;
   contactForm: typeof contactForm;
   faqs: typeof faqs;
   http: typeof http;
+  projectChallenges: typeof projectChallenges;
+  projectDetails: typeof projectDetails;
+  projectGallery: typeof projectGallery;
+  projectMetrics: typeof projectMetrics;
+  projectTestimonials: typeof projectTestimonials;
   projects: typeof projects;
   r2: typeof r2;
   stream: typeof stream;

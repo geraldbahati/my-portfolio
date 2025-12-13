@@ -382,3 +382,375 @@ export const seedProjects = internalMutation({
     return insertedIds;
   },
 });
+
+// =============================================================================
+// Full Project Details (Aggregated Query)
+// =============================================================================
+
+// Validators for related tables
+const colorPaletteValidator = v.array(
+  v.object({
+    hex: v.string(),
+    name: v.optional(v.string()),
+  }),
+);
+
+const deviceTypeValidator = v.optional(
+  v.union(
+    v.literal("desktop"),
+    v.literal("mobile"),
+    v.literal("tablet"),
+    v.literal("full-width"),
+  ),
+);
+
+/**
+ * Get a complete project with all related detail data
+ * This is the main query for the project detail page
+ */
+export const getFullProjectDetails = query({
+  args: {
+    projectSlug: v.string(),
+  },
+  returns: v.union(
+    v.object({
+      // Base project data
+      project: v.object({
+        _id: v.id("projects"),
+        _creationTime: v.number(),
+        id: v.string(),
+        title: v.string(),
+        description: v.optional(v.string()),
+        src: v.string(),
+        type: v.union(v.literal("video"), v.literal("gif")),
+        poster: v.optional(v.string()),
+        alt: v.optional(v.string()),
+        url: v.optional(v.string()),
+        badges: v.optional(
+          v.array(
+            v.object({
+              text: v.string(),
+              position: v.optional(
+                v.union(v.literal("bottom-left"), v.literal("bottom-right")),
+              ),
+            }),
+          ),
+        ),
+        aspectRatio: v.optional(v.string()),
+        order: v.number(),
+        isPublished: v.boolean(),
+        createdAt: v.number(),
+        updatedAt: v.number(),
+      }),
+
+      // Project details (1:1)
+      details: v.union(
+        v.object({
+          _id: v.id("projectDetails"),
+          _creationTime: v.number(),
+          projectId: v.id("projects"),
+          heroImage: v.optional(v.string()),
+          heroAlt: v.optional(v.string()),
+          tagline: v.optional(v.string()),
+          fullDescription: v.optional(v.string()),
+          services: v.optional(v.array(v.string())),
+          client: v.optional(v.string()),
+          industry: v.optional(v.string()),
+          period: v.optional(v.string()),
+          year: v.optional(v.number()),
+          features: v.optional(v.array(v.string())),
+          colorPalette: v.optional(colorPaletteValidator),
+          relatedProjectIds: v.optional(v.array(v.string())),
+          createdAt: v.number(),
+          updatedAt: v.number(),
+        }),
+        v.null(),
+      ),
+
+      // Metrics (1:N)
+      metrics: v.array(
+        v.object({
+          _id: v.id("projectMetrics"),
+          _creationTime: v.number(),
+          projectId: v.id("projects"),
+          value: v.string(),
+          label: v.string(),
+          icon: v.optional(v.string()),
+          order: v.number(),
+          createdAt: v.number(),
+          updatedAt: v.number(),
+        }),
+      ),
+
+      // Testimonial (1:1)
+      testimonial: v.union(
+        v.object({
+          _id: v.id("projectTestimonials"),
+          _creationTime: v.number(),
+          projectId: v.id("projects"),
+          quote: v.string(),
+          authorName: v.string(),
+          authorRole: v.optional(v.string()),
+          authorCompany: v.optional(v.string()),
+          authorImage: v.optional(v.string()),
+          createdAt: v.number(),
+          updatedAt: v.number(),
+        }),
+        v.null(),
+      ),
+
+      // Gallery (1:N)
+      gallery: v.array(
+        v.object({
+          _id: v.id("projectGallery"),
+          _creationTime: v.number(),
+          projectId: v.id("projects"),
+          src: v.string(),
+          alt: v.optional(v.string()),
+          caption: v.optional(v.string()),
+          galleryType: v.union(v.literal("feature"), v.literal("stack")),
+          width: v.number(),
+          height: v.number(),
+          deviceType: deviceTypeValidator,
+          order: v.number(),
+          createdAt: v.number(),
+          updatedAt: v.number(),
+        }),
+      ),
+
+      // Challenges (1:N)
+      challenges: v.array(
+        v.object({
+          _id: v.id("projectChallenges"),
+          _creationTime: v.number(),
+          projectId: v.id("projects"),
+          title: v.string(),
+          content: v.string(),
+          order: v.number(),
+          createdAt: v.number(),
+          updatedAt: v.number(),
+        }),
+      ),
+
+      // Related projects (resolved)
+      relatedProjects: v.array(
+        v.object({
+          _id: v.id("projects"),
+          id: v.string(),
+          title: v.string(),
+          description: v.optional(v.string()),
+          poster: v.optional(v.string()),
+        }),
+      ),
+    }),
+    v.null(),
+  ),
+  handler: async (ctx, args) => {
+    // Find the project by slug
+    const project = await ctx.db
+      .query("projects")
+      .withIndex("by_project_id", (q) => q.eq("id", args.projectSlug))
+      .unique();
+
+    if (!project) {
+      return null;
+    }
+
+    // Fetch all related data in parallel for performance
+    const [details, metrics, testimonial, gallery, challenges] =
+      await Promise.all([
+        // Project details (1:1)
+        ctx.db
+          .query("projectDetails")
+          .withIndex("by_project", (q) => q.eq("projectId", project._id))
+          .unique(),
+
+        // Metrics (1:N)
+        ctx.db
+          .query("projectMetrics")
+          .withIndex("by_project_order", (q) => q.eq("projectId", project._id))
+          .collect(),
+
+        // Testimonial (1:1)
+        ctx.db
+          .query("projectTestimonials")
+          .withIndex("by_project", (q) => q.eq("projectId", project._id))
+          .unique(),
+
+        // Gallery (1:N)
+        ctx.db
+          .query("projectGallery")
+          .withIndex("by_project_order", (q) => q.eq("projectId", project._id))
+          .collect(),
+
+        // Challenges (1:N)
+        ctx.db
+          .query("projectChallenges")
+          .withIndex("by_project_order", (q) => q.eq("projectId", project._id))
+          .collect(),
+      ]);
+
+    // Resolve related projects if they exist
+    let relatedProjects: {
+      _id: typeof project._id;
+      id: string;
+      title: string;
+      description?: string;
+      poster?: string;
+    }[] = [];
+
+    if (details?.relatedProjectIds && details.relatedProjectIds.length > 0) {
+      const allProjects = await ctx.db
+        .query("projects")
+        .withIndex("by_published", (q) => q.eq("isPublished", true))
+        .collect();
+
+      relatedProjects = allProjects
+        .filter((p) => details.relatedProjectIds!.includes(p.id))
+        .map((p) => ({
+          _id: p._id,
+          id: p.id,
+          title: p.title,
+          description: p.description,
+          poster: p.poster,
+        }));
+    }
+
+    return {
+      project,
+      details,
+      metrics: metrics.sort((a, b) => a.order - b.order),
+      testimonial,
+      gallery: gallery.sort((a, b) => a.order - b.order),
+      challenges: challenges.sort((a, b) => a.order - b.order),
+      relatedProjects,
+    };
+  },
+});
+
+/**
+ * Get navigation data for a project (previous and next projects)
+ * Used for project detail page navigation
+ */
+export const getProjectNavigation = query({
+  args: {
+    projectSlug: v.string(),
+  },
+  returns: v.union(
+    v.object({
+      currentProject: v.object({
+        id: v.string(),
+        title: v.string(),
+      }),
+      previousProject: v.union(
+        v.object({
+          id: v.string(),
+          title: v.string(),
+        }),
+        v.null(),
+      ),
+      nextProject: v.union(
+        v.object({
+          id: v.string(),
+          title: v.string(),
+        }),
+        v.null(),
+      ),
+    }),
+    v.null(),
+  ),
+  handler: async (ctx, args) => {
+    // Get all published projects ordered by display order
+    const projects = await ctx.db
+      .query("projects")
+      .withIndex("by_published", (q) => q.eq("isPublished", true))
+      .collect();
+
+    // Sort by order
+    const sortedProjects = projects.sort((a, b) => a.order - b.order);
+
+    // Find current project index
+    const currentIndex = sortedProjects.findIndex(
+      (p) => p.id === args.projectSlug,
+    );
+
+    if (currentIndex === -1) {
+      return null;
+    }
+
+    const current = sortedProjects[currentIndex];
+    const previous = currentIndex > 0 ? sortedProjects[currentIndex - 1] : null;
+    const next =
+      currentIndex < sortedProjects.length - 1
+        ? sortedProjects[currentIndex + 1]
+        : null;
+
+    return {
+      currentProject: {
+        id: current.id,
+        title: current.title,
+      },
+      previousProject: previous
+        ? {
+            id: previous.id,
+            title: previous.title,
+          }
+        : null,
+      nextProject: next
+        ? {
+            id: next.id,
+            title: next.title,
+          }
+        : null,
+    };
+  },
+});
+
+/**
+ * Check if a project has detail data
+ */
+export const hasProjectDetails = query({
+  args: {
+    projectId: v.id("projects"),
+  },
+  returns: v.object({
+    hasDetails: v.boolean(),
+    hasMetrics: v.boolean(),
+    hasTestimonial: v.boolean(),
+    hasGallery: v.boolean(),
+    hasChallenges: v.boolean(),
+  }),
+  handler: async (ctx, args) => {
+    const [details, metrics, testimonial, gallery, challenges] =
+      await Promise.all([
+        ctx.db
+          .query("projectDetails")
+          .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+          .unique(),
+        ctx.db
+          .query("projectMetrics")
+          .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+          .first(),
+        ctx.db
+          .query("projectTestimonials")
+          .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+          .unique(),
+        ctx.db
+          .query("projectGallery")
+          .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+          .first(),
+        ctx.db
+          .query("projectChallenges")
+          .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+          .first(),
+      ]);
+
+    return {
+      hasDetails: details !== null,
+      hasMetrics: metrics !== null,
+      hasTestimonial: testimonial !== null,
+      hasGallery: gallery !== null,
+      hasChallenges: challenges !== null,
+    };
+  },
+});
