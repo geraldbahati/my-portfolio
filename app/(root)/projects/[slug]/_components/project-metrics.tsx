@@ -44,7 +44,7 @@ function MetricRadialChart({
   return (
     <ChartContainer
       config={chartConfig}
-      className="mx-auto aspect-square max-h-[200px] w-full"
+      className="mx-auto aspect-square max-h-[200px] w-full px-4 md:px-6"
     >
       <RadialBarChart
         data={chartData}
