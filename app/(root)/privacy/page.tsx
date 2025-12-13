@@ -41,9 +41,38 @@ export const metadata: Metadata = {
   },
 };
 
-// Generate headers for caching
-export async function generateStaticParams() {
-  return [];
+// Skeleton component for inline Suspense fallback
+function PrivacyContentSkeleton() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pt-32">
+        <div className="bg-card rounded-3xl shadow-xl border border-border p-8 sm:p-12 animate-pulse">
+          {/* Title skeleton */}
+          <div className="h-10 bg-muted rounded w-1/3 mb-8" />
+          {/* Last updated skeleton */}
+          <div className="h-4 bg-muted rounded w-1/4 mb-12" />
+          {/* Content sections skeleton */}
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <div className="h-6 bg-muted rounded w-1/2" />
+              <div className="space-y-2">
+                <div className="h-4 bg-muted rounded w-full" />
+                <div className="h-4 bg-muted rounded w-5/6" />
+                <div className="h-4 bg-muted rounded w-4/6" />
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div className="h-6 bg-muted rounded w-2/5" />
+              <div className="space-y-2">
+                <div className="h-4 bg-muted rounded w-full" />
+                <div className="h-4 bg-muted rounded w-3/4" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // Separate async component that handles dynamic data
@@ -67,18 +96,17 @@ export default function PrivacyPolicyPage() {
 
   return (
     <>
-      <PageAnalytics trackPageView trackScroll trackTime />
+      {/* Analytics - streams in, returns null */}
+      <Suspense fallback={null}>
+        <PageAnalytics trackPageView trackScroll trackTime />
+      </Suspense>
+
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      <Suspense
-        fallback={
-          <div className="min-h-screen flex items-center justify-center">
-            Loading...
-          </div>
-        }
-      >
+
+      <Suspense fallback={<PrivacyContentSkeleton />}>
         <PrivacyContent />
       </Suspense>
     </>
