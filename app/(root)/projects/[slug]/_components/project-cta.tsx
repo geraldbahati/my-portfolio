@@ -96,7 +96,7 @@ const CTAButton = memo(() => {
           onScrambleComplete={handleScrambleComplete}
           as="span"
         >
-          Projekt anfragen
+          Request a Project
         </TextScramble>
       </div>
     </Link>
