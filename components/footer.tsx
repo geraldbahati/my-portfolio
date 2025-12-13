@@ -98,7 +98,7 @@ export function Footer({
     location: "Based in Nairobi, Kenya",
     link: {
       text: "make contact",
-      url: "contact",
+      url: "/contact",
     },
   },
   accessibility = {
