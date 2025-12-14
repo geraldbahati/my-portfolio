@@ -1,6 +1,4 @@
 import { ImageResponse } from "next/og";
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
 
 // Reuse metadata from OG image
 export const alt = "Gerald Bahati - Full Stack Developer & Digital Creative";
@@ -11,17 +9,8 @@ export const size = {
 export const contentType = "image/png";
 
 export default async function Image() {
-  // Read the profile image from public folder and convert to base64
-  let base64Image: string;
-  try {
-    const imageBuffer = await readFile(
-      join(process.cwd(), "public/original.jpeg"),
-    );
-    base64Image = `data:image/jpeg;base64,${imageBuffer.toString("base64")}`;
-  } catch {
-    // Fallback to remote URL if file read fails (e.g., on Vercel)
-    base64Image = "https://geraldbahati.dev/original.jpeg";
-  }
+  // Use remote URL directly for Vercel compatibility
+  const base64Image = "https://geraldbahati.dev/original.jpeg";
 
   // Font loading
   const interMedium = fetch(
