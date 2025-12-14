@@ -25,12 +25,21 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     siteName: "Gerald Bahati",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Gerald Bahati - Full Stack Developer & Digital Creative",
+      },
+    ],
   },
   twitter: {
     title: "Imprint",
     description:
       "Legal notice and imprint information for Gerald Bahati's portfolio.",
     card: "summary_large_image",
+    images: ["/twitter-image"],
   },
 };
 
