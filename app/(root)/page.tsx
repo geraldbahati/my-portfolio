@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     description:
       "Experienced full stack developer specializing in modern web technologies, digital solutions, and creative design.",
     type: "website",
-    locale: "en_US",
+    locale: "en_KE",
     url: "/",
   },
   twitter: {
