@@ -7,9 +7,9 @@ import { connection } from "next/server";
 import { PageAnalytics } from "@/components/PageAnalytics";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy",
+  title: "Privacy Policy - Data Protection & Security",
   description:
-    "Learn how we collect, use, and protect your personal information. Our privacy policy outlines our commitment to your data security.",
+    "Learn how we collect, use, and protect your personal information. Our privacy policy outlines our commitment to data security, GDPR compliance, and transparent data handling practices.",
   keywords: [
     "privacy policy",
     "data protection",
@@ -25,28 +25,19 @@ export const metadata: Metadata = {
     canonical: "/privacy",
   },
   openGraph: {
-    title: "Privacy Policy | Gerald Bahati",
+    title: "Privacy Policy - Data Protection & Security | Gerald Bahati",
     description:
-      "Our commitment to protecting your personal information and data privacy.",
+      "Learn how we collect, use, and protect your personal information. Our privacy policy outlines our commitment to data security and GDPR compliance.",
     url: "/privacy",
     siteName: "Gerald Bahati Portfolio",
     locale: "en_US",
     type: "website",
-    images: [
-      {
-        url: "/opengraph-image",
-        width: 1200,
-        height: 630,
-        alt: "Gerald Bahati - Full Stack Developer & Digital Creative",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Privacy Policy | Gerald Bahati",
+    title: "Privacy Policy - Data Protection & Security | Gerald Bahati",
     description:
-      "Our commitment to protecting your personal information and data privacy.",
-    images: ["/twitter-image"],
+      "Learn how we collect, use, and protect your personal information. Our privacy policy outlines our commitment to data security and GDPR compliance.",
   },
 };
 

@@ -6,9 +6,9 @@ import { ContactSkeleton } from "@/components/imprint/contact-skeleton";
 import imprintData from "@/constants/imprint.json";
 
 export const metadata: Metadata = {
-  title: "Imprint",
+  title: "Imprint - Legal Notice & Business Information",
   description:
-    "Legal notice and imprint information for Gerald Bahati's portfolio.",
+    "Legal notice and imprint information for Gerald Bahati's portfolio. Find business contact details, responsible parties, and regulatory compliance information as required by law.",
   robots: {
     index: true,
     follow: true,
@@ -19,27 +19,18 @@ export const metadata: Metadata = {
   },
 
   openGraph: {
-    title: "Imprint",
+    title: "Imprint - Legal Notice & Business Information | Gerald Bahati",
     description:
-      "Legal notice and imprint information for Gerald Bahati's portfolio.",
+      "Legal notice and imprint information for Gerald Bahati's portfolio. Find business contact details, responsible parties, and regulatory compliance information.",
     type: "website",
     locale: "en_US",
     siteName: "Gerald Bahati",
-    images: [
-      {
-        url: "/opengraph-image",
-        width: 1200,
-        height: 630,
-        alt: "Gerald Bahati - Full Stack Developer & Digital Creative",
-      },
-    ],
   },
   twitter: {
-    title: "Imprint",
+    title: "Imprint - Legal Notice & Business Information | Gerald Bahati",
     description:
-      "Legal notice and imprint information for Gerald Bahati's portfolio.",
+      "Legal notice and imprint information for Gerald Bahati's portfolio. Find business contact details, responsible parties, and regulatory compliance information.",
     card: "summary_large_image",
-    images: ["/twitter-image"],
   },
 };
 

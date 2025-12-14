@@ -7,9 +7,9 @@ import { ContactLinks } from "@/components/ContactLinks";
 import { PageAnalytics } from "@/components/PageAnalytics";
 
 export const metadata: Metadata = {
-  title: "Contact - Request a Project",
+  title: "Contact Gerald - Request a Project | Full Stack Developer",
   description:
-    "Get in touch with Gerald for your next digital project. Contact form, phone, and WhatsApp available. Every message is 100% received and guaranteed to be answered within 24 hours.",
+    "Get in touch with Gerald Bahati for your next digital project. Contact via form, phone, or WhatsApp. Every message is 100% received and guaranteed to be answered within 24 hours.",
   keywords: [
     "contact gerald",
     "request project",
@@ -21,27 +21,18 @@ export const metadata: Metadata = {
     "germany web design",
   ],
   openGraph: {
-    title: "Contact Gerald - Request a Project",
+    title: "Contact Gerald - Request a Project | Full Stack Developer",
     description:
-      "Get in touch with Gerald for your next digital project. Available via contact form, phone, and WhatsApp.",
+      "Get in touch with Gerald Bahati for your next digital project. Contact via form, phone, or WhatsApp. Every message guaranteed answered within 24 hours.",
     type: "website",
     locale: "en_US",
     siteName: "Gerald Bahati Portfolio",
-    images: [
-      {
-        url: "/opengraph-image",
-        width: 1200,
-        height: 630,
-        alt: "Gerald Bahati - Full Stack Developer & Digital Creative",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Contact Gerald - Request a Project",
+    title: "Contact Gerald - Request a Project | Full Stack Developer",
     description:
-      "Get in touch with Gerald for your next digital project. Available via contact form, phone, and WhatsApp.",
-    images: ["/twitter-image"],
+      "Get in touch with Gerald Bahati for your next digital project. Contact via form, phone, or WhatsApp. Every message guaranteed answered within 24 hours.",
   },
   robots: {
     index: true,

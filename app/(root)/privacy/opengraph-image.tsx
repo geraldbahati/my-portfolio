@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { readFile } from "node:fs/promises";
 
 // Image metadata
-export const alt = "Gerald Bahati - Full Stack Developer & Digital Creative";
+export const alt = "Privacy Policy - Gerald Bahati";
 export const size = {
   width: 1200,
   height: 630,
@@ -122,7 +122,7 @@ export default async function Image() {
                 border: "1px solid #e5e7eb",
               }}
             >
-              geraldbahati.dev
+              geraldbahati.dev/privacy
             </span>
 
             {/* Headline */}
@@ -139,10 +139,22 @@ export default async function Image() {
                 margin: 0,
               }}
             >
-              <span>Gerald Bahati - Full Stack</span>
-              <span>Developer & Digital</span>
-              <span>Creative</span>
+              <span>Privacy Policy - Data Protection</span>
             </h1>
+
+            {/* Description */}
+            <p
+              style={{
+                display: "flex",
+                fontSize: "18px",
+                color: "#6b7280",
+                margin: 0,
+                lineHeight: 1.5,
+              }}
+            >
+              Our commitment to protecting your personal information and data
+              privacy.
+            </p>
 
             {/* CTA Button */}
             <div
@@ -154,7 +166,7 @@ export default async function Image() {
                 color: "white",
                 fontSize: "18px",
                 fontWeight: 500,
-                margin: "20px 0",
+                margin: "10px 0",
                 padding: "16px 80px",
                 borderRadius: "50px",
                 boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.3)",

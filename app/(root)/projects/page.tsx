@@ -7,9 +7,9 @@ import { PageAnalytics } from "@/components/PageAnalytics";
 
 // SEO Metadata
 export const metadata: Metadata = {
-  title: "Projects - Creative Digital Solutions",
+  title: "Projects - Creative Digital Solutions & Web Development",
   description:
-    "Creative digital advancement – get to know my approach and style through a selection of my projects. Each project represents quality, well-thought-out structures, and sustainable digital solutions that deliver measurable results.",
+    "Explore my portfolio of creative digital projects including web development, UI/UX design, and innovative digital solutions. Each project showcases quality craftsmanship and sustainable results.",
   keywords: [
     "portfolio",
     "projects",
@@ -20,26 +20,17 @@ export const metadata: Metadata = {
     "creative development",
   ],
   openGraph: {
-    title: "Projects - Creative Digital Solutions",
+    title: "Projects - Creative Digital Solutions & Web Development",
     description:
-      "Explore a curated selection of projects showcasing quality, well-thought-out structures, and sustainable digital solutions.",
+      "Explore my portfolio of creative digital projects including web development, UI/UX design, and innovative digital solutions with sustainable results.",
     type: "website",
     url: "/projects",
-    images: [
-      {
-        url: "/opengraph-image",
-        width: 1200,
-        height: 630,
-        alt: "Gerald Bahati - Full Stack Developer & Digital Creative",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Projects - Creative Digital Solutions",
+    title: "Projects - Creative Digital Solutions & Web Development",
     description:
-      "Explore a curated selection of projects showcasing quality digital solutions.",
-    images: ["/twitter-image"],
+      "Explore my portfolio of creative digital projects including web development, UI/UX design, and innovative digital solutions with sustainable results.",
   },
   alternates: {
     canonical: "/projects",
