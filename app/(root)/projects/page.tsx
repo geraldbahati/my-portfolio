@@ -25,21 +25,12 @@ export const metadata: Metadata = {
       "Explore a curated selection of projects showcasing quality, well-thought-out structures, and sustainable digital solutions.",
     type: "website",
     url: "/projects",
-    images: [
-      {
-        url: "/original.jpeg",
-        width: 1200,
-        height: 630,
-        alt: "Projects Portfolio",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Projects - Creative Digital Solutions",
     description:
       "Explore a curated selection of projects showcasing quality digital solutions.",
-    images: ["/original.jpeg"],
   },
   alternates: {
     canonical: "/projects",

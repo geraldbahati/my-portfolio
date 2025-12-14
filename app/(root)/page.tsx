@@ -35,21 +35,12 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: "/",
-    images: [
-      {
-        url: "https://geraldbahati.dev/original.jpeg",
-        width: 1200,
-        height: 630,
-        alt: "Gerald Bahati - Full Stack Developer",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Gerald Bahati - Full Stack Developer & Digital Creative",
     description:
       "Experienced full stack developer specializing in modern web technologies, digital solutions, and creative design.",
-    images: ["https://geraldbahati.dev/original.jpeg"],
   },
   robots: {
     index: true,
