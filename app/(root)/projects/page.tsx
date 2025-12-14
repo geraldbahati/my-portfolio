@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     description:
       "Explore my portfolio of creative digital projects including web development, UI/UX design, and innovative digital solutions with sustainable results.",
     type: "website",
-    url: "/projects",
+    url: "https://www.geraldbahati.dev/projects",
   },
   twitter: {
     card: "summary_large_image",

@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     title: "Privacy Policy - Data Protection & Security | Gerald Bahati",
     description:
       "Learn how we collect, use, and protect your personal information. Our privacy policy outlines our commitment to data security and GDPR compliance.",
-    url: "/privacy",
+    url: "https://www.geraldbahati.dev/privacy",
     siteName: "Gerald Bahati Portfolio",
     locale: "en_US",
     type: "website",
