@@ -13,10 +13,16 @@ export const contentType = "image/png";
 // Image generation
 export default async function Image() {
   // Read the profile image from public folder and convert to base64
-  const imageBuffer = await readFile(
-    join(process.cwd(), "public/original.jpeg"),
-  );
-  const base64Image = `data:image/jpeg;base64,${imageBuffer.toString("base64")}`;
+  let base64Image: string;
+  try {
+    const imageBuffer = await readFile(
+      join(process.cwd(), "public/original.jpeg"),
+    );
+    base64Image = `data:image/jpeg;base64,${imageBuffer.toString("base64")}`;
+  } catch {
+    // Fallback to remote URL if file read fails (e.g., on Vercel)
+    base64Image = "https://geraldbahati.dev/original.jpeg";
+  }
 
   // Font loading
   const interMedium = fetch(
