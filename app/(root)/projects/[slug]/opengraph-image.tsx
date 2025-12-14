@@ -4,8 +4,6 @@ import { api } from "@/convex/_generated/api";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 
-export const runtime = "nodejs";
-
 // Image metadata
 export const alt = "Project by Gerald Bahati";
 export const size = {
