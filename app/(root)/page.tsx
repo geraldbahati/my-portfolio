@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     "modern web technologies",
   ],
   alternates: {
-    canonical: "/",
+    canonical: "https://www.geraldbahati.dev",
   },
   openGraph: {
     title: "Gerald Bahati - Full Stack Developer & Digital Creative",
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
       "Experienced full stack developer specializing in modern web technologies, digital solutions, and creative design.",
     type: "website",
     locale: "en_KE",
-    url: "/",
+    url: "https://www.geraldbahati.dev",
   },
   twitter: {
     card: "summary_large_image",

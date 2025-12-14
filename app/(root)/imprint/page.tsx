@@ -23,6 +23,7 @@ export const metadata: Metadata = {
     description:
       "Legal notice and imprint information for Gerald Bahati's portfolio. Find business contact details, responsible parties, and regulatory compliance information.",
     type: "website",
+    url: "https://www.geraldbahati.dev/imprint",
     locale: "en_US",
     siteName: "Gerald Bahati",
   },

@@ -25,6 +25,7 @@ export const metadata: Metadata = {
     description:
       "Get in touch with Gerald Bahati for your next digital project. Contact via form, phone, or WhatsApp. Every message guaranteed answered within 24 hours.",
     type: "website",
+    url: "https://www.geraldbahati.dev/contact",
     locale: "en_US",
     siteName: "Gerald Bahati Portfolio",
   },
