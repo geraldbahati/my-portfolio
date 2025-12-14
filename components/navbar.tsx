@@ -1,10 +1,14 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { memo, useEffect, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Linkedin, Github, MessageCircle, Instagram } from "lucide-react";
 import Image from "next/image";
 import Analytics from "@/lib/analytics";
+
+// ============================================================================
+// TYPES
+// ============================================================================
 
 interface NavBarProps {
   isOpen: boolean;
@@ -21,45 +25,208 @@ interface MenuOverlayProps {
   setIsOpen: (isOpen: boolean) => void;
 }
 
-const WhatsAppIcon = ({
+// ============================================================================
+// STATIC DATA - Hoisted to module scope to prevent recreation
+// ============================================================================
+
+const MENU_ITEMS = [
+  { label: "Home", href: "/" },
+  { label: "Projects", href: "/projects" },
+  { label: "Contact", href: "/contact" },
+] as const;
+
+const SOCIAL_LINKS = [
+  {
+    id: "instagram",
+    href: "https://www.instagram.com/ace._gb/",
+    label: "Instagram",
+  },
+  {
+    id: "linkedin",
+    href: "https://www.linkedin.com/in/gerald-bahati-b1865a242/",
+    label: "LinkedIn",
+  },
+  { id: "x", href: "https://x.com/gerald_baha", label: "X" },
+  {
+    id: "whatsapp",
+    href: "https://wa.me/254704713070",
+    label: "WhatsApp",
+  },
+  { id: "github", href: "https://github.com/geraldbahati", label: "GitHub" },
+] as const;
+
+// ============================================================================
+// ANIMATION VARIANTS - Hoisted to module scope to prevent recreation
+// ============================================================================
+
+const OVERLAY_VARIANTS = {
+  initial: {
+    clipPath: "inset(0% 0% 100% 0%)",
+  },
+  animate: {
+    clipPath: "inset(0% 0% 0% 0%)",
+    transition: {
+      duration: 0.6,
+      ease: [0.76, 0, 0.24, 1] as [number, number, number, number],
+    },
+  },
+  exit: {
+    clipPath: "inset(0% 0% 100% 0%)",
+    transition: {
+      duration: 0.8,
+      ease: [0.76, 0, 0.24, 1] as [number, number, number, number],
+    },
+  },
+};
+
+const CONTAINER_VARIANTS = {
+  initial: {},
+  animate: {
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.3,
+    },
+  },
+  exit: {
+    transition: {
+      staggerChildren: 0.05,
+      staggerDirection: -1,
+    },
+  },
+};
+
+const ITEM_VARIANTS = {
+  initial: {
+    y: 100,
+    opacity: 0,
+  },
+  animate: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      duration: 0.8,
+      ease: [0.76, 0, 0.24, 1] as [number, number, number, number],
+    },
+  },
+  exit: {
+    y: 100,
+    opacity: 0,
+    transition: {
+      duration: 0.3,
+      ease: [0.76, 0, 0.24, 1] as [number, number, number, number],
+    },
+  },
+};
+
+const SOCIAL_VARIANTS = {
+  initial: {
+    y: 20,
+    opacity: 0,
+  },
+  animate: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      duration: 0.5,
+      ease: "easeOut" as const,
+    },
+  },
+  exit: {
+    y: 20,
+    opacity: 0,
+    transition: {
+      duration: 0.2,
+    },
+  },
+};
+
+const IMAGE_VARIANTS = {
+  initial: {
+    y: 200,
+    opacity: 0,
+    scale: 0.8,
+  },
+  animate: {
+    y: 0,
+    opacity: 1,
+    scale: 1,
+    transition: {
+      duration: 1,
+      delay: 0.8,
+      ease: [0.76, 0, 0.24, 1] as [number, number, number, number],
+    },
+  },
+  exit: {
+    y: 200,
+    opacity: 0,
+    scale: 0.8,
+    transition: {
+      duration: 0.4,
+      ease: [0.76, 0, 0.24, 1] as [number, number, number, number],
+    },
+  },
+};
+
+// ============================================================================
+// ICON COMPONENTS - Memoized
+// ============================================================================
+
+const WhatsAppIcon = memo(function WhatsAppIcon({
   size = 24,
   className,
 }: {
   size?: number;
   className?: string;
-}) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    height={size}
-    fill="currentColor"
-    className={`bi bi-whatsapp ${className || ""}`}
-    viewBox="0 0 16 16"
-  >
-    <path d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.9 7.9 0 0 0 13.6 2.326zM7.994 14.521a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592m3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654s.71 1.916.81 2.049c.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232" />
-  </svg>
-);
+}) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      fill="currentColor"
+      className={`bi bi-whatsapp ${className || ""}`}
+      viewBox="0 0 16 16"
+    >
+      <path d="M13.601 2.326A7.85 7.85 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.9 7.9 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.9 7.9 0 0 0 13.6 2.326zM7.994 14.521a6.6 6.6 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.56 6.56 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592m3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.73.73 0 0 0-.529.247c-.182.198-.691.677-.691 1.654s.71 1.916.81 2.049c.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232" />
+    </svg>
+  );
+});
 
-const XIcon = ({
+const XIcon = memo(function XIcon({
   size = 24,
   className,
 }: {
   size?: number;
   className?: string;
-}) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    height={size}
-    fill="currentColor"
-    className={`bi bi-twitter-x ${className || ""}`}
-    viewBox="0 0 16 16"
-  >
-    <path d="M12.6.75h2.454l-5.36 6.142L16 15.25h-4.937l-3.867-5.07-4.425 5.07H.316l5.733-6.57L0 .75h5.063l3.495 4.633L12.601.75Zm-.86 13.028h1.36L4.323 2.145H2.865z" />
-  </svg>
-);
+}) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      fill="currentColor"
+      className={`bi bi-twitter-x ${className || ""}`}
+      viewBox="0 0 16 16"
+    >
+      <path d="M12.6.75h2.454l-5.36 6.142L16 15.25h-4.937l-3.867-5.07-4.425 5.07H.316l5.733-6.57L0 .75h5.063l3.495 4.633L12.601.75Zm-.86 13.028h1.36L4.323 2.145H2.865z" />
+    </svg>
+  );
+});
 
-const Navbar = () => {
+// Icon map for social links
+const ICON_MAP: Record<string, React.ComponentType<{ size?: number }>> = {
+  instagram: Instagram,
+  linkedin: Linkedin,
+  x: XIcon,
+  whatsapp: WhatsAppIcon,
+  github: Github,
+};
+
+// ============================================================================
+// MAIN NAVBAR COMPONENT
+// ============================================================================
+
+const Navbar = memo(function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
   // Prevent body scroll when menu is open
@@ -82,9 +249,17 @@ const Navbar = () => {
       </AnimatePresence>
     </>
   );
-};
+});
 
-const NavBar = ({ isOpen, setIsOpen }: NavBarProps) => {
+// ============================================================================
+// NAVBAR HEADER
+// ============================================================================
+
+const NavBar = memo(function NavBar({ isOpen, setIsOpen }: NavBarProps) {
+  const handleLogoClick = useCallback(() => {
+    Analytics.trackLinkClick("Logo", "/", "internal");
+  }, []);
+
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 ${
@@ -107,9 +282,7 @@ const NavBar = ({ isOpen, setIsOpen }: NavBarProps) => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             aria-label="Home"
-            onClick={() => {
-              Analytics.trackLinkClick("Logo", "/", "internal");
-            }}
+            onClick={handleLogoClick}
           >
             <Image
               src="/logo.png"
@@ -128,14 +301,21 @@ const NavBar = ({ isOpen, setIsOpen }: NavBarProps) => {
       </div>
     </nav>
   );
-};
+});
 
-const MenuButton = ({ isOpen, setIsOpen }: MenuButtonProps) => {
-  const handleMenuToggle = () => {
+// ============================================================================
+// MENU BUTTON
+// ============================================================================
+
+const MenuButton = memo(function MenuButton({
+  isOpen,
+  setIsOpen,
+}: MenuButtonProps) {
+  const handleMenuToggle = useCallback(() => {
     const newState = !isOpen;
     setIsOpen(newState);
     Analytics.trackButtonClick(newState ? "Open Menu" : "Close Menu", "Navbar");
-  };
+  }, [isOpen, setIsOpen]);
 
   return (
     <motion.button
@@ -173,148 +353,29 @@ const MenuButton = ({ isOpen, setIsOpen }: MenuButtonProps) => {
       </div>
     </motion.button>
   );
-};
+});
 
-const MenuOverlay = ({ setIsOpen }: MenuOverlayProps) => {
-  // Animation variants
-  const overlayVariants = {
-    initial: {
-      clipPath: "inset(0% 0% 100% 0%)",
-    },
-    animate: {
-      clipPath: "inset(0% 0% 0% 0%)",
-      transition: {
-        duration: 0.6,
-        ease: [0.76, 0, 0.24, 1] as [number, number, number, number],
-      },
-    },
-    exit: {
-      clipPath: "inset(0% 0% 100% 0%)",
-      transition: {
-        duration: 0.8,
-        ease: [0.76, 0, 0.24, 1] as [number, number, number, number],
-      },
-    },
-  };
+// ============================================================================
+// MENU OVERLAY
+// ============================================================================
 
-  const containerVariants = {
-    initial: {},
-    animate: {
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.3,
-      },
+const MenuOverlay = memo(function MenuOverlay({ setIsOpen }: MenuOverlayProps) {
+  const handleMenuItemClick = useCallback(
+    (label: string, href: string) => {
+      Analytics.trackLinkClick(label, href, "internal");
+      setIsOpen(false);
     },
-    exit: {
-      transition: {
-        staggerChildren: 0.05,
-        staggerDirection: -1,
-      },
-    },
-  };
+    [setIsOpen],
+  );
 
-  const itemVariants = {
-    initial: {
-      y: 100,
-      opacity: 0,
-    },
-    animate: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.8,
-        ease: [0.76, 0, 0.24, 1] as [number, number, number, number],
-      },
-    },
-    exit: {
-      y: 100,
-      opacity: 0,
-      transition: {
-        duration: 0.3,
-        ease: [0.76, 0, 0.24, 1] as [number, number, number, number],
-      },
-    },
-  };
-
-  const socialVariants = {
-    initial: {
-      y: 20,
-      opacity: 0,
-    },
-    animate: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.5,
-        ease: "easeOut" as const,
-      },
-    },
-    exit: {
-      y: 20,
-      opacity: 0,
-      transition: {
-        duration: 0.2,
-      },
-    },
-  };
-
-  const imageVariants = {
-    initial: {
-      y: 200,
-      opacity: 0,
-      scale: 0.8,
-    },
-    animate: {
-      y: 0,
-      opacity: 1,
-      scale: 1,
-      transition: {
-        duration: 1,
-        delay: 0.8,
-        ease: [0.76, 0, 0.24, 1] as [number, number, number, number],
-      },
-    },
-    exit: {
-      y: 200,
-      opacity: 0,
-      scale: 0.8,
-      transition: {
-        duration: 0.4,
-        ease: [0.76, 0, 0.24, 1] as [number, number, number, number],
-      },
-    },
-  };
-
-  const menuItems = [
-    { label: "Home", href: "/" },
-    { label: "Projects", href: "/projects" },
-    { label: "Contact", href: "/contact" },
-  ];
-
-  const socialLinks = [
-    {
-      Icon: Instagram,
-      href: "https://www.instagram.com/ace._gb/",
-      label: "Instagram",
-    },
-    {
-      Icon: Linkedin,
-      href: "https://www.linkedin.com/in/gerald-bahati-b1865a242/",
-      label: "LinkedIn",
-    },
-    { Icon: XIcon, href: "https://x.com/gerald_baha", label: "X" },
-    {
-      Icon: WhatsAppIcon,
-      href: "https://wa.me/254704713070",
-      label: "WhatsApp",
-    },
-    { Icon: Github, href: "https://github.com/geraldbahati", label: "GitHub" },
-  ];
+  const handleSocialClick = useCallback((label: string, source: string) => {
+    Analytics.trackSocialShare(label, "profile-link", source);
+  }, []);
 
   return (
     <motion.div
       className="fixed inset-0 bg-black z-40"
-      variants={overlayVariants}
+      variants={OVERLAY_VARIANTS}
       initial="initial"
       animate="animate"
       exit="exit"
@@ -326,25 +387,18 @@ const MenuOverlay = ({ setIsOpen }: MenuOverlayProps) => {
             {/* Menu Items */}
             <motion.nav
               className="w-full flex justify-center lg:justify-start mb-8 lg:mb-0"
-              variants={containerVariants}
+              variants={CONTAINER_VARIANTS}
               initial="initial"
               animate="animate"
               exit="exit"
             >
               <ul className="space-y-4 sm:space-y-6 lg:space-y-8 text-center lg:text-left">
-                {menuItems.map((item) => (
-                  <motion.li key={item.label} variants={itemVariants}>
+                {MENU_ITEMS.map((item) => (
+                  <motion.li key={item.label} variants={ITEM_VARIANTS}>
                     <motion.a
                       href={item.href}
                       className="text-white hover:text-primary text-3xl sm:text-4xl lg:text-6xl xl:text-8xl font-medium block cursor-pointer transition-colors duration-300"
-                      onClick={() => {
-                        Analytics.trackLinkClick(
-                          item.label,
-                          item.href,
-                          "internal",
-                        );
-                        setIsOpen(false);
-                      }}
+                      onClick={() => handleMenuItemClick(item.label, item.href)}
                       initial={{ letterSpacing: "0em" }}
                       whileHover={{
                         letterSpacing: "0.1em",
@@ -365,33 +419,30 @@ const MenuOverlay = ({ setIsOpen }: MenuOverlayProps) => {
             {/* Social Links - Desktop only */}
             <motion.div
               className="hidden lg:flex gap-4 absolute bottom-0 left-0"
-              variants={containerVariants}
+              variants={CONTAINER_VARIANTS}
               initial="initial"
               animate="animate"
               exit="exit"
             >
-              {socialLinks.map((social) => (
-                <motion.a
-                  key={social.label}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={social.label}
-                  className="text-white hover:opacity-70 transition-opacity duration-300 cursor-pointer"
-                  variants={socialVariants}
-                  whileHover={{ scale: 1.2, rotate: 5 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={(e) => {
-                    Analytics.trackSocialShare(
-                      social.label,
-                      "profile-link",
-                      "navbar",
-                    );
-                  }}
-                >
-                  <social.Icon size={24} />
-                </motion.a>
-              ))}
+              {SOCIAL_LINKS.map((social) => {
+                const Icon = ICON_MAP[social.id];
+                return (
+                  <motion.a
+                    key={social.label}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={social.label}
+                    className="text-white hover:opacity-70 transition-opacity duration-300 cursor-pointer"
+                    variants={SOCIAL_VARIANTS}
+                    whileHover={{ scale: 1.2, rotate: 5 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => handleSocialClick(social.label, "navbar")}
+                  >
+                    <Icon size={24} />
+                  </motion.a>
+                );
+              })}
             </motion.div>
           </div>
 
@@ -399,7 +450,7 @@ const MenuOverlay = ({ setIsOpen }: MenuOverlayProps) => {
           <div className="flex-1 flex flex-col items-center justify-center mt-8 lg:mt-0 relative">
             <motion.div
               className="relative w-64 h-80 sm:w-72 sm:h-88 md:w-80 md:h-96 lg:w-[500px] lg:h-[600px] xl:w-[600px] xl:h-[700px]"
-              variants={imageVariants}
+              variants={IMAGE_VARIANTS}
               initial="initial"
               animate="animate"
               exit="exit"
@@ -422,18 +473,9 @@ const MenuOverlay = ({ setIsOpen }: MenuOverlayProps) => {
                 />
               </div>
 
-              {/* Glitch effect overlay */}
-              <motion.div
-                className="absolute inset-0 mix-blend-screen opacity-30"
-                animate={{
-                  backgroundPosition: ["0% 0%", "100% 100%"],
-                }}
-                transition={{
-                  duration: 10,
-                  repeat: Infinity,
-                  repeatType: "reverse",
-                  ease: "linear",
-                }}
+              {/* Glitch effect overlay - CSS animation for better performance */}
+              <div
+                className="absolute inset-0 mix-blend-screen opacity-30 animate-glitch-shimmer"
                 style={{
                   background:
                     "linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%)",
@@ -442,42 +484,41 @@ const MenuOverlay = ({ setIsOpen }: MenuOverlayProps) => {
               />
             </motion.div>
 
-            {/* Social Links - Mobile only, positioned below image */}
+            {/* Social Links - Mobile only */}
             <motion.div
               className="flex lg:hidden gap-4 mt-6 justify-center w-full"
-              variants={containerVariants}
+              variants={CONTAINER_VARIANTS}
               initial="initial"
               animate="animate"
               exit="exit"
             >
-              {socialLinks.map((social) => (
-                <motion.a
-                  key={social.label}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={social.label}
-                  className="text-white hover:opacity-70 transition-opacity duration-300 cursor-pointer"
-                  variants={socialVariants}
-                  whileHover={{ scale: 1.2, rotate: 5 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={(e) => {
-                    Analytics.trackSocialShare(
-                      social.label,
-                      "profile-link",
-                      "navbar-mobile",
-                    );
-                  }}
-                >
-                  <social.Icon size={24} />
-                </motion.a>
-              ))}
+              {SOCIAL_LINKS.map((social) => {
+                const Icon = ICON_MAP[social.id];
+                return (
+                  <motion.a
+                    key={social.label}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={social.label}
+                    className="text-white hover:opacity-70 transition-opacity duration-300 cursor-pointer"
+                    variants={SOCIAL_VARIANTS}
+                    whileHover={{ scale: 1.2, rotate: 5 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() =>
+                      handleSocialClick(social.label, "navbar-mobile")
+                    }
+                  >
+                    <Icon size={24} />
+                  </motion.a>
+                );
+              })}
             </motion.div>
           </div>
         </div>
       </div>
     </motion.div>
   );
-};
+});
 
 export { Navbar };
