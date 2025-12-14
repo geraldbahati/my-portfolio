@@ -1,27 +1,58 @@
 import { ImageResponse } from "next/og";
-import { join } from "node:path";
+import { fetchQuery } from "convex/nextjs";
+import { api } from "@/convex/_generated/api";
 import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 
 // Image metadata
-export const alt = "Privacy Policy - Gerald Bahati";
+export const alt = "Project by Gerald Bahati";
 export const size = {
   width: 1200,
   height: 630,
 };
 export const contentType = "image/png";
 
-// Image generation
-export default async function Image() {
-  // Load image and fonts locally for reliability and performance
-  const [imageData, interMediumData, interSemiBoldData, interBoldData] =
-    await Promise.all([
-      readFile(join(process.cwd(), "public/original.jpeg"), "base64"),
+// Dynamic image generation based on project slug
+export default async function Image({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+
+  // Fetch project data
+  const data = await fetchQuery(api.projects.getFullProjectDetails, {
+    projectSlug: slug,
+  });
+
+  const projectTitle = data?.project?.title ?? "Project Showcase";
+  const industry = data?.details?.industry ?? "Design & Development";
+  const projectPoster = data?.project?.poster;
+
+  // Fallback image handling
+  let base64Image = "";
+  if (projectPoster) {
+    base64Image = projectPoster;
+  } else {
+    try {
+      const imageBuffer = await readFile(
+        join(process.cwd(), "public/original.jpeg"),
+      );
+      base64Image = `data:image/jpeg;base64,${imageBuffer.toString("base64")}`;
+    } catch (e) {
+      // Emergency fallback if file read fails (unlikely)
+      base64Image = "https://geraldbahati.dev/original.jpeg";
+    }
+  }
+
+  // Font loading - use local fonts for reliability and performance
+  const [interMediumData, interSemiBoldData, interBoldData] = await Promise.all(
+    [
       readFile(join(process.cwd(), "app/fonts/Inter-Medium.woff")),
       readFile(join(process.cwd(), "app/fonts/Inter-SemiBold.woff")),
       readFile(join(process.cwd(), "app/fonts/Inter-Bold.woff")),
-    ]);
-
-  const imageSrc = `data:image/jpeg;base64,${imageData}`;
+    ],
+  );
 
   return new ImageResponse(
     (
@@ -67,8 +98,8 @@ export default async function Image() {
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={imageSrc}
-                alt="Gerald Bahati"
+                src={base64Image}
+                alt={projectTitle}
                 style={{
                   width: "320px",
                   height: "420px",
@@ -91,7 +122,7 @@ export default async function Image() {
               maxWidth: "480px",
             }}
           >
-            {/* Domain tag */}
+            {/* Domain/Industry tag */}
             <span
               style={{
                 display: "flex",
@@ -104,7 +135,7 @@ export default async function Image() {
                 border: "1px solid #e5e7eb",
               }}
             >
-              geraldbahati.dev/privacy
+              {industry}
             </span>
 
             {/* Headline */}
@@ -119,24 +150,13 @@ export default async function Image() {
                 letterSpacing: "-0.025em",
                 color: "#000000",
                 margin: 0,
+                // Limit lines to avoid overflow if title is long
+                maxHeight: "220px",
+                overflow: "hidden",
               }}
             >
-              <span>Privacy Policy - Data Protection</span>
+              {projectTitle}
             </h1>
-
-            {/* Description */}
-            <p
-              style={{
-                display: "flex",
-                fontSize: "18px",
-                color: "#6b7280",
-                margin: 0,
-                lineHeight: 1.5,
-              }}
-            >
-              Our commitment to protecting your personal information and data
-              privacy.
-            </p>
 
             {/* CTA Button */}
             <div
@@ -148,13 +168,13 @@ export default async function Image() {
                 color: "white",
                 fontSize: "18px",
                 fontWeight: 500,
-                margin: "10px 0",
+                margin: "20px 0",
                 padding: "16px 80px",
                 borderRadius: "50px",
                 boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.3)",
               }}
             >
-              Read more
+              View Project
             </div>
           </div>
         </div>

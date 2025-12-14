@@ -50,27 +50,13 @@ export default async function Image({
     }
   }
 
-  // Font loading
-  const interMedium = fetch(
-    new URL(
-      "https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.18/files/inter-latin-500-normal.woff",
-    ),
-  ).then((res) => res.arrayBuffer());
-
-  const interSemiBold = fetch(
-    new URL(
-      "https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.18/files/inter-latin-600-normal.woff",
-    ),
-  ).then((res) => res.arrayBuffer());
-
-  const interBold = fetch(
-    new URL(
-      "https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.18/files/inter-latin-700-normal.woff",
-    ),
-  ).then((res) => res.arrayBuffer());
-
+  // Font loading - use local fonts for reliability and performance
   const [interMediumData, interSemiBoldData, interBoldData] = await Promise.all(
-    [interMedium, interSemiBold, interBold],
+    [
+      readFile(join(process.cwd(), "app/fonts/Inter-Medium.woff")),
+      readFile(join(process.cwd(), "app/fonts/Inter-SemiBold.woff")),
+      readFile(join(process.cwd(), "app/fonts/Inter-Bold.woff")),
+    ],
   );
 
   return new ImageResponse(

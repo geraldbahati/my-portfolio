@@ -10,36 +10,18 @@ export const size = {
 };
 export const contentType = "image/png";
 
+// Image generation
 export default async function Image() {
-  // Load image locally for reliability
-  const imageData = await readFile(
-    join(process.cwd(), "public/original.jpeg"),
-    "base64",
-  );
+  // Load image and fonts locally for reliability and performance
+  const [imageData, interMediumData, interSemiBoldData, interBoldData] =
+    await Promise.all([
+      readFile(join(process.cwd(), "public/original.jpeg"), "base64"),
+      readFile(join(process.cwd(), "app/fonts/Inter-Medium.woff")),
+      readFile(join(process.cwd(), "app/fonts/Inter-SemiBold.woff")),
+      readFile(join(process.cwd(), "app/fonts/Inter-Bold.woff")),
+    ]);
+
   const imageSrc = `data:image/jpeg;base64,${imageData}`;
-
-  // Font loading
-  const interMedium = fetch(
-    new URL(
-      "https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.18/files/inter-latin-500-normal.woff",
-    ),
-  ).then((res) => res.arrayBuffer());
-
-  const interSemiBold = fetch(
-    new URL(
-      "https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.18/files/inter-latin-600-normal.woff",
-    ),
-  ).then((res) => res.arrayBuffer());
-
-  const interBold = fetch(
-    new URL(
-      "https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.18/files/inter-latin-700-normal.woff",
-    ),
-  ).then((res) => res.arrayBuffer());
-
-  const [interMediumData, interSemiBoldData, interBoldData] = await Promise.all(
-    [interMedium, interSemiBold, interBold],
-  );
 
   return new ImageResponse(
     (
