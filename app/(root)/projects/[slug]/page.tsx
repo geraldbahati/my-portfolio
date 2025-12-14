@@ -66,10 +66,15 @@ export async function generateMetadata({
 
   const { project, details } = data;
   const projectTitle = project.title ?? "Project";
+
+  // Build description ensuring at least 100 characters for social media
+  const baseDescription =
+    details?.tagline ?? project.description ?? `Explore ${projectTitle}`;
   const projectDescription =
-    details?.tagline ??
-    project.description ??
-    `Explore ${projectTitle} - a project by Gerald Bahati`;
+    baseDescription.length >= 100
+      ? baseDescription
+      : `${baseDescription}. A project by Gerald Bahati showcasing modern web development, creative design, and digital solutions.`;
+
   const projectUrl = `https://geraldbahati.dev/projects/${slug}`;
 
   // Build keywords from project data
