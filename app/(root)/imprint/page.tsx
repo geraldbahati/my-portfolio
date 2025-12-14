@@ -25,29 +25,12 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     siteName: "Gerald Bahati",
-    images: [
-      {
-        url: "https://media.geraldbahati.dev/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Imprint",
-      },
-    ],
   },
-
   twitter: {
     title: "Imprint",
     description:
       "Legal notice and imprint information for Gerald Bahati's portfolio.",
     card: "summary_large_image",
-    images: [
-      {
-        url: "https://media.geraldbahati.dev/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Imprint",
-      },
-    ],
   },
 };
 

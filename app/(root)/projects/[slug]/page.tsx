@@ -70,7 +70,6 @@ export async function generateMetadata({
     details?.tagline ??
     project.description ??
     `Explore ${projectTitle} - a project by Gerald Bahati`;
-  const projectImage = project.poster ?? null;
   const projectUrl = `https://geraldbahati.dev/projects/${slug}`;
 
   // Build keywords from project data
@@ -93,16 +92,6 @@ export async function generateMetadata({
       description: projectDescription,
       url: projectUrl,
       siteName: "Gerald Bahati Portfolio",
-      ...(projectImage && {
-        images: [
-          {
-            url: projectImage,
-            width: 1200,
-            height: 630,
-            alt: `${projectTitle} - Project by Gerald Bahati`,
-          },
-        ],
-      }),
       publishedTime: project._creationTime
         ? new Date(project._creationTime).toISOString()
         : undefined,
@@ -113,12 +102,6 @@ export async function generateMetadata({
       title: projectTitle,
       description: projectDescription,
       creator: "@geraldbahati",
-      ...(projectImage && {
-        images: {
-          url: projectImage,
-          alt: `${projectTitle} - Project by Gerald Bahati`,
-        },
-      }),
     },
     alternates: {
       canonical: projectUrl,

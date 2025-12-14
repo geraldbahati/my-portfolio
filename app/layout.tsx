@@ -60,15 +60,6 @@ export const metadata: Metadata = {
     title: "Gerald Bahati - Full Stack Developer & Digital Creative",
     description:
       "Experienced full stack developer specializing in modern web technologies, digital solutions, and creative design. Building exceptional web applications with Next.js, React, TypeScript, and more.",
-    images: [
-      {
-        url: "https://geraldbahati.dev/original.jpeg",
-        width: 1200,
-        height: 630,
-        alt: "Gerald Bahati - Full Stack Developer & Digital Creative",
-        type: "image/jpeg",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
@@ -76,10 +67,6 @@ export const metadata: Metadata = {
     description:
       "Experienced full stack developer specializing in modern web technologies, digital solutions, and creative design. Building exceptional web applications with Next.js, React, TypeScript, and more.",
     creator: "@geraldbahati",
-    images: {
-      url: "https://geraldbahati.dev/original.jpeg",
-      alt: "Gerald Bahati - Full Stack Developer & Digital Creative",
-    },
   },
   robots: {
     index: true,
