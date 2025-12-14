@@ -174,7 +174,6 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
           className="relative w-full h-full transition-transform duration-100 ease-out"
           style={{
             transform: `scale(${imageScale}) translateZ(0)`,
-            willChange: "transform",
           }}
         >
           <Image

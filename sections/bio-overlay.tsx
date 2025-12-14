@@ -1,12 +1,16 @@
 "use client";
 
-import { memo, useMemo } from "react";
-import { motion, MotionValue, useTransform } from "framer-motion";
+import { memo, useMemo, useRef, useEffect, useCallback } from "react";
+import {
+  motion,
+  MotionValue,
+  useTransform,
+  useMotionValueEvent,
+} from "framer-motion";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import Analytics from "@/lib/analytics";
 
-// Lazy load the CutoutMaskImage component for better performance
 const CutoutMaskImage = dynamic(
   () =>
     import("@/components/ui/cutout-image-mask").then((mod) => ({
@@ -15,21 +19,30 @@ const CutoutMaskImage = dynamic(
   { ssr: true },
 );
 
-// Optimized Character component with simplified transforms
-interface CharacterProps {
-  children: string;
-  progress: MotionValue<number>;
-  range: [number, number];
-  className?: string;
+interface CharacterData {
+  char: string;
+  charIndex: number;
+  key: string;
 }
 
-const Character = memo(
-  ({ children, progress, range, className = "" }: CharacterProps) => {
-    // Simplified opacity transform with reduced complexity
-    const opacity = useTransform(progress, range, [0, 1]);
+interface WordData {
+  word: string;
+  chars: CharacterData[];
+  wordIdx: number;
+  isLast: boolean;
+}
 
-    // Handle spaces properly to maintain spacing
-    if (children === " ") {
+const StaticCharacter = memo(
+  ({
+    char,
+    charKey,
+    registerRef,
+  }: {
+    char: string;
+    charKey: string;
+    registerRef: (key: string, el: HTMLSpanElement | null) => void;
+  }) => {
+    if (char === " ") {
       return (
         <span className="inline-block" style={{ width: "0.25em" }}>
           {" "}
@@ -38,73 +51,142 @@ const Character = memo(
     }
 
     return (
-      <span className={`relative inline-block ${className}`}>
-        <span className="opacity-20">{children}</span>
-        <motion.span
+      <span className="relative inline-block">
+        <span className="opacity-20">{char}</span>
+        <span
+          ref={(el) => registerRef(charKey, el)}
           className="absolute inset-0"
-          style={{
-            opacity,
-            willChange: "opacity",
-          }}
+          style={{ opacity: 0 }}
         >
-          {children}
-        </motion.span>
+          {char}
+        </span>
       </span>
     );
   },
-  // Custom comparison to prevent unnecessary re-renders
-  (prev, next) => {
-    return prev.children === next.children && prev.progress === next.progress;
-  },
+  (prev, next) => prev.char === next.char && prev.charKey === next.charKey,
 );
 
-Character.displayName = "Character";
+StaticCharacter.displayName = "StaticCharacter";
 
 interface BioOverlayProps {
   scrollProgress: MotionValue<number>;
 }
 
 export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
-  // Transform scroll progress to control content animations
-  // Content animations trigger as bio slides into view (last 60% of scroll)
-  // useTransform is already optimized internally by Framer Motion
-  const contentProgress = useTransform(scrollProgress, [0.4, 1], [0, 1]);
+  const charRefsMap = useRef<Map<string, HTMLSpanElement>>(new Map());
 
-  // Text reveal starts later so image appears first
+  const contentProgress = useTransform(scrollProgress, [0.4, 1], [0, 1]);
   const textProgress = useTransform(scrollProgress, [0.55, 1], [0, 1]);
 
-  // Transform values for the cutout image
   const imageScale = useTransform(contentProgress, [0, 1], [0.6, 1]);
   const imageOpacity = useTransform(contentProgress, [0, 0.2], [0, 1]);
   const imageY = useTransform(contentProgress, [0, 1], [100, 0]);
-
-  // CTA button visibility based on scroll progress
   const ctaOpacity = useTransform(textProgress, [0.7, 1], [0, 1]);
   const ctaY = useTransform(textProgress, [0.7, 1], [20, 0]);
 
-  // Text content - Memoized to prevent re-splitting on every render
   const tagline = "What I can do for you";
-  const taglineChars = useMemo(() => tagline.split(""), []);
-
   const mainText =
     "As a web designer and digital expert, I combine creative, detail-loving design with strategic know-how in digital marketing to unlock your brand's full potential.";
-  const mainChars = useMemo(() => mainText.split(""), []);
-
   const numberText = "(01)";
-  const numberChars = useMemo(() => numberText.split(""), []);
 
-  // Calculate character reveal ranges - Memoized with simplified calculation
-  const totalChars = useMemo(
-    () => taglineChars.length + numberChars.length + mainChars.length,
-    [taglineChars.length, numberChars.length, mainChars.length],
-  );
+  const { taglineData, numberData, mainTextData, totalChars, charIndexMap } =
+    useMemo(() => {
+      const taglineChars = tagline.split("");
+      const numberChars = numberText.split("");
+      const mainChars = mainText.split("");
+      const total = taglineChars.length + numberChars.length + mainChars.length;
+
+      const charIndexMap = new Map<string, number>();
+
+      const taglineWords = tagline.split(" ");
+      let taglineCharIdx = 0;
+      const taglineData: WordData[] = taglineWords.map((word, wordIdx) => {
+        const chars = word.split("").map((char, charIdx) => {
+          const idx = taglineCharIdx + charIdx;
+          const key = `tag-${idx}`;
+          charIndexMap.set(key, idx);
+          return { char, charIndex: idx, key };
+        });
+        taglineCharIdx += word.length + 1;
+        return {
+          word,
+          chars,
+          wordIdx,
+          isLast: wordIdx === taglineWords.length - 1,
+        };
+      });
+
+      const numberOffset = taglineChars.length;
+      const numberData: CharacterData[] = numberChars.map((char, i) => {
+        const idx = numberOffset + i;
+        const key = `num-${idx}`;
+        charIndexMap.set(key, idx);
+        return { char, charIndex: idx, key };
+      });
+
+      const mainTextWords = mainText.split(" ");
+      let mainCharIdx = 0;
+      const charOffset = taglineChars.length + numberChars.length;
+      const mainTextData: WordData[] = mainTextWords.map((word, wordIdx) => {
+        const chars = word.split("").map((char, charIdx) => {
+          const idx = charOffset + mainCharIdx + charIdx;
+          const key = `main-${idx}`;
+          charIndexMap.set(key, idx);
+          return { char, charIndex: idx, key };
+        });
+        mainCharIdx += word.length + 1;
+        return {
+          word,
+          chars,
+          wordIdx,
+          isLast: wordIdx === mainTextWords.length - 1,
+        };
+      });
+
+      return {
+        taglineData,
+        numberData,
+        mainTextData,
+        totalChars: total,
+        charIndexMap,
+      };
+    }, []);
+
+  const registerRef = useCallback((key: string, el: HTMLSpanElement | null) => {
+    if (el) {
+      charRefsMap.current.set(key, el);
+    } else {
+      charRefsMap.current.delete(key);
+    }
+  }, []);
+
+  useMotionValueEvent(textProgress, "change", (progress) => {
+    charRefsMap.current.forEach((el, key) => {
+      const charIndex = charIndexMap.get(key);
+      if (charIndex === undefined) return;
+
+      const charStart = charIndex / totalChars;
+      const charWidth = 3 / totalChars;
+      const opacity = Math.min(
+        1,
+        Math.max(0, (progress - charStart) / charWidth),
+      );
+
+      el.style.opacity = String(opacity);
+    });
+  });
+
+  useEffect(() => {
+    charRefsMap.current.forEach((el) => {
+      el.style.opacity = "0";
+    });
+  }, []);
 
   return (
     <section
       className="relative h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-t-xl sm:rounded-t-[1rem] lg:rounded-t-[2rem] overflow-y-auto"
       style={{
         contain: "layout style paint",
-        willChange: "transform",
       }}
     >
       {/* Subtle background elements */}
@@ -112,7 +194,6 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
         className="absolute inset-0 overflow-hidden pointer-events-none"
         style={{
           opacity: useTransform(scrollProgress, [0, 0.5, 1], [0.3, 1, 1]),
-          willChange: "opacity",
         }}
       >
         <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-purple-100/20 to-transparent rounded-full blur-3xl" />
@@ -128,8 +209,7 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
               scale: imageScale,
               opacity: imageOpacity,
               y: imageY,
-              willChange: "transform, opacity",
-              transform: "translateZ(0)", // Force GPU layer
+              transform: "translateZ(0)",
             }}
           >
             <CutoutMaskImage
@@ -149,102 +229,20 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
             {/* Tagline and Number */}
             <div className="flex justify-between items-start">
               <div className="text-xs sm:text-sm font-medium tracking-[0.2em] uppercase text-gray-600">
-                {tagline.split(" ").map((word, wordIdx) => {
-                  // Calculate the starting character index for this word within the full tagline
-                  const prevWordsLength = tagline
-                    .split(" ")
-                    .slice(0, wordIdx)
-                    .join(" ").length;
-                  const wordStartCharIndex =
-                    prevWordsLength + (wordIdx > 0 ? 1 : 0); // +1 for space if not the first word
-
-                  return (
-                    <span
-                      key={`tag-word-${wordIdx}`}
-                      className="inline-block whitespace-nowrap"
-                    >
-                      {word.split("").map((char, charIdx) => {
-                        const charIndex = wordStartCharIndex + charIdx;
-                        const start = charIndex / totalChars;
-                        const end = (charIndex + 3) / totalChars;
-
-                        return (
-                          <Character
-                            key={`tag-${wordIdx}-${charIdx}`}
-                            progress={textProgress}
-                            range={[start, end]}
-                          >
-                            {char}
-                          </Character>
-                        );
-                      })}
-                      {wordIdx < tagline.split(" ").length - 1 && (
-                        <span
-                          className="inline-block"
-                          style={{ width: "0.25em" }}
-                        >
-                          {" "}
-                        </span>
-                      )}
-                    </span>
-                  );
-                })}
-              </div>
-
-              <div className="text-xs sm:text-sm font-light text-gray-400 whitespace-nowrap">
-                {numberChars.map((char, i) => {
-                  const charIndex = taglineChars.length + i;
-                  const start = charIndex / totalChars;
-                  const end = (charIndex + 3) / totalChars;
-
-                  return (
-                    <Character
-                      key={`num-${i}`}
-                      progress={textProgress}
-                      range={[start, end]}
-                    >
-                      {char}
-                    </Character>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Main Text */}
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl leading-tight font-light text-gray-900">
-              {mainText.split(" ").map((word, wordIdx) => {
-                // Calculate the starting character index for this word within the full mainText
-                const prevMainTextLength = mainText
-                  .split(" ")
-                  .slice(0, wordIdx)
-                  .join(" ").length;
-                const mainTextWordStartCharIndex =
-                  prevMainTextLength + (wordIdx > 0 ? 1 : 0); // +1 for space if not the first word
-
-                const charOffset = taglineChars.length + numberChars.length;
-
-                return (
+                {taglineData.map(({ chars, wordIdx, isLast }) => (
                   <span
-                    key={`main-word-${wordIdx}`}
+                    key={`tag-word-${wordIdx}`}
                     className="inline-block whitespace-nowrap"
                   >
-                    {word.split("").map((char, charIdx) => {
-                      const charIndex =
-                        charOffset + mainTextWordStartCharIndex + charIdx;
-                      const start = charIndex / totalChars;
-                      const end = (charIndex + 3) / totalChars;
-
-                      return (
-                        <Character
-                          key={`main-${wordIdx}-${charIdx}`}
-                          progress={textProgress}
-                          range={[start, end]}
-                        >
-                          {char}
-                        </Character>
-                      );
-                    })}
-                    {wordIdx < mainText.split(" ").length - 1 && (
+                    {chars.map(({ char, key }) => (
+                      <StaticCharacter
+                        key={key}
+                        char={char}
+                        charKey={key}
+                        registerRef={registerRef}
+                      />
+                    ))}
+                    {!isLast && (
                       <span
                         className="inline-block"
                         style={{ width: "0.25em" }}
@@ -253,8 +251,43 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
                       </span>
                     )}
                   </span>
-                );
-              })}
+                ))}
+              </div>
+
+              <div className="text-xs sm:text-sm font-light text-gray-400 whitespace-nowrap">
+                {numberData.map(({ char, key }) => (
+                  <StaticCharacter
+                    key={key}
+                    char={char}
+                    charKey={key}
+                    registerRef={registerRef}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Main Text */}
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl leading-tight font-light text-gray-900">
+              {mainTextData.map(({ chars, wordIdx, isLast }) => (
+                <span
+                  key={`main-word-${wordIdx}`}
+                  className="inline-block whitespace-nowrap"
+                >
+                  {chars.map(({ char, key }) => (
+                    <StaticCharacter
+                      key={key}
+                      char={char}
+                      charKey={key}
+                      registerRef={registerRef}
+                    />
+                  ))}
+                  {!isLast && (
+                    <span className="inline-block" style={{ width: "0.25em" }}>
+                      {" "}
+                    </span>
+                  )}
+                </span>
+              ))}
             </h2>
 
             {/* CTA Button - appears after text */}
@@ -262,7 +295,6 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
               style={{
                 opacity: ctaOpacity,
                 y: ctaY,
-                willChange: "transform, opacity",
                 transform: "translateZ(0)",
               }}
             >
