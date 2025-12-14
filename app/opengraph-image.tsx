@@ -1,7 +1,11 @@
 import { ImageResponse } from "next/og";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+
+export const runtime = "nodejs";
 
 // Image metadata
-export const alt = "Gerald Bahati - Web Design & Digital Marketing";
+export const alt = "Gerald Bahati - Full Stack Developer & Digital Creative";
 export const size = {
   width: 1200,
   height: 630,
@@ -10,87 +14,181 @@ export const contentType = "image/png";
 
 // Image generation
 export default async function Image() {
+  // Read the profile image from public folder and convert to base64
+  const imageBuffer = await readFile(
+    join(process.cwd(), "public/original.jpeg"),
+  );
+  const base64Image = `data:image/jpeg;base64,${imageBuffer.toString("base64")}`;
+
+  // Font loading
+  const interMedium = fetch(
+    new URL(
+      "https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.18/files/inter-latin-500-normal.woff",
+    ),
+  ).then((res) => res.arrayBuffer());
+
+  const interSemiBold = fetch(
+    new URL(
+      "https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.18/files/inter-latin-600-normal.woff",
+    ),
+  ).then((res) => res.arrayBuffer());
+
+  const interBold = fetch(
+    new URL(
+      "https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.18/files/inter-latin-700-normal.woff",
+    ),
+  ).then((res) => res.arrayBuffer());
+
+  const [interMediumData, interSemiBoldData, interBoldData] = await Promise.all(
+    [interMedium, interSemiBold, interBold],
+  );
+
   return new ImageResponse(
     (
       <div
         style={{
-          fontSize: 40,
-          background: "#0a0a0a",
           width: "100%",
           height: "100%",
           display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-start",
-          justifyContent: "flex-end",
-          padding: "60px 80px",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "linear-gradient(to right, #a1a1aa, #ffffff, #ffffff)",
+          padding: "40px",
+          fontFamily: '"Inter"',
         }}
       >
-        {/* Brand accent line */}
+        {/* Main card container - centered */}
         <div
           style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            height: "6px",
-            background: "linear-gradient(90deg, #d97706 0%, #f59e0b 100%)",
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "100px",
           }}
-        />
+        >
+          {/* Tilted image with white border - larger */}
+          <div
+            style={{
+              display: "flex",
+              flexShrink: 0,
+              transform: "rotate(-6deg)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                padding: "14px",
+                background: "white",
+                borderRadius: "32px",
+                boxShadow:
+                  "0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 10px 20px -5px rgba(0, 0, 0, 0.1)",
+              }}
+            >
+              <img
+                src={base64Image}
+                alt="Gerald Bahati"
+                style={{
+                  width: "320px",
+                  height: "420px",
+                  objectFit: "cover",
+                  objectPosition: "center top",
+                  borderRadius: "24px",
+                  filter: "grayscale(20%)",
+                }}
+              />
+            </div>
+          </div>
 
-        {/* Name */}
-        <span
-          style={{
-            color: "#d97706",
-            fontSize: 20,
-            letterSpacing: "0.3em",
-            textTransform: "uppercase",
-            marginBottom: 24,
-          }}
-        >
-          Gerald Bahati
-        </span>
+          {/* Content */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              gap: "20px",
+              maxWidth: "480px",
+            }}
+          >
+            {/* Domain tag */}
+            <span
+              style={{
+                display: "flex",
+                background: "#f3f4f6",
+                color: "#1f2937",
+                fontSize: "16px",
+                fontWeight: 600,
+                padding: "8px 20px",
+                borderRadius: "50px",
+                border: "1px solid #e5e7eb",
+              }}
+            >
+              geraldbahati.dev
+            </span>
 
-        {/* Title */}
-        <h1
-          style={{
-            color: "white",
-            fontSize: 72,
-            fontWeight: 300,
-            lineHeight: 1.1,
-            margin: 0,
-            marginBottom: 16,
-          }}
-        >
-          Web Design /
-        </h1>
-        <h1
-          style={{
-            color: "rgba(255,255,255,0.7)",
-            fontSize: 72,
-            fontWeight: 300,
-            fontStyle: "italic",
-            lineHeight: 1.1,
-            margin: 0,
-            marginBottom: 40,
-          }}
-        >
-          Digital Marketing
-        </h1>
+            {/* Headline */}
+            <h1
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                fontFamily: '"Inter"',
+                fontSize: "40px",
+                fontWeight: 700,
+                lineHeight: 1.1,
+                letterSpacing: "-0.025em",
+                color: "#000000",
+                margin: 0,
+              }}
+            >
+              <span>Gerald Bahati - Full Stack</span>
+              <span>Developer & Digital</span>
+              <span>Creative</span>
+            </h1>
 
-        {/* Tagline */}
-        <p
-          style={{
-            color: "rgba(255,255,255,0.5)",
-            fontSize: 24,
-            margin: 0,
-          }}
-        >
-          Design meets Performance
-        </p>
+            {/* CTA Button */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "#000000",
+                color: "white",
+                fontSize: "18px",
+                fontWeight: 500,
+                margin: "20px 0",
+                padding: "16px 80px",
+                borderRadius: "50px",
+                boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.3)",
+              }}
+            >
+              Read more
+            </div>
+          </div>
+        </div>
       </div>
     ),
     {
       ...size,
+      fonts: [
+        {
+          name: "Inter",
+          data: interMediumData,
+          style: "normal",
+          weight: 500,
+        },
+        {
+          name: "Inter",
+          data: interSemiBoldData,
+          style: "normal",
+          weight: 600,
+        },
+        {
+          name: "Inter",
+          data: interBoldData,
+          style: "normal",
+          weight: 700,
+        },
+      ],
     },
   );
 }
