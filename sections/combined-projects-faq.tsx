@@ -133,12 +133,20 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
   const [isFaqShowing, setIsFaqShowing] = useState(false);
 
   // Dynamic: how much space is below projects in the sticky container (as vh)
-  // This is the amount the FAQ should overlap with the scroll trigger
-  const [spaceBelow, setSpaceBelow] = useState(30); // default ~30vh
+  const [spaceBelow, setSpaceBelow] = useState(30);
+
+  // Cached DOM measurements - updated on mount/resize, not every frame
+  const cachedMeasurementsRef = useRef({
+    sectionHeight: 0,
+    viewportHeight: 0,
+    scrollableDistance: 0,
+  });
 
   const scrollValuesRef = useRef({
     isHeaderVisible: false,
     isFaqShowing: false,
+    lastHeaderUpdate: 0,
+    lastFaqUpdate: 0,
   });
 
   // Measure the space below projects (responsive)
@@ -160,6 +168,17 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
       const belowVh = Math.max(10, (belowSpace / vh) * 100);
 
       setSpaceBelow(belowVh);
+
+      // Cache section measurements
+      if (scrollTriggerRef.current) {
+        const sectionHeight = scrollTriggerRef.current.offsetHeight;
+        const viewportHeight = window.innerHeight;
+        cachedMeasurementsRef.current = {
+          sectionHeight,
+          viewportHeight,
+          scrollableDistance: sectionHeight - viewportHeight,
+        };
+      }
     };
 
     const timer = setTimeout(measure, 500);
@@ -170,7 +189,7 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
     };
   }, [projects]);
 
-  // Scroll handler
+  // Optimized scroll handler - uses cached measurements
   const updateScrollPosition = useCallback(() => {
     if (
       !scrollTriggerRef.current ||
@@ -186,20 +205,22 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
     }
     lastUpdateTimeRef.current = now;
 
-    const triggerSection = scrollTriggerRef.current;
-    const rect = triggerSection.getBoundingClientRect();
-    const sectionHeight = triggerSection.offsetHeight;
-    const viewportHeight = window.innerHeight;
+    // Use cached measurements instead of reading DOM every frame
+    const { sectionHeight, viewportHeight, scrollableDistance } =
+      cachedMeasurementsRef.current;
 
-    // Header visibility
+    // Only read rect.top - single layout trigger
+    const rect = scrollTriggerRef.current.getBoundingClientRect();
+
+    // Header visibility with debounce (100ms threshold)
     const isInView = rect.top <= viewportHeight * 0.8;
     if (isInView !== scrollValuesRef.current.isHeaderVisible) {
-      scrollValuesRef.current.isHeaderVisible = isInView;
-      setIsHeaderVisible(isInView);
+      if (now - scrollValuesRef.current.lastHeaderUpdate > 100) {
+        scrollValuesRef.current.isHeaderVisible = isInView;
+        scrollValuesRef.current.lastHeaderUpdate = now;
+        setIsHeaderVisible(isInView);
+      }
     }
-
-    // Scroll progress
-    const scrollableDistance = sectionHeight - viewportHeight;
     const scrolled = -rect.top;
     const totalProgress = Math.max(
       0,
@@ -223,10 +244,13 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
       // FAQ stays below viewport (pushed down by spaceBelow vh)
       faqSectionRef.current.style.transform = `translateY(${spaceBelow}vh)`;
 
-      // FAQ not showing yet
+      // FAQ not showing yet - debounced
       if (scrollValuesRef.current.isFaqShowing) {
-        scrollValuesRef.current.isFaqShowing = false;
-        setIsFaqShowing(false);
+        if (now - scrollValuesRef.current.lastFaqUpdate > 100) {
+          scrollValuesRef.current.isFaqShowing = false;
+          scrollValuesRef.current.lastFaqUpdate = now;
+          setIsFaqShowing(false);
+        }
       }
     } else {
       // Phase 2: FAQ slides up
@@ -245,10 +269,13 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
       const translateY = (1 - clampedSlide) * spaceBelow;
       faqSectionRef.current.style.transform = `translateY(${translateY}vh)`;
 
-      // FAQ is now showing - trigger color change
+      // FAQ is now showing - debounced
       if (!scrollValuesRef.current.isFaqShowing) {
-        scrollValuesRef.current.isFaqShowing = true;
-        setIsFaqShowing(true);
+        if (now - scrollValuesRef.current.lastFaqUpdate > 100) {
+          scrollValuesRef.current.isFaqShowing = true;
+          scrollValuesRef.current.lastFaqUpdate = now;
+          setIsFaqShowing(true);
+        }
       }
     }
   }, [spaceBelow]);
@@ -339,7 +366,7 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
               ref={scrollContainerRef}
               data-projects-area
               className="flex gap-6 overflow-hidden relative"
-              style={{ scrollBehavior: "auto", willChange: "scroll-position" }}
+              style={{ scrollBehavior: "auto" }}
             >
               <div className="w-[calc(50vw-45vw)] md:w-[calc(50vw-250px)] lg:w-[calc(50vw-333px)] flex-shrink-0" />
 
@@ -377,9 +404,8 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
         ref={faqSectionRef}
         className="bg-black text-white relative z-10"
         style={{
-          marginTop: `-${spaceBelow}vh`, // Only overlap the empty space, not projects
-          transform: `translateY(${spaceBelow}vh)`, // Initially positioned, animated via JS
-          willChange: "transform",
+          marginTop: `-${spaceBelow}vh`,
+          transform: `translateY(${spaceBelow}vh)`,
         }}
       >
         <div className="pb-32">

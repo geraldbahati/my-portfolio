@@ -51,14 +51,12 @@ export default function HeroBioOverlay() {
           // Scroll >200vh: Container ends, next section appears naturally
           height: "200vh",
           contain: "layout style paint",
-          willChange: "transform",
         }}
       >
         {/* Fixed Hero Section - stays in place during scroll */}
         <div
           className="sticky top-0 h-screen w-full"
           style={{
-            willChange: "transform",
             transform: "translateZ(0)",
           }}
         >
@@ -75,7 +73,6 @@ export default function HeroBioOverlay() {
             top: "100vh",
             // Ensure bio appears above hero
             zIndex: 10,
-            willChange: "transform",
             transform: "translateZ(0)",
           }}
         >

@@ -6,8 +6,14 @@ import React, {
   useState,
   useMemo,
   useCallback,
+  memo,
 } from "react";
-import { motion, useScroll, useTransform, MotionValue } from "framer-motion";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useMotionValueEvent,
+} from "framer-motion";
 import Image from "next/image";
 
 // ============================================================================
@@ -72,33 +78,47 @@ function useActiveSectionIndex(
   return activeIndex;
 }
 
-// Optimized Text Section Component
-const TextSection = ({
-  section,
-  index,
-  sectionRef,
-}: {
-  section: any;
+interface TextSectionProps {
+  section: {
+    label?: string;
+    title: string;
+    description?: string;
+    bullets?: string[];
+  };
   index: number;
   sectionRef: React.RefObject<HTMLDivElement | null>;
-}) => {
+}
+
+const TextSection = memo(({ section, index, sectionRef }: TextSectionProps) => {
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start center", "end center"],
   });
 
+  // Extract all useTransform calls to component body (stable references)
   const opacity = useTransform(
     scrollYProgress,
     [0, 0.1, 0.9, 1],
     [0.3, 1, 1, 0.3],
   );
-  const color = useTransform(
+  const labelWidth = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
+  const titleColor = useTransform(
     scrollYProgress,
     [0, 0.1, 0.9, 1],
     [
       "var(--gray-400)",
       "var(--text-primary)",
       "var(--text-primary)",
+      "var(--gray-400)",
+    ],
+  );
+  const descriptionColor = useTransform(
+    scrollYProgress,
+    [0, 0.1, 0.9, 1],
+    [
+      "var(--gray-400)",
+      "var(--gray-700)",
+      "var(--gray-700)",
       "var(--gray-400)",
     ],
   );
@@ -122,16 +142,14 @@ const TextSection = ({
             </span>
             <motion.div
               className="mt-3 h-[1px] bg-accent-orange-muted"
-              style={{
-                width: useTransform(scrollYProgress, [0, 1], ["0%", "100%"]),
-              }}
+              style={{ width: labelWidth }}
             />
           </motion.div>
         )}
 
         <motion.h2
           className="text-6xl lg:text-7xl font-bold mb-12 tracking-tight transition-colors duration-500 grid-interaction-blocked"
-          style={{ lineHeight: "0.9", color }}
+          style={{ lineHeight: "0.9", color: titleColor }}
         >
           {section.title}
         </motion.h2>
@@ -139,18 +157,7 @@ const TextSection = ({
         {section.description && (
           <motion.p
             className="text-base mb-12 max-w-lg leading-relaxed transition-colors duration-500 grid-interaction-blocked"
-            style={{
-              color: useTransform(
-                scrollYProgress,
-                [0, 0.1, 0.9, 1],
-                [
-                  "var(--gray-400)",
-                  "var(--gray-700)",
-                  "var(--gray-700)",
-                  "var(--gray-400)",
-                ],
-              ),
-            }}
+            style={{ color: descriptionColor }}
           >
             {section.description}
           </motion.p>
@@ -166,7 +173,7 @@ const TextSection = ({
               >
                 <motion.svg
                   className="w-4 h-4 mt-1.5 mr-4 flex-shrink-0 transition-all duration-300"
-                  style={{ color }}
+                  style={{ color: titleColor }}
                   fill="currentColor"
                   viewBox="0 0 16 16"
                 >
@@ -174,18 +181,7 @@ const TextSection = ({
                 </motion.svg>
                 <motion.span
                   className="text-base transition-colors duration-300"
-                  style={{
-                    color: useTransform(
-                      scrollYProgress,
-                      [0, 0.1, 0.9, 1],
-                      [
-                        "var(--gray-400)",
-                        "var(--gray-700)",
-                        "var(--gray-700)",
-                        "var(--gray-400)",
-                      ],
-                    ),
-                  }}
+                  style={{ color: descriptionColor }}
                 >
                   {bullet}
                 </motion.span>
@@ -196,101 +192,101 @@ const TextSection = ({
       </motion.div>
     </div>
   );
-};
+});
 
-// Optimized Image Panel Component with smart loading
-const ImagePanel = ({
-  section,
-  index,
-  sectionRef,
-  contentClassName,
-  shouldLoad,
-}: {
-  section: any;
+TextSection.displayName = "TextSection";
+
+interface ImagePanelProps {
+  section: {
+    title: string;
+    content?: React.ReactNode;
+    image?: string;
+  };
   index: number;
-  sectionRef: React.RefObject<HTMLDivElement | null>;
   contentClassName?: string;
-  shouldLoad: boolean; // Whether this image should be loaded (based on proximity)
-}) => {
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start end", "start center"],
-  });
+  shouldLoad: boolean;
+  registerRef: (index: number, el: HTMLDivElement | null) => void;
+}
 
-  // Reveal from top to bottom as we scroll through the section
-  // inset(top right bottom left)
-  // 100% top inset = hidden
-  // 0% top inset = visible
-  const clipPath = useTransform(
-    scrollYProgress,
-    [0, 1],
-    ["inset(100% 0 0 0)", "inset(0% 0 0 0)"],
-  );
-
-  return (
-    <motion.div
-      className={`absolute inset-0 w-full h-full ${contentClassName || ""}`}
-      style={{
-        clipPath: index === 0 ? "inset(0 0 0 0)" : clipPath, // First image always visible underneath
-        zIndex: index + 1,
-        willChange: "clip-path",
-        transform: "translateZ(0)",
-      }}
-    >
-      {section.content ? (
-        section.content
-      ) : section.image ? (
-        <div className="relative w-full h-full overflow-hidden">
-          {/* Background blurred image */}
-          <div className="absolute inset-0 w-full h-full" style={{ zIndex: 1 }}>
-            <Image
-              src={section.image}
-              alt={`${section.title} background`}
-              fill
-              className="object-cover"
-              style={{
-                filter: "blur(10px) brightness(0.95)",
-                transform: "scale(1.1)",
-              }}
-              priority={index === 0}
-              loading={shouldLoad ? "eager" : "lazy"}
-              quality={50}
-              sizes="(max-width: 1024px) 500px, 600px"
-            />
-          </div>
-
-          {/* Centered sharp image - bigger size */}
-          <div
-            className="absolute inset-0 flex items-center justify-center p-8"
-            style={{ zIndex: 2 }}
-          >
-            <div className="relative w-full max-w-[450px] aspect-square rounded-lg overflow-hidden shadow-2xl bg-white">
+const ImagePanel = memo(
+  ({
+    section,
+    index,
+    contentClassName,
+    shouldLoad,
+    registerRef,
+  }: ImagePanelProps) => {
+    return (
+      <div
+        ref={(el) => registerRef(index, el)}
+        className={`absolute inset-0 w-full h-full ${contentClassName || ""}`}
+        style={{
+          clipPath: index === 0 ? "inset(0 0 0 0)" : "inset(100% 0 0 0)",
+          zIndex: index + 1,
+          transform: "translateZ(0)",
+        }}
+      >
+        {section.content ? (
+          section.content
+        ) : section.image ? (
+          <div className="relative w-full h-full overflow-hidden">
+            {/* Background blurred image */}
+            <div
+              className="absolute inset-0 w-full h-full"
+              style={{ zIndex: 1 }}
+            >
               <Image
                 src={section.image}
-                alt={section.title}
+                alt={`${section.title} background`}
                 fill
                 className="object-cover"
                 style={{
-                  filter: "none",
+                  filter: "blur(10px) brightness(0.95)",
+                  transform: "scale(1.1)",
                 }}
                 priority={index === 0}
                 loading={shouldLoad ? "eager" : "lazy"}
-                quality={95}
-                sizes="(max-width: 1024px) 320px, 450px"
+                quality={50}
+                sizes="(max-width: 1024px) 500px, 600px"
               />
             </div>
+
+            {/* Centered sharp image */}
+            <div
+              className="absolute inset-0 flex items-center justify-center p-8"
+              style={{ zIndex: 2 }}
+            >
+              <div className="relative w-full max-w-[450px] aspect-square rounded-lg overflow-hidden shadow-2xl bg-white">
+                <Image
+                  src={section.image}
+                  alt={section.title}
+                  fill
+                  className="object-cover"
+                  priority={index === 0}
+                  loading={shouldLoad ? "eager" : "lazy"}
+                  quality={95}
+                  sizes="(max-width: 1024px) 320px, 450px"
+                />
+              </div>
+            </div>
           </div>
-        </div>
-      ) : (
-        <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-          <span className="text-text-tertiary text-xl font-medium">
-            {section.title}
-          </span>
-        </div>
-      )}
-    </motion.div>
-  );
-};
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+            <span className="text-text-tertiary text-xl font-medium">
+              {section.title}
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  },
+);
+
+ImagePanel.displayName = "ImagePanel";
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
 
 export const StickyScrollReveal = ({
   sections,
@@ -310,8 +306,10 @@ export const StickyScrollReveal = ({
 }) => {
   const [isMobile, setIsMobile] = useState(false);
 
+  // Ref registry for image panels - for direct DOM updates
+  const imagePanelRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+
   // Create refs for each section
-  // We use useMemo to ensure refs are stable across renders
   const sectionRefs = useMemo(
     () => sections.map(() => React.createRef<HTMLDivElement>()),
     [sections.length],
@@ -326,6 +324,58 @@ export const StickyScrollReveal = ({
   // Preload upcoming images (current + next 2)
   useImagePreloader(imageUrls, activeIndex, 2);
 
+  // Register/unregister image panel refs
+  const registerImagePanelRef = useCallback(
+    (index: number, el: HTMLDivElement | null) => {
+      if (el) {
+        imagePanelRefs.current.set(index, el);
+      } else {
+        imagePanelRefs.current.delete(index);
+      }
+    },
+    [],
+  );
+
+  // ============================================================================
+  // SINGLE SCROLL SUBSCRIPTION for all image panel clipPaths
+  // Replaces N separate useScroll hooks with one consolidated handler
+  // ============================================================================
+  useEffect(() => {
+    if (isMobile) return;
+
+    const handleScroll = () => {
+      sectionRefs.forEach((sectionRef, index) => {
+        if (!sectionRef.current || index === 0) return;
+
+        const panelEl = imagePanelRefs.current.get(index);
+        if (!panelEl) return;
+
+        const rect = sectionRef.current.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+
+        // Calculate progress: 0 when section bottom is at viewport bottom,
+        // 1 when section top is at viewport center
+        const sectionCenter = rect.top + rect.height / 2;
+        const start = viewportHeight; // When section bottom enters viewport
+        const end = viewportHeight / 2; // When section top reaches center
+
+        const progress = Math.min(
+          1,
+          Math.max(0, (start - sectionCenter) / (start - end)),
+        );
+
+        // Calculate clipPath based on progress
+        const clipValue = `inset(${(1 - progress) * 100}% 0 0 0)`;
+        panelEl.style.clipPath = clipValue;
+      });
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll(); // Initial call
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [sectionRefs, isMobile]);
+
   // Detect mobile/desktop
   useEffect(() => {
     const checkMobile = () => {
@@ -338,7 +388,7 @@ export const StickyScrollReveal = ({
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Mobile Layout - Image above content
+  // Mobile Layout - Image above content (simplified, no scroll animations)
   if (isMobile) {
     return (
       <div className={`relative ${containerClassName || ""}`}>
@@ -534,7 +584,6 @@ export const StickyScrollReveal = ({
                   top: "calc(50vh - 300px)",
                   width: "600px",
                   height: "600px",
-                  willChange: "transform",
                   transform: "translateZ(0)",
                 }}
                 initial={{ opacity: 0, y: 350 }}
@@ -549,18 +598,11 @@ export const StickyScrollReveal = ({
                       key={`image-${index}`}
                       section={section}
                       index={index}
-                      sectionRef={sectionRefs[index]}
                       contentClassName={contentClassName}
                       shouldLoad={index <= activeIndex + 2}
+                      registerRef={registerImagePanelRef}
                     />
                   ))}
-
-                  {/* Progress indicator - Simplified for performance */}
-                  {/* We could implement this with useScroll on the container if needed,
-                      but for now we'll omit the complex global progress bar to save performance
-                      or implement it simply if requested.
-                      Since we removed global state, we can't easily show global progress
-                      without a global useScroll, which is fine to omit for pure performance. */}
                 </div>
               </motion.div>
             </div>
