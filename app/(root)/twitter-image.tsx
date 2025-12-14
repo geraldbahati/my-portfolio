@@ -1,4 +1,6 @@
 import { ImageResponse } from "next/og";
+import { join } from "node:path";
+import { readFile } from "node:fs/promises";
 
 // Reuse metadata from OG image
 export const alt = "Gerald Bahati - Full Stack Developer & Digital Creative";
@@ -9,8 +11,12 @@ export const size = {
 export const contentType = "image/png";
 
 export default async function Image() {
-  // Use remote URL directly for Vercel compatibility
-  const base64Image = "https://geraldbahati.dev/original.jpeg";
+  // Load image locally for reliability
+  const imageData = await readFile(
+    join(process.cwd(), "public/original.jpeg"),
+    "base64",
+  );
+  const imageSrc = `data:image/jpeg;base64,${imageData}`;
 
   // Font loading
   const interMedium = fetch(
@@ -79,7 +85,7 @@ export default async function Image() {
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={base64Image}
+                src={imageSrc}
                 alt="Gerald Bahati"
                 style={{
                   width: "320px",
