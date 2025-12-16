@@ -76,6 +76,7 @@ const TextScrambleHoverTrigger = memo(() => {
   return (
     <Link
       href="/contact"
+      prefetch={true}
       onClick={() =>
         Analytics.trackButtonClick("Request a project", "Hero CTA")
       }

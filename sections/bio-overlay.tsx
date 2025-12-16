@@ -300,6 +300,7 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
             >
               <Link
                 href="/contact"
+                prefetch={true}
                 onClick={() =>
                   Analytics.trackButtonClick(
                     "Arrange a consultation",
