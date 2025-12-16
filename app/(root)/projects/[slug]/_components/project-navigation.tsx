@@ -30,6 +30,7 @@ export function ProjectNavigation({
             {previousProject ? (
               <Link
                 href={`/projects/${previousProject.id}`}
+                prefetch={true}
                 className="group flex flex-col items-start gap-2 text-muted-foreground hover:text-foreground transition-colors h-full animate-in fade-in slide-in-from-left-4 duration-500"
               >
                 <span className="flex items-center gap-2 text-sm font-medium uppercase tracking-wider">
@@ -43,6 +44,7 @@ export function ProjectNavigation({
             ) : (
               <Link
                 href="/projects"
+                prefetch={true}
                 className="group flex flex-col items-start gap-2 text-muted-foreground hover:text-foreground transition-colors h-full animate-in fade-in slide-in-from-left-4 duration-500"
               >
                 <span className="flex items-center gap-2 text-sm font-medium uppercase tracking-wider">
@@ -61,6 +63,7 @@ export function ProjectNavigation({
             {nextProject ? (
               <Link
                 href={`/projects/${nextProject.id}`}
+                prefetch={true}
                 className="group flex flex-col items-end gap-2 text-muted-foreground hover:text-foreground transition-colors text-right h-full animate-in fade-in slide-in-from-right-4 duration-500"
               >
                 <span className="flex items-center gap-2 text-sm font-medium uppercase tracking-wider">
@@ -74,6 +77,7 @@ export function ProjectNavigation({
             ) : (
               <Link
                 href="/projects"
+                prefetch={true}
                 className="group flex flex-col items-end gap-2 text-muted-foreground hover:text-foreground transition-colors text-right h-full animate-in fade-in slide-in-from-right-4 duration-500"
               >
                 <span className="flex items-center gap-2 text-sm font-medium uppercase tracking-wider">
