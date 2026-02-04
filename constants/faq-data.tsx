@@ -28,18 +28,20 @@ export const FAQ_DATA: FaqItem[] = [
           <li className="flex items-start">
             <span className="text-primary mr-3 mt-1">•</span>
             <div>
-              <strong className="text-white">Analysis:</strong>
+              <strong className="text-white">Discovery & Architecture:</strong>
               <span className="block mt-1">
-                Assessment of the status quo and identification of potential
+                Deep dive into technical requirements, system design, and
+                product goals.
               </span>
             </div>
           </li>
           <li className="flex items-start">
             <span className="text-primary mr-3 mt-1">•</span>
             <div>
-              <strong className="text-white">Offer creation:</strong>
+              <strong className="text-white">Agile Development:</strong>
               <span className="block mt-1">
-                Creation of an individual offer based on the findings
+                Iterative sprint-based development with regular updates and
+                feedback loops.
               </span>
             </div>
           </li>
@@ -66,14 +68,19 @@ export const FAQ_DATA: FaqItem[] = [
     ),
   },
   {
-    question: "WHY SHOULD PEOPLE WORK WITH YOU?",
+    question: "WHY SHOULD COMPANIES HIRE YOU?",
     answer:
-      "With over a decade of experience in digital design and development, we bring a unique blend of creativity and technical expertise. Our commitment to quality, attention to detail, and client-focused approach ensures that every project exceeds expectations.",
+      "I bring a product-first engineering mindset with 4+ years of production experience. I don't just write code; I build scalable systems that solve business problems. From e-commerce platforms with 40% engagement growth to fintech solutions with secure payment integrations (Stripe, M-Pesa), I deliver software that drives measurable outcomes.",
   },
   {
-    question: "WHAT IS SYNERGISTIC MARKETING?",
+    question: "WHAT IS YOUR TECH STACK?",
     answer:
-      "Synergistic marketing is an integrated approach that combines multiple marketing channels and strategies to create a cohesive brand experience. This method amplifies your message across platforms, ensuring maximum impact and consistent brand presence.",
+      "I specialize in TypeScript/React/Next.js for frontend, with backend expertise in Node.js, Spring Boot, Go, and Django. I architect real-time systems using WebSockets and Redis Pub/Sub, and leverage Cloud infrastructure (AWS, Cloudflare) with modern databases (PostgreSQL, MongoDB, Convex). I also integrate AI/LLM capabilities for intelligent product features.",
+  },
+  {
+    question: "WHAT TYPES OF PROJECTS HAVE YOU DELIVERED?",
+    answer:
+      "I've shipped production e-commerce platforms with Stripe and M-Pesa payments, fintech applications with secure transaction handling, AI-native collaboration platforms with Generative UI, distributed real-time chat systems supporting 10,000+ concurrent connections with sub-50ms latency, and digital transformation solutions for electoral processes serving 500+ users.",
   },
   {
     question: "DO YOU ALSO OFFER INDIVIDUAL SERVICES?",
@@ -86,8 +93,7 @@ export const FAQ_DATA: FaqItem[] = [
       "Website costs vary based on complexity, features, and scope. A basic website starts from $5,000, while more complex e-commerce or custom solutions can range from $15,000 to $50,000+. We provide detailed quotes after understanding your specific requirements.",
   },
   {
-    question:
-      "DO YOU ALSO OFFER WEBSITE MAINTENANCE AND SUPPORT AFTER LAUNCH?",
+    question: "DO YOU ALSO OFFER WEBSITE MAINTENANCE AND SUPPORT AFTER LAUNCH?",
     answer:
       "Absolutely. We offer comprehensive maintenance packages that include regular updates, security monitoring, performance optimization, and ongoing support. Our team ensures your website remains secure, fast, and up-to-date with the latest standards.",
   },

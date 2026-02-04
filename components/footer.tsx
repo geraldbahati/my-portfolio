@@ -92,7 +92,7 @@ function AnimatedLink({
 export function Footer({
   brand = {
     name: "Gerald Bahati.",
-    tagline: "Digital Designer & Developer",
+    tagline: "Senior Software Engineer",
   },
   contact = {
     location: "Based in Nairobi, Kenya",
@@ -102,8 +102,8 @@ export function Footer({
     },
   },
   accessibility = {
-    hours: "Mon & Fri: 8:00 - 18:00",
-    availability: "24/7 WhatsApp & Email",
+    hours: "Mon – Fri: 9:00 - 18:00",
+    availability: "Async communication via Email",
   },
   legal = [
     { name: "Imprint", url: "/imprint" },

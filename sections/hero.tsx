@@ -179,7 +179,7 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
         >
           <Image
             src="/habibi.png"
-            alt="Gerald Bahati - Web Designer"
+            alt="Gerald Bahati - Product Software Engineer"
             fill
             priority
             fetchPriority="high"
@@ -247,10 +247,10 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
               className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-thin leading-tight sm:leading-none tracking-tight grid-interaction-blocked pointer-events-auto text-white"
               style={{ fontSize: "clamp(2.25rem, 8vw, 6rem)" }}
             >
-              {/* "Web design" with clip reveal */}
+              {/* "Product" with clip reveal */}
               <span className="inline-block overflow-hidden align-bottom">
                 <span className="inline-block font-medium reveal-up-title">
-                  Web design
+                  Product
                 </span>
               </span>
               {/* "/" separator with clip reveal */}
@@ -262,10 +262,10 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
                   /
                 </span>
               </span>
-              {/* "Digital Marketing" with clip reveal - same timing */}
+              {/* "Software Engineer" with clip reveal - same timing */}
               <span className="inline-block overflow-hidden align-bottom">
-                <span className="inline-block text-transparent [text-stroke:1px_white] [-webkit-text-stroke:1px_white] reveal-up-title italic">
-                  Digital Marketing
+                <span className="inline-block text-transparent [text-stroke:1px_white] [-webkit-text-stroke:1px_white] reveal-up-title italic pr-[0.15em]">
+                  Software Engineer
                 </span>
               </span>
             </h1>
@@ -276,8 +276,9 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
             {/* Description with clip reveal */}
             <div className="max-w-xl lg:max-w-2xl overflow-hidden">
               <p className="text-sm sm:text-base lg:text-lg text-muted-foreground font-light leading-relaxed tracking-wide grid-interaction-blocked pointer-events-auto reveal-up">
-                Design meets Performance – creative web design and digital
-                marketing delivered precisely.
+                4+ years shipping production e-commerce and fintech experiences
+                with secure Stripe & M-Pesa payments and scalable real-time
+                architectures.
               </p>
             </div>
 

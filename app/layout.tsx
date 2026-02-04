@@ -23,26 +23,29 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://geraldbahati.dev"),
   title: {
-    default: "Gerald Bahati - Full Stack Developer & Digital Creative",
+    default: "Gerald Bahati - Product Software Engineer | 4+ Years Experience",
     template: "%s | Gerald Bahati",
   },
   description:
-    "Experienced full stack developer specializing in modern web technologies, digital solutions, and creative design. Building exceptional web applications with Next.js, React, TypeScript, and more.",
+    "Product Software Engineer with 4+ years shipping production e-commerce and fintech experiences. Specializing in React, Next.js, Spring Boot, Go, and real-time systems with measurable business impact.",
   applicationName: "Gerald Bahati Portfolio",
   keywords: [
     "Gerald Bahati",
-    "full stack developer",
-    "web developer",
-    "digital creative",
-    "Next.js developer",
-    "React developer",
-    "TypeScript",
-    "web design",
-    "Trier developer",
-    "Germany web development",
+    "product engineer",
     "software engineer",
-    "frontend developer",
-    "backend developer",
+    "full stack developer",
+    "React developer",
+    "Next.js expert",
+    "Spring Boot developer",
+    "Go developer",
+    "TypeScript",
+    "Node.js",
+    "e-commerce developer",
+    "fintech engineer",
+    "real-time systems",
+    "AI integration",
+    "Kenya software engineer",
+    "Nairobi developer",
   ],
   authors: [{ name: "Gerald Bahati", url: "https://geraldbahati.dev" }],
   creator: "Gerald Bahati",
@@ -57,15 +60,15 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "https://geraldbahati.dev",
     siteName: "Gerald Bahati Portfolio",
-    title: "Gerald Bahati - Full Stack Developer & Digital Creative",
+    title: "Gerald Bahati - Product Software Engineer | 4+ Years Experience",
     description:
-      "Experienced full stack developer specializing in modern web technologies, digital solutions, and creative design. Building exceptional web applications with Next.js, React, TypeScript, and more.",
+      "Product Software Engineer with 4+ years shipping production e-commerce and fintech experiences. Specializing in React, Next.js, Spring Boot, Go, and real-time systems with measurable business impact.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Gerald Bahati - Full Stack Developer & Digital Creative",
+    title: "Gerald Bahati - Product Software Engineer | 4+ Years Experience",
     description:
-      "Experienced full stack developer specializing in modern web technologies, digital solutions, and creative design. Building exceptional web applications with Next.js, React, TypeScript, and more.",
+      "Product Software Engineer with 4+ years shipping production e-commerce and fintech experiences. Specializing in React, Next.js, Spring Boot, Go, and real-time systems.",
     creator: "@geraldbahati",
   },
   robots: {
@@ -100,13 +103,13 @@ export default function RootLayout({
       <body
         className={`${syne.variable} ${jetbrainsMono.variable} antialiased bg-background`}
       >
-        {/* <ClerkProvider> */}
+        {/*<ClerkProvider>*/}
         <ConvexClientProvider>
           <ConsoleFilter />
           {children}
           <AnalyticsProvider />
         </ConvexClientProvider>
-        {/* </ClerkProvider> */}
+        {/*</ClerkProvider>*/}
       </body>
     </html>
   );

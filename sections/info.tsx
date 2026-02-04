@@ -9,55 +9,59 @@ import { motion } from "framer-motion";
 const sections = [
   {
     label: "FOUNDATION",
-    title: "Web Design",
+    title: "Frontend Engineering",
     description:
-      "Guaranteed uniqueness – I create the optimal foundation for your digital presence with an eye for detail and aesthetics.",
+      "Crafting responsive, high-performance user interfaces with modern React ecosystems and state-of-the-art animations.",
     bullets: [
-      "Web design and development",
-      "Design implementation (e.g., Figma)",
-      "Creation of interactive designs for development",
-      "E-commerce platforms and online stores",
-      "Website redesign and relaunch",
-      "UI and UX optimization",
+      "React 19 & Next.js 16 Architecture",
+      "TypeScript & Advanced State Management",
+      "Advanced Animation (Framer Motion/GSAP)",
+      "Performance Optimization (Core Web Vitals)",
+      "Component Library Design Systems",
     ],
     image: "/web-design.jpg",
   },
   {
     label: "PHASE 1",
-    title: "Branding",
+    title: "Backend Development",
     description:
-      "Whether redesigning a systematic brand message or developing a fresh digital presence – your brand is in the best hands with me.",
+      "Building robust, scalable server-side solutions with microservices architecture and type-safe database queries.",
     bullets: [
-      "Corporate (Re)Design",
-      "Brand strategy and positioning",
-      "Brand messaging and communication",
+      "Node.js, Spring Boot & Go Microservices",
+      "Django & Python Backend Systems",
+      "API Design (REST & GraphQL)",
+      "Database Modeling (PostgreSQL, MongoDB, Convex)",
+      "Type-Safe Queries with sqlc",
     ],
-    image: "/branding.jpg",
+    image: "/backend.jpg",
   },
   {
     label: "PHASE 2",
-    title: "Advertising",
+    title: "Cloud & DevOps",
     description:
-      "Quick results through conversion-optimized digital campaigns – tailored to your goals and precisely targeted to the right platforms.",
+      "Deploying and managing resilient cloud infrastructure with automated pipelines for reliable and continuous delivery.",
     bullets: [
-      "E-commerce, lead generation, recruiting, etc.",
-      "Landing page and creative development",
-      "GDPR-compliant and data-driven tracking",
-      "Ad creation and optimization",
+      "Cloud Infrastructure (AWS, Cloudflare)",
+      "CI/CD Pipeline Automation",
+      "Containerization (Docker)",
+      "Payment Integration (M-Pesa, Stripe)",
+      "System Monitoring & Logging",
     ],
-    image: "/advertising.jpg",
+    image: "/devops-engineer.webp",
   },
   {
     label: "PHASE 3",
-    title: "Visibility",
+    title: "AI & Real-Time Systems",
     description:
-      "Long-term and sustainable visibility through search engine optimization and content management.",
+      "Building intelligent, responsive applications with AI integration and real-time data synchronization at scale.",
     bullets: [
-      "Search engine optimization (SEO)",
-      "Content strategy and copywriting",
-      "Digital placements and affiliates",
+      "WebSockets & Redis Pub/Sub Architecture",
+      "LLM/AI Integration & Prompt Engineering",
+      "Generative UI Components",
+      "Event-Driven Microservices",
+      "10,000+ Concurrent Connection Systems",
     ],
-    image: "/visibility.webp",
+    image: "/ai.jpg",
   },
 ];
 
@@ -94,10 +98,10 @@ const InfoSection = memo(function InfoSection() {
               viewport={{ once: false, amount: 0.3 }}
               transition={{ duration: 0.6 }}
             >
-              <span>Web design, marketing, and SEO</span> are like puzzle pieces
-              – individually strong, but only truly powerful when perfectly
-              combined. With my experience, I merge these elements into a
-              creative and profitable unit that shapes your digital success.
+              <span>Product Engineering</span> is about shipping solutions that
+              matter. I combine deep technical expertise with business acumen to
+              deliver measurable outcomes—40% engagement growth, 90% time
+              savings, and systems that scale.
             </motion.p>
           </div>
         </div>
