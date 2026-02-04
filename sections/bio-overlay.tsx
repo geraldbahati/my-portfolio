@@ -84,9 +84,9 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
   const ctaOpacity = useTransform(textProgress, [0.7, 1], [0, 1]);
   const ctaY = useTransform(textProgress, [0.7, 1], [20, 0]);
 
-  const tagline = "What I can do for you";
+  const tagline = "Shipping Production Impact";
   const mainText =
-    "As a web designer and digital expert, I combine creative, detail-loving design with strategic know-how in digital marketing to unlock your brand's full potential.";
+    "Software Engineer with 4+ years delivering secure, scalable web and mobile applications. From fintech payment flows to real-time collaboration platforms, I build systems that boost engagement and customer satisfaction";
   const numberText = "(01)";
 
   const { taglineData, numberData, mainTextData, totalChars, charIndexMap } =
@@ -299,11 +299,11 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
               }}
             >
               <Link
-                href="/contact"
+                href="/projects"
                 prefetch={true}
                 onClick={() =>
                   Analytics.trackButtonClick(
-                    "Arrange a consultation",
+                    "View Selected Work",
                     "Bio Overlay CTA",
                   )
                 }
@@ -314,7 +314,7 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
                   whileTap={{ scale: 0.98 }}
                 >
                   <span className="relative">
-                    Arrange a consultation
+                    View Selected Work
                     <span className="absolute bottom-0 left-0 w-full h-px bg-gray-900 origin-left transition-transform duration-300 scale-x-100 group-hover:scale-x-0" />
                   </span>
                   <svg

@@ -45,6 +45,7 @@ next-env.d.ts
 
 # admin dashboard UI (not for public repo - backend is committed but secure)
 /app/(admin)/
+/convex/seedWeblineProjects.ts
 
 # codebuff
 codebuff.json

@@ -197,7 +197,7 @@ const TitleOverlay = memo(function TitleOverlay({
 }: TitleOverlayProps) {
   return (
     <motion.div
-      className="absolute top-4 left-4 right-4 z-10"
+      className="absolute top-4 left-4 z-10"
       initial={{ y: -10, opacity: 0.8 }}
       animate={{
         y: isHovered ? 0 : -10,
@@ -205,7 +205,7 @@ const TitleOverlay = memo(function TitleOverlay({
       }}
       transition={{ duration: 0.3, ease: "easeOut" }}
     >
-      <h2 className="text-white text-lg font-semibold drop-shadow-lg">
+      <h2 className="text-white text-lg font-semibold px-3 py-1.5 rounded-lg bg-black/60 backdrop-blur-sm">
         {title}
       </h2>
     </motion.div>

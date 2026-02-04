@@ -26,6 +26,7 @@ import type * as projectMetrics from "../projectMetrics.js";
 import type * as projectTestimonials from "../projectTestimonials.js";
 import type * as projects from "../projects.js";
 import type * as r2 from "../r2.js";
+import type * as seedWeblineProjects from "../seedWeblineProjects.js";
 import type * as stream from "../stream.js";
 
 import type {
@@ -53,6 +54,7 @@ declare const fullApi: ApiFromModules<{
   projectTestimonials: typeof projectTestimonials;
   projects: typeof projects;
   r2: typeof r2;
+  seedWeblineProjects: typeof seedWeblineProjects;
   stream: typeof stream;
 }>;
 
