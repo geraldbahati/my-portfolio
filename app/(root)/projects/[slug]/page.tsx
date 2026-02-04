@@ -42,10 +42,17 @@ interface PageProps {
 
 // Generate static params for all published projects at build time
 export async function generateStaticParams() {
-  const projects = await fetchQuery(api.projects.getPublishedProjects, {});
-  return projects.map((project) => ({
-    slug: project.id,
-  }));
+  try {
+    const projects = await fetchQuery(api.projects.getPublishedProjects, {});
+    return projects.map((project) => ({
+      slug: project.id,
+    }));
+  } catch (error) {
+    // If Convex is unreachable during build, return empty array
+    // Pages will be generated on-demand with ISR
+    console.warn("Could not fetch projects for static generation:", error);
+    return [];
+  }
 }
 
 // Generate dynamic metadata for each project page
@@ -120,11 +127,15 @@ async function getProjectData(slug: string) {
   cacheLife("hours");
   cacheTag(`project-${slug}`);
 
-  const data = await fetchQuery(api.projects.getFullProjectDetails, {
-    projectSlug: slug,
-  });
-
-  return data;
+  try {
+    const data = await fetchQuery(api.projects.getFullProjectDetails, {
+      projectSlug: slug,
+    });
+    return data;
+  } catch (error) {
+    console.error("Failed to fetch project data:", error);
+    return null;
+  }
 }
 
 export default async function ProjectDetailPage({ params }: PageProps) {
