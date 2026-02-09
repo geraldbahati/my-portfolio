@@ -1,12 +1,29 @@
 "use client";
 
-import React, { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import GridPattern from "@/components/ui/shadcn-io/grid-pattern";
 import { TextScramble } from "@/components/ui/text-scramble";
+
+// Smooth easing curve
+const smoothEase = [0.22, 1, 0.36, 1];
+
+// Arrow animation with spring physics
+const arrowVariants = {
+  idle: { x: 0, y: 0 },
+  hover: {
+    x: 5,
+    y: -5,
+    transition: {
+      type: "spring",
+      stiffness: 400,
+      damping: 15,
+    },
+  },
+};
 
 interface ContactSectionProps {
   className?: string;
@@ -73,39 +90,41 @@ const ContactSection = memo(function ContactSection({
         <h2 className="text-4xl sm:text-6xl md:text-7xl lg:text-7xl font-light text-white tracking-wide drop-shadow-2xl">
           <Link
             href="/contact"
-            className="group inline-flex items-center gap-2 sm:gap-4 transition-opacity duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded-lg"
+            className="group inline transition-opacity duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded-lg"
             aria-label="Navigate to contact page to discuss your project"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
           >
             <motion.span
-              className={`inline-block relative border-b transition-colors duration-300 ${
+              className={`inline border-b transition-colors duration-300 ${
                 isHovered ? "border-primary" : "border-transparent"
               }`}
             >
               <TextScramble
                 trigger={shouldTriggerScramble}
                 duration={0.8}
-                speed={0.04}
+                speed={0.1}
                 onScrambleComplete={handleScrambleComplete}
                 as="span"
               >
                 Let&apos;s discuss
               </TextScramble>
-            </motion.span>
+            </motion.span>{" "}
+            {/* Image always in DOM - animate properties instead of mount/unmount */}
             <motion.span
-              className="inline-block relative rounded-xl"
-              initial={{ scale: 0, width: 0, opacity: 0 }}
+              className="inline-block relative rounded-xl overflow-hidden align-middle"
+              initial={false}
               animate={{
                 scale: isHovered ? 1 : 0,
-                width: isHovered ? "auto" : 0,
                 opacity: isHovered ? 1 : 0,
+                width: isHovered ? "auto" : 0,
+                marginLeft: isHovered ? "0.25em" : 0,
+                marginRight: isHovered ? "0.25em" : 0,
               }}
               transition={{
                 duration: 0.8,
-                ease: [0.25, 0.1, 0.25, 1],
+                ease: smoothEase,
               }}
-              style={{ overflow: "hidden" }}
             >
               <Image
                 src="/cta-gif.gif"
@@ -118,7 +137,7 @@ const ContactSection = memo(function ContactSection({
               />
             </motion.span>
             <motion.span
-              className={`inline-block relative border-b transition-colors duration-300 ${
+              className={`inline border-b transition-colors duration-300 ${
                 isHovered ? "border-primary" : "border-transparent"
               }`}
             >
@@ -133,11 +152,9 @@ const ContactSection = memo(function ContactSection({
               </TextScramble>
             </motion.span>
             <motion.span
-              animate={{
-                x: isHovered ? 4 : 0,
-                y: isHovered ? -4 : 0,
-              }}
-              transition={{ duration: 0.3 }}
+              variants={arrowVariants}
+              initial="idle"
+              animate={isHovered ? "hover" : "idle"}
               className="inline-block ml-2 sm:ml-4"
             >
               <ArrowUpRight className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10" />
