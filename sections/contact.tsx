@@ -18,7 +18,7 @@ const arrowVariants = {
     x: 5,
     y: -5,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 400,
       damping: 15,
     },
