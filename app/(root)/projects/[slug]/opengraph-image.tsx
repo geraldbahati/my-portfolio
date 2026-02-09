@@ -20,10 +20,15 @@ export default async function Image({
 }) {
   const { slug } = await params;
 
-  // Fetch project data
-  const data = await fetchQuery(api.projects.getFullProjectDetails, {
-    projectSlug: slug,
-  });
+  // Fetch project data with error handling
+  let data = null;
+  try {
+    data = await fetchQuery(api.projects.getFullProjectDetails, {
+      projectSlug: slug,
+    });
+  } catch (error) {
+    console.error("Failed to fetch project data for OG image:", error);
+  }
 
   const projectTitle = data?.project?.title ?? "Project Showcase";
   const industry = data?.details?.industry ?? "Design & Development";

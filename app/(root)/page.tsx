@@ -11,7 +11,6 @@ import { PageAnalytics } from "@/components/PageAnalytics";
 
 // SEO Metadata
 export const metadata: Metadata = {
-  title: "Home",
   description:
     "Experienced full stack developer specializing in modern web technologies, digital solutions, and creative design. Explore my portfolio of websites, applications, and client projects.",
   keywords: [
@@ -26,7 +25,7 @@ export const metadata: Metadata = {
     "modern web technologies",
   ],
   alternates: {
-    canonical: "https://www.geraldbahati.dev",
+    canonical: "/",
   },
   openGraph: {
     title: "Gerald Bahati - Full Stack Developer & Digital Creative",
@@ -34,7 +33,7 @@ export const metadata: Metadata = {
       "Experienced full stack developer specializing in modern web technologies, digital solutions, and creative design.",
     type: "website",
     locale: "en_KE",
-    url: "https://www.geraldbahati.dev",
+    url: "/",
   },
   twitter: {
     card: "summary_large_image",
@@ -55,12 +54,46 @@ export const metadata: Metadata = {
   },
 };
 
+const BASE_URL = "https://geraldbahati.dev";
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Gerald Bahati Portfolio",
+    url: BASE_URL,
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: "Gerald Bahati",
+    url: BASE_URL,
+    jobTitle: "Product Software Engineer",
+    email: "contact@geraldbahati.dev",
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: "Nairobi",
+      addressCountry: "KE",
+    },
+    sameAs: [
+      "https://www.linkedin.com/in/geraldbahati/",
+      "https://github.com/geraldbahati",
+      "https://x.com/gerald_baha",
+    ],
+  },
+];
+
 export default async function Home() {
   "use cache";
   cacheLife("hours");
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       <PageAnalytics trackPageView trackScroll trackTime />
 
       {/* Hero and Bio with scroll-triggered overlay effect */}

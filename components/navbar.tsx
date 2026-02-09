@@ -43,7 +43,7 @@ const SOCIAL_LINKS = [
   },
   {
     id: "linkedin",
-    href: "https://www.linkedin.com/in/gerald-bahati-b1865a242/",
+    href: "https://www.linkedin.com/in/geraldbahati/",
     label: "LinkedIn",
   },
   { id: "x", href: "https://x.com/gerald_baha", label: "X" },

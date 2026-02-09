@@ -65,7 +65,7 @@ const SocialSidebar = memo(function SocialSidebar() {
       },
       {
         icon: Linkedin,
-        href: "https://www.linkedin.com/in/gerald-bahati-b1865a242/",
+        href: "https://www.linkedin.com/in/geraldbahati/",
         label: "LinkedIn",
       },
       { icon: XIcon, href: "https://x.com/gerald_baha", label: "X" },

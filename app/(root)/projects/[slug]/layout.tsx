@@ -15,11 +15,15 @@ async function getNavigationData(slug: string) {
   cacheLife("hours");
   cacheTag(`project-nav-${slug}`);
 
-  const data = await fetchQuery(api.projects.getProjectNavigation, {
-    projectSlug: slug,
-  });
-
-  return data;
+  try {
+    const data = await fetchQuery(api.projects.getProjectNavigation, {
+      projectSlug: slug,
+    });
+    return data;
+  } catch (error) {
+    console.error("Failed to fetch navigation data:", error);
+    return null;
+  }
 }
 
 export default async function ProjectDetailLayout({
