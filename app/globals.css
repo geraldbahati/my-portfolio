@@ -190,8 +190,8 @@
   /* ===== CUSTOM THEME COLORS ===== */
 
   /* Hero Section - Dark background for hero area */
-  --hero-bg: oklch(0.1451 0 0); /* #0a0a0a equivalent */
-  --hero-overlay: oklch(0.1451 0 0); /* For gradient overlays */
+  --hero-bg: oklch(0 0 0); /* #000000 - matches hero image background */
+  --hero-overlay: oklch(0 0 0); /* For gradient overlays */
 
   /* Surface Colors - Section backgrounds */
   --surface-light: oklch(1 0 0); /* #ffffff */
