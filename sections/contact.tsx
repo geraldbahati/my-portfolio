@@ -9,7 +9,7 @@ import GridPattern from "@/components/ui/shadcn-io/grid-pattern";
 import { TextScramble } from "@/components/ui/text-scramble";
 
 // Smooth easing curve
-const smoothEase = [0.22, 1, 0.36, 1];
+const smoothEase: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 // Arrow animation with spring physics
 const arrowVariants = {
