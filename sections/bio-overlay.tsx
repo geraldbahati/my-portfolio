@@ -86,7 +86,7 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
 
   const tagline = "Shipping Production Impact";
   const mainText =
-    "Software Engineer with 4+ years delivering secure, scalable web and mobile applications. From fintech payment flows to real-time collaboration platforms, I build systems that boost engagement and customer satisfaction";
+    "Full-stack engineer building edge-first web applications. From multi-layer caching strategies to AI-powered recommendation engines, I architect systems that are fast, scalable, and impactful";
   const numberText = "(01)";
 
   const { taglineData, numberData, mainTextData, totalChars, charIndexMap } =

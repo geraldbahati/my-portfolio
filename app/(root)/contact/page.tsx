@@ -5,6 +5,7 @@ import HelloMarquee from "@/components/HelloMarquee";
 import GridPattern from "@/components/ui/shadcn-io/grid-pattern";
 import { ContactLinks } from "@/components/ContactLinks";
 import { PageAnalytics } from "@/components/PageAnalytics";
+import { generateBreadcrumbSchema } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Contact Gerald - Request a Project | Full Stack Developer",
@@ -13,21 +14,20 @@ export const metadata: Metadata = {
   keywords: [
     "contact gerald",
     "request project",
-    "digital designer contact",
+    "software engineer contact",
     "web developer contact",
     "project inquiry",
     "freelancer contact",
-    "trier developer",
-    "germany web design",
+    "nairobi developer",
+    "kenya software engineer",
   ],
   openGraph: {
     title: "Contact Gerald - Request a Project | Full Stack Developer",
     description:
       "Get in touch with Gerald Bahati for your next digital project. Contact via form, phone, or WhatsApp. Every message guaranteed answered within 24 hours.",
     type: "website",
-    url: "https://www.geraldbahati.dev/contact",
+    url: "/contact",
     locale: "en_US",
-    siteName: "Gerald Bahati Portfolio",
   },
   twitter: {
     card: "summary_large_image",
@@ -107,31 +107,39 @@ function ContactFormSkeleton() {
   );
 }
 
+const BASE_URL = "https://geraldbahati.dev";
+
 export default function ContactPage() {
+  const breadcrumbLd = generateBreadcrumbSchema([
+    { name: "Home", url: BASE_URL },
+    { name: "Contact", url: `${BASE_URL}/contact` },
+  ]);
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ContactPage",
     name: "Contact Gerald Bahati",
     description: "Get in touch with Gerald for your next digital project",
-    url: "/contact",
+    url: "https://geraldbahati.dev/contact",
     mainEntity: {
       "@type": "Person",
       name: "Gerald Bahati",
-      jobTitle: "Digital Designer & Developer",
+      jobTitle: "Full-Stack Software Engineer",
       address: {
         "@type": "PostalAddress",
-        addressLocality: "Trier",
-        postalCode: "54295",
-        addressCountry: "DE",
+        addressLocality: "Nairobi",
+        addressCountry: "KE",
       },
+      email: "contact@geraldbahati.dev",
       contactPoint: {
         "@type": "ContactPoint",
-        telephone: "+49-651-17089399",
+        telephone: "+254-704-713-070",
+        email: "contact@geraldbahati.dev",
         contactType: "customer service",
-        availableLanguage: ["English", "German"],
+        availableLanguage: ["English", "Swahili"],
         hoursAvailable: {
           "@type": "OpeningHoursSpecification",
-          dayOfWeek: ["Monday", "Friday"],
+          dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
           opens: "08:00",
           closes: "18:00",
         },
@@ -149,6 +157,10 @@ export default function ContactPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
 
       <main className="bg-white pt-[96px] sm:pt-[104px] md:pt-[104px] lg:pt-[112px] xl:pt-[128px]">
@@ -202,7 +214,7 @@ export default function ContactPage() {
                       Office hours
                     </h2>
                     <div className="space-y-2">
-                      <p className="text-gray-600">Monday & Friday:</p>
+                      <p className="text-gray-600">Monday – Friday:</p>
                       <p className="text-gray-800 font-medium">
                         <time itemProp="opens" dateTime="08:00">
                           8:00 a.m.

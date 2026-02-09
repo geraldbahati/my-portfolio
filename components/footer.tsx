@@ -92,7 +92,7 @@ function AnimatedLink({
 export function Footer({
   brand = {
     name: "Gerald Bahati.",
-    tagline: "Senior Software Engineer",
+    tagline: "Full-Stack Software Engineer",
   },
   contact = {
     location: "Based in Nairobi, Kenya",

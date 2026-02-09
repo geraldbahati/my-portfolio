@@ -5,6 +5,7 @@ import { fetchQuery } from "convex/nextjs";
 import { cacheLife, cacheTag } from "next/cache";
 import dynamic from "next/dynamic";
 import { api } from "@/convex/_generated/api";
+import { generateBreadcrumbSchema } from "@/lib/seo";
 import { ProjectHero } from "./_components/project-hero";
 import { ProjectInfo } from "./_components/project-info";
 import { ProjectGallery } from "./_components/project-gallery";
@@ -82,7 +83,7 @@ export async function generateMetadata({
       ? baseDescription
       : `${baseDescription}. A project by Gerald Bahati showcasing modern web development, creative design, and digital solutions.`;
 
-  const projectUrl = `https://geraldbahati.dev/projects/${slug}`;
+  const projectPath = `/projects/${slug}`;
 
   // Build keywords from project data
   const keywords = [
@@ -102,8 +103,7 @@ export async function generateMetadata({
       type: "article",
       title: projectTitle,
       description: projectDescription,
-      url: projectUrl,
-      siteName: "Gerald Bahati Portfolio",
+      url: projectPath,
       publishedTime: project._creationTime
         ? new Date(project._creationTime).toISOString()
         : undefined,
@@ -116,7 +116,7 @@ export async function generateMetadata({
       creator: "@geraldbahati",
     },
     alternates: {
-      canonical: projectUrl,
+      canonical: projectPath,
     },
   };
 }
@@ -148,6 +148,8 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   );
 }
 
+const BASE_URL = "https://geraldbahati.dev";
+
 async function ProjectContent({ slug }: { slug: string }) {
   const data = await getProjectData(slug);
 
@@ -158,26 +160,64 @@ async function ProjectContent({ slug }: { slug: string }) {
 
   const { project, details, metrics, gallery, challenges, testimonial } = data;
 
+  const projectTitle = project?.title ?? "Project";
+  const projectUrl = `${BASE_URL}/projects/${slug}`;
+
+  const breadcrumbLd = generateBreadcrumbSchema([
+    { name: "Home", url: BASE_URL },
+    { name: "Projects", url: `${BASE_URL}/projects` },
+    { name: projectTitle, url: projectUrl },
+  ]);
+
+  const projectLd = {
+    "@context": "https://schema.org",
+    "@type": "CreativeWork",
+    name: projectTitle,
+    description: details?.tagline ?? project?.description ?? project?.alt,
+    url: projectUrl,
+    author: {
+      "@type": "Person",
+      name: "Gerald Bahati",
+      url: BASE_URL,
+    },
+    ...(project?.poster && { image: project.poster }),
+    ...(details?.industry && { genre: details.industry }),
+    ...(details?.services && { keywords: details.services.join(", ") }),
+    ...(project?._creationTime && {
+      dateCreated: new Date(project._creationTime).toISOString(),
+    }),
+  };
+
   return (
-    <main className="min-h-screen bg-background">
-      <ProjectHero project={project} details={details} />
-
-      <ProjectInfo details={details} />
-
-      <ProjectChallenges challenges={challenges} />
-
-      <ProjectGallery gallery={gallery} />
-
-      <ProjectVideo
-        videoUrl={project?.src}
-        posterUrl={project?.poster}
-        alt={project?.alt}
-        url={project?.url}
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(projectLd) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
+      <main className="min-h-screen bg-background">
+        <ProjectHero project={project} details={details} />
 
-      <ProjectMetrics metrics={metrics} />
+        <ProjectInfo details={details} />
 
-      <ProjectTestimonial testimonial={testimonial} />
-    </main>
+        <ProjectChallenges challenges={challenges} />
+
+        <ProjectGallery gallery={gallery} />
+
+        <ProjectVideo
+          videoUrl={project?.src}
+          posterUrl={project?.poster}
+          alt={project?.alt}
+          url={project?.url}
+        />
+
+        <ProjectMetrics metrics={metrics} />
+
+        <ProjectTestimonial testimonial={testimonial} />
+      </main>
+    </>
   );
 }
