@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { ProjectsGrid } from "@/components/projects-grid";
 import { getCachedProjects } from "@/lib/data/projects";
 import { PageAnalytics } from "@/components/PageAnalytics";
+import { generateBreadcrumbSchema } from "@/lib/seo";
 
 // SEO Metadata
 export const metadata: Metadata = {
@@ -24,7 +25,7 @@ export const metadata: Metadata = {
     description:
       "Explore my portfolio of creative digital projects including web development, UI/UX design, and innovative digital solutions with sustainable results.",
     type: "website",
-    url: "https://www.geraldbahati.dev/projects",
+    url: "/projects",
   },
   twitter: {
     card: "summary_large_image",
@@ -48,23 +49,25 @@ async function ProjectsContent() {
   const projects = await getCachedProjects();
 
   // Generate JSON-LD structured data for SEO
+  const baseUrl = "https://geraldbahati.dev";
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "ItemList",
     name: "Portfolio Projects",
     description:
       "A curated selection of projects showcasing creative digital solutions",
+    url: `${baseUrl}/projects`,
     numberOfItems: projects.length,
     itemListElement: projects.map((project, index) => ({
       "@type": "ListItem",
       position: index + 1,
       item: {
         "@type": "CreativeWork",
-        "@id": `/projects#${project.id}`,
+        "@id": `${baseUrl}/projects/${project.id}`,
         name: project.title,
         description: project.description || project.alt,
         image: project.poster || project.src,
-        url: `/projects#${project.id}`,
+        url: `${baseUrl}/projects/${project.id}`,
         keywords: project.badges?.map((b) => b.text).join(", "),
       },
     })),
@@ -121,8 +124,17 @@ export default async function ProjectsPage() {
   "use cache";
   cacheLife("hours");
 
+  const breadcrumbLd = generateBreadcrumbSchema([
+    { name: "Home", url: "https://geraldbahati.dev" },
+    { name: "Projects", url: "https://geraldbahati.dev/projects" },
+  ]);
+
   return (
     <main className="min-h-screen bg-background">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
       <PageAnalytics trackPageView trackScroll trackTime />
       {/* Page Header - Static, always pre-rendered */}
       <header className="max-w-7xl mx-auto px-6 lg:px-8 pt-20 md:pt-24 lg:pt-32 pb-12">

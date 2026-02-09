@@ -1,6 +1,6 @@
 import { PrivacyPolicyWrapper } from "@/components/PrivacyPolicyWrapper";
 import { getPrivacyContent } from "@/lib/content";
-import { generateStructuredData } from "@/lib/seo";
+import { generateStructuredData, generateBreadcrumbSchema } from "@/lib/seo";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { connection } from "next/server";
@@ -28,8 +28,7 @@ export const metadata: Metadata = {
     title: "Privacy Policy - Data Protection & Security | Gerald Bahati",
     description:
       "Learn how we collect, use, and protect your personal information. Our privacy policy outlines our commitment to data security and GDPR compliance.",
-    url: "https://www.geraldbahati.dev/privacy",
-    siteName: "Gerald Bahati Portfolio",
+    url: "/privacy",
     locale: "en_US",
     type: "website",
   },
@@ -82,15 +81,22 @@ async function PrivacyContent() {
   return <PrivacyPolicyWrapper content={content} />;
 }
 
+const BASE_URL = "https://geraldbahati.dev";
+
 export default function PrivacyPolicyPage() {
+  const breadcrumbLd = generateBreadcrumbSchema([
+    { name: "Home", url: BASE_URL },
+    { name: "Privacy Policy", url: `${BASE_URL}/privacy` },
+  ]);
+
   const structuredData = generateStructuredData({
-    type: "Organization",
+    "@type": "Organization",
     name: "Gerald Bahati",
     url: "https://geraldbahati.dev",
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "Privacy Inquiries",
-      email: "bahatigerald0@gmail.com",
+      email: "contact@geraldbahati.dev",
     },
   });
 
@@ -104,6 +110,10 @@ export default function PrivacyPolicyPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
 
       <Suspense fallback={<PrivacyContentSkeleton />}>

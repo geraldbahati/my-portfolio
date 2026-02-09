@@ -4,11 +4,19 @@ import { Suspense } from "react";
 import { ContactWrapper } from "@/components/imprint/contact-wrapper";
 import { ContactSkeleton } from "@/components/imprint/contact-skeleton";
 import imprintData from "@/constants/imprint.json";
+import { generateBreadcrumbSchema } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Imprint - Legal Notice & Business Information",
   description:
     "Legal notice and imprint information for Gerald Bahati's portfolio. Find business contact details, responsible parties, and regulatory compliance information as required by law.",
+  keywords: [
+    "imprint",
+    "legal notice",
+    "Gerald Bahati",
+    "business information",
+    "contact details",
+  ],
   robots: {
     index: true,
     follow: true,
@@ -17,15 +25,16 @@ export const metadata: Metadata = {
       follow: true,
     },
   },
-
+  alternates: {
+    canonical: "/imprint",
+  },
   openGraph: {
     title: "Imprint - Legal Notice & Business Information | Gerald Bahati",
     description:
       "Legal notice and imprint information for Gerald Bahati's portfolio. Find business contact details, responsible parties, and regulatory compliance information.",
     type: "website",
-    url: "https://www.geraldbahati.dev/imprint",
+    url: "/imprint",
     locale: "en_US",
-    siteName: "Gerald Bahati",
   },
   twitter: {
     title: "Imprint - Legal Notice & Business Information | Gerald Bahati",
@@ -35,10 +44,21 @@ export const metadata: Metadata = {
   },
 };
 
-// NOTE: Please replace the placeholder address and tax ID below with your actual legal information.
+const BASE_URL = "https://geraldbahati.dev";
+
 export default function ImprintPage() {
+  const breadcrumbLd = generateBreadcrumbSchema([
+    { name: "Home", url: BASE_URL },
+    { name: "Imprint", url: `${BASE_URL}/imprint` },
+  ]);
+
   return (
-    <main className="min-h-screen pt-32 pb-20 px-6 lg:px-12 bg-background">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
+      <main className="min-h-screen pt-32 pb-20 px-6 lg:px-12 bg-background">
       <div className="max-w-3xl mx-auto">
         {/* Header - Static content */}
         <header className="mb-16">
@@ -114,5 +134,6 @@ export default function ImprintPage() {
         </section>
       </div>
     </main>
+    </>
   );
 }

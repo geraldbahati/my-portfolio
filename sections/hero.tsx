@@ -276,9 +276,9 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
             {/* Description with clip reveal */}
             <div className="max-w-xl lg:max-w-2xl overflow-hidden">
               <p className="text-sm sm:text-base lg:text-lg text-muted-foreground font-light leading-relaxed tracking-wide grid-interaction-blocked pointer-events-auto reveal-up">
-                4+ years shipping production e-commerce and fintech experiences
-                with secure Stripe & M-Pesa payments and scalable real-time
-                architectures.
+                Building edge-first e-commerce and real-time systems with
+                multi-layer caching, AI recommendations, and M-Pesa payment
+                integrations.
               </p>
             </div>
 

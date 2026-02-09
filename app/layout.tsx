@@ -23,11 +23,11 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://geraldbahati.dev"),
   title: {
-    default: "Gerald Bahati - Product Software Engineer | 4+ Years Experience",
+    default: "Gerald Bahati - Product Software Engineer | 2+ Years Experience",
     template: "%s | Gerald Bahati",
   },
   description:
-    "Product Software Engineer with 4+ years shipping production e-commerce and fintech experiences. Specializing in React, Next.js, Spring Boot, Go, and real-time systems with measurable business impact.",
+    "Product Software Engineer with 2+ years shipping production e-commerce and fintech experiences. Specializing in React, Next.js, Spring Boot, Go, and real-time systems with measurable business impact.",
   applicationName: "Gerald Bahati Portfolio",
   keywords: [
     "Gerald Bahati",
@@ -60,15 +60,15 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: "https://geraldbahati.dev",
     siteName: "Gerald Bahati Portfolio",
-    title: "Gerald Bahati - Product Software Engineer | 4+ Years Experience",
+    title: "Gerald Bahati - Product Software Engineer | 2+ Years Experience",
     description:
-      "Product Software Engineer with 4+ years shipping production e-commerce and fintech experiences. Specializing in React, Next.js, Spring Boot, Go, and real-time systems with measurable business impact.",
+      "Product Software Engineer with 2+ years shipping production e-commerce and fintech experiences. Specializing in React, Next.js, Spring Boot, Go, and real-time systems with measurable business impact.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Gerald Bahati - Product Software Engineer | 4+ Years Experience",
+    title: "Gerald Bahati - Product Software Engineer | 2+ Years Experience",
     description:
-      "Product Software Engineer with 4+ years shipping production e-commerce and fintech experiences. Specializing in React, Next.js, Spring Boot, Go, and real-time systems.",
+      "Product Software Engineer with 2+ years shipping production e-commerce and fintech experiences. Specializing in React, Next.js, Spring Boot, Go, and real-time systems.",
     creator: "@geraldbahati",
   },
   robots: {

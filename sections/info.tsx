@@ -8,58 +8,58 @@ import { motion } from "framer-motion";
 // Static sections data - defined outside component to prevent recreation on each render
 const sections = [
   {
-    label: "FOUNDATION",
+    label: "FRONTEND",
     title: "Frontend Engineering",
     description:
-      "Crafting responsive, high-performance user interfaces with modern React ecosystems and state-of-the-art animations.",
+      "I build fast, interactive interfaces using React 19 and Next.js 16 — optimized for Core Web Vitals and shipped with edge-first rendering.",
     bullets: [
-      "React 19 & Next.js 16 Architecture",
-      "TypeScript & Advanced State Management",
-      "Advanced Animation (Framer Motion/GSAP)",
-      "Performance Optimization (Core Web Vitals)",
-      "Component Library Design Systems",
+      "React 19 & Next.js 16 with App Router",
+      "TypeScript-first component architecture",
+      "Scroll-driven animations (Framer Motion, GSAP)",
+      "Core Web Vitals & performance tuning",
+      "Design system implementation",
     ],
     image: "/web-design.jpg",
   },
   {
-    label: "PHASE 1",
-    title: "Backend Development",
+    label: "BACKEND",
+    title: "Backend & APIs",
     description:
-      "Building robust, scalable server-side solutions with microservices architecture and type-safe database queries.",
+      "I design type-safe APIs and data layers that handle real traffic — from oRPC procedure routers to payment flows with M-Pesa and Stripe.",
     bullets: [
-      "Node.js, Spring Boot & Go Microservices",
-      "Django & Python Backend Systems",
-      "API Design (REST & GraphQL)",
-      "Database Modeling (PostgreSQL, MongoDB, Convex)",
-      "Type-Safe Queries with sqlc",
+      "Node.js, Spring Boot, Go, Django",
+      "Type-safe APIs (oRPC, REST, GraphQL)",
+      "PostgreSQL, MongoDB, Convex, D1",
+      "Payment integration (M-Pesa, Stripe)",
+      "Rate limiting, validation & error handling",
     ],
     image: "/backend.jpg",
   },
   {
-    label: "PHASE 2",
+    label: "INFRASTRUCTURE",
     title: "Cloud & DevOps",
     description:
-      "Deploying and managing resilient cloud infrastructure with automated pipelines for reliable and continuous delivery.",
+      "I deploy on Cloudflare and AWS with multi-layer caching, containerized services, and CI/CD pipelines that keep deploys fast and reliable.",
     bullets: [
-      "Cloud Infrastructure (AWS, Cloudflare)",
-      "CI/CD Pipeline Automation",
-      "Containerization (Docker)",
-      "Payment Integration (M-Pesa, Stripe)",
-      "System Monitoring & Logging",
+      "Cloudflare Workers, KV, R2, Queues",
+      "AWS infrastructure & S3",
+      "Docker containerization",
+      "CI/CD pipeline automation",
+      "Monitoring, logging & alerting",
     ],
     image: "/devops-engineer.webp",
   },
   {
-    label: "PHASE 3",
+    label: "AI & REALTIME",
     title: "AI & Real-Time Systems",
     description:
-      "Building intelligent, responsive applications with AI integration and real-time data synchronization at scale.",
+      "I integrate LLMs into product features and build real-time systems with WebSockets — from recommendation engines to live collaboration tools.",
     bullets: [
-      "WebSockets & Redis Pub/Sub Architecture",
-      "LLM/AI Integration & Prompt Engineering",
-      "Generative UI Components",
-      "Event-Driven Microservices",
-      "10,000+ Concurrent Connection Systems",
+      "LLM integration & prompt engineering",
+      "Vector search & recommendation engines",
+      "WebSocket & Redis Pub/Sub architecture",
+      "Generative UI components",
+      "Event-driven microservices",
     ],
     image: "/ai.jpg",
   },
@@ -99,9 +99,9 @@ const InfoSection = memo(function InfoSection() {
               transition={{ duration: 0.6 }}
             >
               <span>Product Engineering</span> is about shipping solutions that
-              matter. I combine deep technical expertise with business acumen to
-              deliver measurable outcomes—40% engagement growth, 90% time
-              savings, and systems that scale.
+              matter. I focus on the intersection of performance, reliability,
+              and user experience — building systems that are fast to use, fast
+              to ship, and built to scale.
             </motion.p>
           </div>
         </div>
