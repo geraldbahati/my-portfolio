@@ -178,7 +178,7 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
           }}
         >
           <Image
-            src="/habibi.png"
+            src="/hero-image.png"
             alt="Gerald Bahati - Product Software Engineer"
             fill
             priority
