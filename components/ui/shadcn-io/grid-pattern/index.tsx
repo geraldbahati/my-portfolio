@@ -58,6 +58,7 @@ export default function GridPattern({
   const isMovingRef = useRef(false);
   const rafIdRef = useRef<number | null>(null);
   const mouseMoveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const animateRef = useRef<(() => void) | null>(null);
 
   // Memoize static squares
   const staticSquares = useMemo(() => squares || [], [squares]);
@@ -130,7 +131,7 @@ export default function GridPattern({
   // Animation loop using RAF - uses direct DOM manipulation, NO React state updates
   const animate = useCallback(() => {
     if (disableInteraction || !interactiveGroupRef.current) {
-      rafIdRef.current = requestAnimationFrame(animate);
+      rafIdRef.current = requestAnimationFrame(() => animateRef.current?.());
       return;
     }
 
@@ -218,8 +219,12 @@ export default function GridPattern({
       group.appendChild(rect);
     });
 
-    rafIdRef.current = requestAnimationFrame(animate);
+    rafIdRef.current = requestAnimationFrame(() => animateRef.current?.());
   }, [disableInteraction, width, height, getPrimaryColor]);
+
+  useEffect(() => {
+    animateRef.current = animate;
+  });
 
   // Throttled mouse handler
   const handleMouseMove = useCallback(

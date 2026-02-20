@@ -8,7 +8,7 @@ import React, {
   useMemo,
   memo,
 } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import ProjectCard from "@/components/project-card";
 import Image from "next/image";
 import { Instagram, Linkedin, Github } from "lucide-react";
@@ -88,7 +88,7 @@ const SocialSidebar = memo(function SocialSidebar() {
       {socialLinks.map((social, index) => {
         const Icon = social.icon;
         return (
-          <motion.a
+          <m.a
             key={social.label}
             href={social.href}
             target="_blank"
@@ -102,7 +102,7 @@ const SocialSidebar = memo(function SocialSidebar() {
             whileTap={{ scale: 0.95 }}
           >
             <Icon size={20} />
-          </motion.a>
+          </m.a>
         );
       })}
     </div>
@@ -128,6 +128,7 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
   const faqSectionRef = useRef<HTMLElement>(null);
   const rafIdRef = useRef<number | null>(null);
   const lastUpdateTimeRef = useRef(0);
+  const updateScrollPositionRef = useRef<(() => void) | null>(null);
 
   const [isHeaderVisible, setIsHeaderVisible] = useState(false);
   const [isFaqShowing, setIsFaqShowing] = useState(false);
@@ -200,7 +201,7 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
 
     const now = performance.now();
     if (now - lastUpdateTimeRef.current < 16) {
-      rafIdRef.current = requestAnimationFrame(updateScrollPosition);
+      rafIdRef.current = requestAnimationFrame(() => updateScrollPositionRef.current?.());
       return;
     }
     lastUpdateTimeRef.current = now;
@@ -281,6 +282,10 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
   }, [spaceBelow]);
 
   useEffect(() => {
+    updateScrollPositionRef.current = updateScrollPosition;
+  });
+
+  useEffect(() => {
     const handleScroll = () => {
       if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
       rafIdRef.current = requestAnimationFrame(updateScrollPosition);
@@ -310,7 +315,7 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
           className={`sticky top-0 h-screen overflow-hidden transition-colors duration-500 ${isFaqShowing ? "bg-surface-dark" : "bg-surface-light"}`}
         >
           {/* Header */}
-          <motion.div
+          <m.div
             className="absolute top-0 left-0 right-0 z-40 pt-16"
             initial={{ opacity: 0, y: 32 }}
             animate={
@@ -320,7 +325,7 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
           >
             <div className="max-w-7xl mx-auto px-6 pb-12">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-                <motion.div
+                <m.div
                   initial={{ opacity: 0, y: 16 }}
                   animate={
                     isHeaderVisible
@@ -337,8 +342,8 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
                   >
                     Website Creations and Client Projects
                   </h1>
-                </motion.div>
-                <motion.div
+                </m.div>
+                <m.div
                   className="lg:pl-12"
                   initial={{ opacity: 0, y: 16 }}
                   animate={
@@ -355,10 +360,10 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
                     insight into my projects that stand for quality, structure
                     and sustainable solutions.
                   </p>
-                </motion.div>
+                </m.div>
               </div>
             </div>
-          </motion.div>
+          </m.div>
 
           {/* Horizontal scroll projects */}
           <div className="h-full flex items-start pb-20 pt-80 lg:pt-64">

@@ -2,6 +2,25 @@ import { Doc } from "@/convex/_generated/dataModel";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+function TagList({ items }: { items: string[] | undefined }) {
+  if (!items || items.length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-2">
+      {items.map((item) => (
+        <span
+          key={item}
+          className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium 
+                     bg-primary/10 text-primary border border-primary/20
+                     hover:bg-primary/15 hover:border-primary/30 
+                     transition-all duration-200 cursor-default"
+        >
+          {item}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 interface ProjectInfoProps {
   details: Doc<"projectDetails"> | null;
 }
@@ -21,26 +40,6 @@ export function ProjectInfo({ details }: ProjectInfoProps) {
   ];
 
   const colors = details.colorPalette;
-
-  // Helper component for rendering array items as styled tags
-  const TagList = ({ items }: { items: string[] | undefined }) => {
-    if (!items || items.length === 0) return null;
-    return (
-      <div className="flex flex-wrap gap-2">
-        {items.map((item, index) => (
-          <span
-            key={index}
-            className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium 
-                       bg-primary/10 text-primary border border-primary/20
-                       hover:bg-primary/15 hover:border-primary/30 
-                       transition-all duration-200 cursor-default"
-          >
-            {item}
-          </span>
-        ))}
-      </div>
-    );
-  };
 
   return (
     <section className="py-20 md:py-24 bg-background relative z-20 max-w-6xl mx-auto px-4 md:px-6">
@@ -62,8 +61,8 @@ export function ProjectInfo({ details }: ProjectInfoProps) {
 
             {/* Simple Metadata (Customer, Period) */}
             <div className="pt-8 space-y-4">
-              {simpleMetadata.map((item, index) => (
-                <div key={index} className="flex gap-2 items-baseline">
+              {simpleMetadata.map((item) => (
+                <div key={item.label} className="flex gap-2 items-baseline">
                   <h3 className="text-xs font-bold uppercase tracking-widest text-foreground shrink-0">
                     {item.label}
                   </h3>
@@ -100,7 +99,7 @@ export function ProjectInfo({ details }: ProjectInfoProps) {
             {colors &&
               colors.map((color, i) => (
                 <div
-                  key={i}
+                  key={color.hex}
                   className="group animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both"
                   style={{ animationDelay: `${100 + i * 100}ms` }}
                 >

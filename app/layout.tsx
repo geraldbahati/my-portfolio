@@ -3,6 +3,7 @@ import { Syne, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 // import { ClerkProvider } from "@clerk/nextjs";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
+import { MotionProvider } from "@/components/MotionProvider";
 import { AnalyticsProvider } from "@/components/analytics-provider";
 import { ConsoleFilter } from "@/components/console-filter";
 
@@ -105,9 +106,11 @@ export default function RootLayout({
       >
         {/*<ClerkProvider>*/}
         <ConvexClientProvider>
-          <ConsoleFilter />
-          {children}
-          <AnalyticsProvider />
+          <MotionProvider>
+            <ConsoleFilter />
+            {children}
+            <AnalyticsProvider />
+          </MotionProvider>
         </ConvexClientProvider>
         {/*</ClerkProvider>*/}
       </body>

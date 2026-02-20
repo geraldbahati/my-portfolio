@@ -4,6 +4,7 @@ import { memo, useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import Analytics from "@/lib/analytics";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 // Lazy load heavy components
 const GridPattern = dynamic(
@@ -106,19 +107,12 @@ const CTAButton = memo(() => {
 CTAButton.displayName = "CTAButton";
 
 export function ProjectCTA() {
-  const [mounted, setMounted] = useState(false);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setPrefersReducedMotion(mediaQuery.matches);
-    setMounted(true);
-  }, []);
+  const prefersReducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
 
   return (
     <section className="relative bg-black text-white py-24 md:py-32 overflow-hidden">
       {/* Grid Pattern Background */}
-      {mounted && !prefersReducedMotion && (
+      {!prefersReducedMotion && (
         <GridPattern
           className="absolute inset-0 z-0"
           gridClassName="stroke-current/10"

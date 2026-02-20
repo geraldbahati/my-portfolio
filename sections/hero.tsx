@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import Analytics from "@/lib/analytics";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 // Lazy load heavy components with loading optimization
 const GridPattern = dynamic(
@@ -114,52 +115,28 @@ interface HeroSectionProps {
 }
 
 export default function HeroSection({ scrollProgress }: HeroSectionProps) {
-  const [mounted, setMounted] = useState(false);
-  const [nameScrambling, setNameScrambling] = useState(false);
+  const [nameScrambling, setNameScrambling] = useState(true);
   const [imageScale, setImageScale] = useState(1);
-  const stopScrambleTimeoutRef = useRef<NodeJS.Timeout>(null);
 
-  // Check for reduced motion preference
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const prefersReducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
 
   useEffect(() => {
-    // Check reduced motion preference
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setPrefersReducedMotion(mediaQuery.matches);
-
-    setMounted(true);
-
-    // Start scramble, then stop after 800ms
-    if (!mediaQuery.matches) {
-      setNameScrambling(true);
-      stopScrambleTimeoutRef.current = setTimeout(() => {
-        setNameScrambling(false);
-      }, 800);
-    } else {
+    if (prefersReducedMotion) return;
+    const timer = setTimeout(() => {
       setNameScrambling(false);
-    }
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [prefersReducedMotion]);
 
-    // Subscribe to scroll progress for image scaling
-    let unsubscribe: (() => void) | undefined;
-    if (scrollProgress && !mediaQuery.matches) {
-      unsubscribe = scrollProgress.on("change", (progress: number) => {
-        // Scale from 1 to 0.85 as user scrolls (0 to 1)
-        const newScale = 1 - progress * 0.15;
-        setImageScale(newScale);
-      });
-      // Set initial value
-      setImageScale(1 - scrollProgress.get() * 0.15);
-    }
+  useEffect(() => {
+    if (!scrollProgress || prefersReducedMotion) return;
 
-    return () => {
-      if (stopScrambleTimeoutRef.current) {
-        clearTimeout(stopScrambleTimeoutRef.current);
-      }
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
-  }, [scrollProgress]);
+    const unsubscribe = scrollProgress.on("change", (progress: number) => {
+      const newScale = 1 - progress * 0.15;
+      setImageScale(newScale);
+    });
+    return () => unsubscribe();
+  }, [scrollProgress, prefersReducedMotion]);
 
   return (
     <section
@@ -207,7 +184,7 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
       />
 
       {/* Grid Pattern Background */}
-      {mounted && !prefersReducedMotion && (
+      {!prefersReducedMotion && (
         <GridPattern
           className="absolute inset-0 z-10"
           gridClassName="stroke-current/10"
@@ -225,13 +202,13 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
           <div className="mb-8 overflow-hidden">
             <div
               className={`reveal-up transition-[filter] duration-700 ease-out ${
-                nameScrambling ? "blur-[1px]" : "blur-0"
+                nameScrambling && !prefersReducedMotion ? "blur-[1px]" : "blur-0"
               }`}
             >
               <TextScramble
-                key={nameScrambling ? "scrambling" : "stopped"}
+                key={nameScrambling && !prefersReducedMotion ? "scrambling" : "stopped"}
                 className="text-xs sm:text-sm lg:text-base font-light text-primary tracking-[0.2em] sm:tracking-[0.3em] uppercase"
-                trigger={nameScrambling}
+                trigger={nameScrambling && !prefersReducedMotion}
                 duration={ANIMATION_DURATIONS.NAME_SCRAMBLE}
                 speed={ANIMATION_DURATIONS.NAME_SCRAMBLE_SPEED}
                 as="p"
