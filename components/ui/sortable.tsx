@@ -164,7 +164,7 @@ function SortableRoot<T>(props: SortableRootProps<T>) {
 
       setActiveId(event.active.id);
     },
-    [sortableProps.onDragStart],
+    [sortableProps],
   );
 
   const onDragEnd = React.useCallback(
@@ -190,7 +190,7 @@ function SortableRoot<T>(props: SortableRootProps<T>) {
       }
       setActiveId(null);
     },
-    [value, onValueChange, onMove, getItemValue, sortableProps.onDragEnd],
+    [value, onValueChange, onMove, getItemValue, sortableProps],
   );
 
   const onDragCancel = React.useCallback(
@@ -201,7 +201,7 @@ function SortableRoot<T>(props: SortableRootProps<T>) {
 
       setActiveId(null);
     },
-    [sortableProps.onDragCancel],
+    [sortableProps],
   );
 
   const announcements: Announcements = React.useMemo(

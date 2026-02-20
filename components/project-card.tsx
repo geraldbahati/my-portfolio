@@ -2,12 +2,13 @@
 
 import { memo, useRef, useState, useCallback, useEffect } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { EyeIcon } from "lucide-react";
 import { Cursor } from "@/components/ui/cursor";
 import { MediaRenderer } from "@/components/media";
 import { parseAspectRatio } from "@/lib/media-utils";
 import Analytics from "@/lib/analytics";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 // ============================================================================
 // Types
@@ -32,6 +33,8 @@ export interface ProjectCardProps {
   onClick?: () => void;
 }
 
+const EMPTY_BADGES: NonNullable<ProjectCardProps["badges"]> = [];
+
 // ============================================================================
 // Hooks
 // ============================================================================
@@ -40,37 +43,11 @@ export interface ProjectCardProps {
  * Hook to detect reduced motion preference
  */
 function useReducedMotion(): boolean {
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-
-  useEffect(() => {
-    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setPrefersReducedMotion(query.matches);
-
-    const handler = (e: MediaQueryListEvent) =>
-      setPrefersReducedMotion(e.matches);
-    query.addEventListener("change", handler);
-    return () => query.removeEventListener("change", handler);
-  }, []);
-
-  return prefersReducedMotion;
+  return useMediaQuery("(prefers-reduced-motion: reduce)");
 }
 
-/**
- * Hook to detect mobile viewport
- */
 function useIsMobile(breakpoint = 768): boolean {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const query = window.matchMedia(`(max-width: ${breakpoint}px)`);
-    setIsMobile(query.matches);
-
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    query.addEventListener("change", handler);
-    return () => query.removeEventListener("change", handler);
-  }, [breakpoint]);
-
-  return isMobile;
+  return useMediaQuery(`(max-width: ${breakpoint}px)`);
 }
 
 /**
@@ -123,7 +100,7 @@ const HoverCursor = memo(function HoverCursor({
   isHovering,
 }: HoverCursorProps) {
   return (
-    <motion.div
+    <m.div
       animate={{
         width: isHovering ? 80 : 16,
         height: isHovering ? 32 : 16,
@@ -132,7 +109,7 @@ const HoverCursor = memo(function HoverCursor({
     >
       <AnimatePresence>
         {isHovering && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, scale: 0.6 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.6 }}
@@ -141,10 +118,10 @@ const HoverCursor = memo(function HoverCursor({
             <div className="inline-flex items-center text-sm text-white font-medium">
               View <EyeIcon className="ml-1 h-4 w-4" />
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </m.div>
   );
 });
 
@@ -165,7 +142,7 @@ const Badge = memo(function Badge({
     position === "bottom-right" ? "bottom-4 right-4" : "bottom-4 left-4";
 
   return (
-    <motion.div
+    <m.div
       className={`absolute ${positionClasses} z-10`}
       initial={{ y: 10, opacity: 0.7, scale: 0.95 }}
       animate={{
@@ -182,7 +159,7 @@ const Badge = memo(function Badge({
       <span className="inline-block bg-black/70 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-full">
         {text}
       </span>
-    </motion.div>
+    </m.div>
   );
 });
 
@@ -196,7 +173,7 @@ const TitleOverlay = memo(function TitleOverlay({
   isHovered,
 }: TitleOverlayProps) {
   return (
-    <motion.div
+    <m.div
       className="absolute top-4 left-4 z-10"
       initial={{ y: -10, opacity: 0.8 }}
       animate={{
@@ -208,7 +185,7 @@ const TitleOverlay = memo(function TitleOverlay({
       <h2 className="text-white text-lg font-semibold px-3 py-1.5 rounded-lg bg-black/60 backdrop-blur-sm">
         {title}
       </h2>
-    </motion.div>
+    </m.div>
   );
 });
 
@@ -224,7 +201,7 @@ function ProjectCardComponent({
   alt = "",
   title,
   url,
-  badges = [],
+  badges = EMPTY_BADGES,
   aspectRatio = "16/9",
   className = "",
   style,
@@ -310,7 +287,7 @@ function ProjectCardComponent({
       </Cursor>
 
       {/* Card container */}
-      <motion.div
+      <m.div
         ref={containerRef}
         id={id}
         className={`relative overflow-hidden rounded-lg bg-gray-900 ${className}`}
@@ -326,7 +303,7 @@ function ProjectCardComponent({
         whileTap={{ scale: 0.98 }}
       >
         {/* Media content with grayscale animation */}
-        <motion.div
+        <m.div
           className="absolute inset-0"
           variants={mediaVariants}
           initial="initial"
@@ -350,10 +327,10 @@ function ProjectCardComponent({
               onError={() => setHasError(true)}
             />
           )}
-        </motion.div>
+        </m.div>
 
         {/* Hover overlay gradient */}
-        <motion.div
+        <m.div
           className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none"
           initial={{ opacity: 0 }}
           animate={{ opacity: isHovered ? 1 : 0 }}
@@ -366,14 +343,14 @@ function ProjectCardComponent({
         {/* Badges */}
         {badges.map((badge, index) => (
           <Badge
-            key={`${id}-badge-${index}`}
+            key={`${id}-badge-${badge.text}`}
             text={badge.text}
             position={badge.position || "bottom-left"}
             isHovered={isHovered}
             index={index}
           />
         ))}
-      </motion.div>
+      </m.div>
     </Link>
   );
 }

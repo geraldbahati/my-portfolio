@@ -2,13 +2,12 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { TextScramble } from "@/components/ui/text-scramble";
 import GridPattern from "@/components/ui/shadcn-io/grid-pattern";
 import { ArrowLeft } from "lucide-react";
 
 export default function NotFoundContent() {
-  const [mounted, setMounted] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [shouldTriggerScramble, setShouldTriggerScramble] = useState(false);
   const [hasTriggered, setHasTriggered] = useState(false);
@@ -18,11 +17,9 @@ export default function NotFoundContent() {
   const [messageScramble, setMessageScramble] = useState(true);
 
   useEffect(() => {
-    setMounted(true);
-    // Stop message scramble after animation completes
     const timer = setTimeout(() => {
       setMessageScramble(false);
-    }, 1200); // duration (1s) + small buffer
+    }, 1200);
     return () => clearTimeout(timer);
   }, []);
 
@@ -57,16 +54,14 @@ export default function NotFoundContent() {
   return (
     <main className="min-h-screen bg-hero-bg flex items-center justify-center px-6 relative overflow-hidden">
       {/* Grid Pattern Background */}
-      {mounted && (
-        <GridPattern
-          className="absolute inset-0 z-0"
-          gridClassName="stroke-current/10"
-          width={32}
-          height={32}
-          surroundingCells={4}
-          surroundingRadius={1}
-        />
-      )}
+      <GridPattern
+        className="absolute inset-0 z-0"
+        gridClassName="stroke-current/10"
+        width={32}
+        height={32}
+        surroundingCells={4}
+        surroundingRadius={1}
+      />
 
       {/* Gradient Overlays */}
       <div
@@ -79,7 +74,7 @@ export default function NotFoundContent() {
 
       <div className="text-center max-w-3xl relative z-10">
         {/* Large 404 with animation */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
@@ -89,7 +84,7 @@ export default function NotFoundContent() {
             style={{ lineHeight: "0.85" }}
           >
             <span className="inline-block">4</span>
-            <motion.span
+            <m.span
               className="inline-block text-primary"
               animate={{
                 scale: [1, 1.05, 1],
@@ -102,13 +97,13 @@ export default function NotFoundContent() {
               }}
             >
               0
-            </motion.span>
+            </m.span>
             <span className="inline-block">4</span>
           </h1>
-        </motion.div>
+        </m.div>
 
         {/* Message with TextScramble */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
@@ -125,10 +120,10 @@ export default function NotFoundContent() {
             The page you&apos;re looking for doesn&apos;t exist or has been
             moved.
           </TextScramble>
-        </motion.div>
+        </m.div>
 
         {/* CTA with hover effect */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
@@ -139,7 +134,7 @@ export default function NotFoundContent() {
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
           >
-            <motion.span
+            <m.span
               animate={{ x: isHovered ? -4 : 0 }}
               transition={{ duration: 0.3 }}
             >
@@ -148,7 +143,7 @@ export default function NotFoundContent() {
                   isHovered ? "text-primary" : "text-muted-foreground"
                 }`}
               />
-            </motion.span>
+            </m.span>
             <span
               className={`border-b pb-1 font-light text-sm uppercase tracking-[0.2em] transition-colors duration-300 ${
                 isHovered
@@ -166,10 +161,10 @@ export default function NotFoundContent() {
               </TextScramble>
             </span>
           </Link>
-        </motion.div>
+        </m.div>
 
         {/* Decorative line */}
-        <motion.div
+        <m.div
           className="mt-16 flex items-center justify-center gap-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -180,7 +175,7 @@ export default function NotFoundContent() {
             Lost in space
           </span>
           <div className="h-[1px] w-16 bg-muted-foreground/30" />
-        </motion.div>
+        </m.div>
       </div>
     </main>
   );

@@ -7,6 +7,8 @@ import {
   getStreamThumbnail,
   parseAspectRatio,
 } from "@/lib/media-utils";
+import Image from "next/image";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 export interface StreamVideoProps {
   src: string;
@@ -18,6 +20,68 @@ export interface StreamVideoProps {
   className?: string;
   onError?: () => void;
   onLoad?: () => void;
+}
+
+async function initHlsPlayer(
+  video: HTMLVideoElement,
+  hlsUrl: string,
+  isMobileDevice: boolean,
+  autoPlayRef: { current: boolean },
+  callbacks: {
+    onLoaded: () => void;
+    onError: () => void;
+  },
+): Promise<Hls | null> {
+  if (video.canPlayType("application/vnd.apple.mpegurl")) {
+    video.src = hlsUrl;
+    video.addEventListener(
+      "canplay",
+      () => {
+        callbacks.onLoaded();
+        if (autoPlayRef.current) {
+          video.play().catch(() => {});
+        }
+      },
+      { once: true },
+    );
+    return null;
+  }
+
+  try {
+    const HlsModule = (await import("hls.js")).default;
+
+    if (HlsModule.isSupported()) {
+      const hls = new HlsModule({
+        enableWorker: true,
+        lowLatencyMode: false,
+        startLevel: -1,
+        maxBufferLength: isMobileDevice ? 15 : 30,
+        maxMaxBufferLength: isMobileDevice ? 30 : 60,
+      });
+
+      hls.loadSource(hlsUrl);
+      hls.attachMedia(video);
+
+      hls.on(HlsModule.Events.MANIFEST_PARSED, () => {
+        callbacks.onLoaded();
+        if (autoPlayRef.current) {
+          video.play().catch(() => {});
+        }
+      });
+
+      hls.on(HlsModule.Events.ERROR, (_, data) => {
+        if (data.fatal) {
+          callbacks.onError();
+        }
+      });
+
+      return hls;
+    }
+  } catch (error) {
+    console.error("[StreamVideo] Failed to load HLS.js:", error);
+    callbacks.onError();
+  }
+  return null;
 }
 
 /**
@@ -40,19 +104,12 @@ function StreamVideoComponent({
   const autoPlayRef = useRef(autoPlay);
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useMediaQuery("(max-width: 768px)");
 
   // Keep ref in sync so the init effect can read current value without re-running
-  autoPlayRef.current = autoPlay;
-
-  // Detect mobile for responsive optimizations
   useEffect(() => {
-    const query = window.matchMedia("(max-width: 768px)");
-    setIsMobile(query.matches);
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    query.addEventListener("change", handler);
-    return () => query.removeEventListener("change", handler);
-  }, []);
+    autoPlayRef.current = autoPlay;
+  });
 
   const streamUid = extractStreamUid(src);
   const { ratio } = parseAspectRatio(aspectRatio);
@@ -73,79 +130,28 @@ function StreamVideoComponent({
         })
       : undefined);
 
-  // Initialize HLS player — does NOT depend on autoPlay to avoid
-  // destroying/recreating the HLS instance on every scroll visibility change
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !hlsUrl) return;
 
-    let hls: import("hls.js").default | null = null;
     const isMobileDevice = window.matchMedia("(max-width: 768px)").matches;
 
-    const initPlayer = async () => {
-      // Safari/iOS: native HLS support
-      if (video.canPlayType("application/vnd.apple.mpegurl")) {
-        video.src = hlsUrl;
-        video.addEventListener(
-          "canplay",
-          () => {
-            setIsLoaded(true);
-            onLoad?.();
-            if (autoPlayRef.current) {
-              video.play().catch(() => {});
-            }
-          },
-          { once: true },
-        );
-        return;
-      }
-
-      // HLS.js for other browsers (Chrome, Firefox, etc.)
-      try {
-        const Hls = (await import("hls.js")).default;
-
-        if (Hls.isSupported()) {
-          hls = new Hls({
-            enableWorker: true,
-            lowLatencyMode: false,
-            startLevel: -1,
-            // Smaller buffers on mobile for better memory usage
-            maxBufferLength: isMobileDevice ? 15 : 30,
-            maxMaxBufferLength: isMobileDevice ? 30 : 60,
-          });
-
-          hls.loadSource(hlsUrl);
-          hls.attachMedia(video);
-
-          hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            setIsLoaded(true);
-            onLoad?.();
-            if (autoPlayRef.current) {
-              video.play().catch(() => {});
-            }
-          });
-
-          hls.on(Hls.Events.ERROR, (_, data) => {
-            if (data.fatal) {
-              setHasError(true);
-              onError?.();
-            }
-          });
-
-          hlsRef.current = hls;
-        }
-      } catch (error) {
-        console.error("[StreamVideo] Failed to load HLS.js:", error);
+    initHlsPlayer(video, hlsUrl, isMobileDevice, autoPlayRef, {
+      onLoaded: () => {
+        setIsLoaded(true);
+        onLoad?.();
+      },
+      onError: () => {
         setHasError(true);
         onError?.();
-      }
-    };
-
-    initPlayer();
+      },
+    }).then((instance) => {
+      hlsRef.current = instance;
+    });
 
     return () => {
-      if (hls) {
-        hls.destroy();
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
         hlsRef.current = null;
       }
     };
@@ -187,10 +193,12 @@ function StreamVideoComponent({
     >
       {/* Poster/Loading state */}
       {!isLoaded && posterUrl && (
-        <img
+        <Image
           src={posterUrl}
           alt=""
-          className="absolute inset-0 w-full h-full object-cover"
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+          className="object-cover"
           loading="lazy"
         />
       )}

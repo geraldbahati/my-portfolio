@@ -1,38 +1,25 @@
 "use client";
 
 import { InfiniteSlider } from "@/components/ui/infinite-slider";
-import { useEffect, useState } from "react";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 const greetings = [
-  { text: "Hello", lang: "en", dir: "ltr" },
-  { text: "こんにちは", lang: "ja", dir: "ltr" }, // Japanese
-  { text: "مرحبًا", lang: "ar", dir: "rtl" }, // Arabic
-  { text: "Hello", lang: "en", dir: "ltr" },
-  { text: "Hola", lang: "es", dir: "ltr" }, // Spanish
-  { text: "Bonjour", lang: "fr", dir: "ltr" }, // French
-  { text: "Hello", lang: "en", dir: "ltr" },
-  { text: "你好", lang: "zh", dir: "ltr" }, // Chinese
-  { text: "Hallo", lang: "de", dir: "ltr" }, // German
-  { text: "Hello", lang: "en", dir: "ltr" },
-  { text: "Ciao", lang: "it", dir: "ltr" }, // Italian
-  { text: "안녕하세요", lang: "ko", dir: "ltr" }, // Korean
+  { id: "en-1", text: "Hello", lang: "en", dir: "ltr" },
+  { id: "ja", text: "こんにちは", lang: "ja", dir: "ltr" }, // Japanese
+  { id: "ar", text: "مرحبًا", lang: "ar", dir: "rtl" }, // Arabic
+  { id: "en-2", text: "Hello", lang: "en", dir: "ltr" },
+  { id: "es", text: "Hola", lang: "es", dir: "ltr" }, // Spanish
+  { id: "fr", text: "Bonjour", lang: "fr", dir: "ltr" }, // French
+  { id: "en-3", text: "Hello", lang: "en", dir: "ltr" },
+  { id: "zh", text: "你好", lang: "zh", dir: "ltr" }, // Chinese
+  { id: "de", text: "Hallo", lang: "de", dir: "ltr" }, // German
+  { id: "en-4", text: "Hello", lang: "en", dir: "ltr" },
+  { id: "it", text: "Ciao", lang: "it", dir: "ltr" }, // Italian
+  { id: "ko", text: "안녕하세요", lang: "ko", dir: "ltr" }, // Korean
 ];
 
 export default function HelloMarquee() {
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-
-  useEffect(() => {
-    // Check for reduced motion preference
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setPrefersReducedMotion(mediaQuery.matches);
-
-    const handleChange = (e: MediaQueryListEvent) => {
-      setPrefersReducedMotion(e.matches);
-    };
-
-    mediaQuery.addEventListener("change", handleChange);
-    return () => mediaQuery.removeEventListener("change", handleChange);
-  }, []);
+  const prefersReducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
 
   // If user prefers reduced motion, show static version
   if (prefersReducedMotion) {
@@ -75,9 +62,9 @@ export default function HelloMarquee() {
           direction="horizontal"
           className="text-6xl md:text-8xl lg:text-9xl font-bold text-black select-none"
         >
-          {greetings.map((greeting, index) => (
+          {greetings.map((greeting) => (
             <span
-              key={index}
+              key={greeting.id}
               className="whitespace-nowrap flex items-center"
               lang={greeting.lang}
               dir={greeting.dir}

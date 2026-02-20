@@ -1,11 +1,12 @@
 "use client";
 
 import { useRef, useState, useEffect, useCallback, memo, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { EyeIcon } from "lucide-react";
 import Image from "next/image";
 import { MediaRenderer } from "@/components/media";
 import { Cursor } from "@/components/ui/cursor";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ProjectVideoProps {
@@ -63,19 +64,7 @@ function useVisibility(
  * Hook to detect reduced motion preference
  */
 function useReducedMotion(): boolean {
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-
-  useEffect(() => {
-    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setPrefersReducedMotion(query.matches);
-
-    const handler = (e: MediaQueryListEvent) =>
-      setPrefersReducedMotion(e.matches);
-    query.addEventListener("change", handler);
-    return () => query.removeEventListener("change", handler);
-  }, []);
-
-  return prefersReducedMotion;
+  return useMediaQuery("(prefers-reduced-motion: reduce)");
 }
 
 // Custom cursor component - memoized for performance
@@ -85,7 +74,7 @@ const HoverCursor = memo(function HoverCursor({
   isHovering: boolean;
 }) {
   return (
-    <motion.div
+    <m.div
       animate={{
         width: isHovering ? 80 : 16,
         height: isHovering ? 32 : 16,
@@ -94,7 +83,7 @@ const HoverCursor = memo(function HoverCursor({
     >
       <AnimatePresence>
         {isHovering && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, scale: 0.6 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.6 }}
@@ -103,17 +92,17 @@ const HoverCursor = memo(function HoverCursor({
             <div className="inline-flex items-center text-sm text-primary-foreground font-medium">
               View <EyeIcon className="ml-1 h-4 w-4" />
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </m.div>
   );
 });
 
 // Left arrow indicator - memoized to prevent re-renders
 const LeftArrowIndicator = memo(function LeftArrowIndicator() {
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
@@ -133,14 +122,14 @@ const LeftArrowIndicator = memo(function LeftArrowIndicator() {
         unoptimized
         loading="lazy"
       />
-    </motion.div>
+    </m.div>
   );
 });
 
 // Right arrow indicator - memoized to prevent re-renders
 const RightArrowIndicator = memo(function RightArrowIndicator() {
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: -20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
@@ -160,14 +149,14 @@ const RightArrowIndicator = memo(function RightArrowIndicator() {
         unoptimized
         loading="lazy"
       />
-    </motion.div>
+    </m.div>
   );
 });
 
 // Mobile arrow indicator - centered above video, only visible on mobile
 const MobileArrowIndicator = memo(function MobileArrowIndicator() {
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 10 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
@@ -187,7 +176,7 @@ const MobileArrowIndicator = memo(function MobileArrowIndicator() {
         unoptimized
         loading="lazy"
       />
-    </motion.div>
+    </m.div>
   );
 });
 
@@ -276,7 +265,7 @@ export function ProjectVideo({
           )}
 
           {/* Video container with Floating Animation */}
-          <motion.div
+          <m.div
             animate={floatingAnimation}
             transition={floatingTransition}
             className="relative will-change-transform"
@@ -290,17 +279,17 @@ export function ProjectVideo({
 
             <div
               ref={containerRef}
-              role={hasInteractiveUrl ? "button" : undefined}
-              tabIndex={hasInteractiveUrl ? 0 : undefined}
-              onClick={hasInteractiveUrl ? handleClick : undefined}
-              onKeyDown={hasInteractiveUrl ? handleKeyDown : undefined}
               className="relative w-full rounded-lg overflow-hidden shadow-2xl border border-border/30 hover:shadow-primary/20 transition-shadow duration-500"
               style={{ cursor: hasInteractiveUrl ? "none" : "default" }}
-              aria-label={
-                hasInteractiveUrl
-                  ? `View ${alt || "project"} website`
-                  : undefined
-              }
+              {...(hasInteractiveUrl
+                ? {
+                    role: "button" as const,
+                    tabIndex: 0,
+                    onClick: handleClick,
+                    onKeyDown: handleKeyDown,
+                    "aria-label": `View ${alt || "project"} website`,
+                  }
+                : {})}
             >
               <MediaRenderer
                 src={videoUrl}
@@ -315,7 +304,7 @@ export function ProjectVideo({
                 onError={handleError}
               />
             </div>
-          </motion.div>
+          </m.div>
         </div>
       </div>
     </section>

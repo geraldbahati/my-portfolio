@@ -1,7 +1,7 @@
 "use client";
 
-import { motion } from "motion/react";
-import { useCallback, useState, useEffect } from "react";
+import { m } from "motion/react";
+import { useCallback, useState, useSyncExternalStore } from "react";
 import { TextScramble } from "@/components/ui/text-scramble";
 import { Separator } from "@/components/ui/separator";
 import Analytics from "@/lib/analytics";
@@ -66,7 +66,7 @@ function AnimatedLink({
   }, [children, href]);
 
   return (
-    <motion.a
+    <m.a
       href={href}
       className={`inline-block relative border-b transition-colors duration-300 ${
         isHovered ? "border-primary" : "border-transparent"
@@ -85,7 +85,7 @@ function AnimatedLink({
       >
         {String(children)}
       </TextScramble>
-    </motion.a>
+    </m.a>
   );
 }
 
@@ -111,17 +111,14 @@ export function Footer({
   ],
   copyright,
 }: FooterProps) {
-  const [copyrightText, setCopyrightText] = useState<string>(copyright || "");
-
-  useEffect(() => {
-    // Update copyright with current year on client-side only
-    if (!copyright) {
-      const currentYear = new Date().getFullYear();
-      setCopyrightText(`©${currentYear} Gerald Bahati | All rights reserved.`);
-    } else {
-      setCopyrightText(copyright);
-    }
-  }, [copyright]);
+  const currentYear = useSyncExternalStore(
+    () => () => {},
+    () => new Date().getFullYear(),
+    () => 2026,
+  );
+  const copyrightText =
+    copyright ||
+    `©${currentYear} Gerald Bahati | All rights reserved.`;
 
   return (
     <footer className="bg-black text-white">
@@ -132,7 +129,7 @@ export function Footer({
 
       {/* Main content */}
       <div className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
@@ -140,7 +137,7 @@ export function Footer({
           className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4"
         >
           {/* Brand */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
@@ -150,10 +147,10 @@ export function Footer({
             {brand.tagline && (
               <p className="text-base text-gray-400">{brand.tagline}</p>
             )}
-          </motion.div>
+          </m.div>
 
           {/* Contact */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
@@ -173,10 +170,10 @@ export function Footer({
                 </AnimatedLink>
               )}
             </div>
-          </motion.div>
+          </m.div>
 
           {/* Accessibility */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
@@ -193,10 +190,10 @@ export function Footer({
                 </p>
               )}
             </div>
-          </motion.div>
+          </m.div>
 
           {/* Legal */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
@@ -215,11 +212,11 @@ export function Footer({
                 </div>
               ))}
             </div>
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
 
         {/* Copyright */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.5 }}
@@ -227,7 +224,7 @@ export function Footer({
           className="mt-16 pt-8"
         >
           <p className="text-base text-gray-500">{copyrightText}</p>
-        </motion.div>
+        </m.div>
       </div>
     </footer>
   );

@@ -9,7 +9,7 @@ import React, {
   memo,
 } from "react";
 import {
-  motion,
+  m,
   useScroll,
   useTransform,
   useMotionValueEvent,
@@ -125,7 +125,7 @@ const TextSection = memo(({ section, index, sectionRef }: TextSectionProps) => {
 
   return (
     <div ref={sectionRef} className="min-h-screen flex items-center py-16">
-      <motion.div
+      <m.div
         className="w-full"
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -133,63 +133,63 @@ const TextSection = memo(({ section, index, sectionRef }: TextSectionProps) => {
         transition={{ duration: 0.6 }}
       >
         {section.label && (
-          <motion.div
+          <m.div
             className="mb-8 grid-interaction-blocked"
             style={{ opacity }}
           >
             <span className="inline-block text-sm font-medium uppercase tracking-[0.2em] text-accent-orange">
               {section.label}
             </span>
-            <motion.div
+            <m.div
               className="mt-3 h-[1px] bg-accent-orange-muted"
               style={{ width: labelWidth }}
             />
-          </motion.div>
+          </m.div>
         )}
 
-        <motion.h2
+        <m.h2
           className="text-6xl lg:text-7xl font-bold mb-12 tracking-tight transition-colors duration-500 grid-interaction-blocked"
           style={{ lineHeight: "0.9", color: titleColor }}
         >
           {section.title}
-        </motion.h2>
+        </m.h2>
 
         {section.description && (
-          <motion.p
+          <m.p
             className="text-base mb-12 max-w-lg leading-relaxed transition-colors duration-500 grid-interaction-blocked"
             style={{ color: descriptionColor }}
           >
             {section.description}
-          </motion.p>
+          </m.p>
         )}
 
         {section.bullets && (
           <ul className="space-y-4 grid-interaction-blocked">
             {section.bullets.map((bullet: string, bulletIndex: number) => (
-              <motion.li
+              <m.li
                 key={`bullet-${bulletIndex}`}
                 className="flex items-start"
                 style={{ opacity }}
               >
-                <motion.svg
+                <m.svg
                   className="w-4 h-4 mt-1.5 mr-4 flex-shrink-0 transition-all duration-300"
                   style={{ color: titleColor }}
                   fill="currentColor"
                   viewBox="0 0 16 16"
                 >
                   <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
-                </motion.svg>
-                <motion.span
+                </m.svg>
+                <m.span
                   className="text-base transition-colors duration-300"
                   style={{ color: descriptionColor }}
                 >
                   {bullet}
-                </motion.span>
-              </motion.li>
+                </m.span>
+              </m.li>
             ))}
           </ul>
         )}
-      </motion.div>
+      </m.div>
     </div>
   );
 });
@@ -312,7 +312,7 @@ export const StickyScrollReveal = ({
   // Create refs for each section
   const sectionRefs = useMemo(
     () => sections.map(() => React.createRef<HTMLDivElement>()),
-    [sections.length],
+    [sections],
   );
 
   // Extract image URLs for preloading
@@ -395,11 +395,11 @@ export const StickyScrollReveal = ({
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           {sections.map((section, index) => (
             <div
-              key={`section-mobile-${index}`}
+              key={`section-mobile-${section.title}`}
               className="min-h-screen flex flex-col justify-center py-16"
             >
               {/* Image Section for Mobile */}
-              <motion.div
+              <m.div
                 className="mb-12"
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -467,10 +467,10 @@ export const StickyScrollReveal = ({
                     </div>
                   )}
                 </div>
-              </motion.div>
+              </m.div>
 
               {/* Content Section for Mobile */}
-              <motion.div
+              <m.div
                 className="w-full"
                 initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -478,7 +478,7 @@ export const StickyScrollReveal = ({
                 transition={{ duration: 0.6, delay: 0.2 }}
               >
                 {section.label && (
-                  <motion.div
+                  <m.div
                     className="mb-6 grid-interaction-blocked"
                     initial={{ opacity: 0, x: -20 }}
                     whileInView={{ opacity: 1, x: 0 }}
@@ -488,33 +488,33 @@ export const StickyScrollReveal = ({
                     <span className="inline-block text-sm font-medium uppercase tracking-[0.2em] text-accent-orange">
                       {section.label}
                     </span>
-                    <motion.div
+                    <m.div
                       className="mt-3 h-[1px] bg-accent-orange-muted"
                       initial={{ width: 0 }}
                       whileInView={{ width: 120 }}
                       viewport={{ once: false }}
                       transition={{ duration: 0.5, delay: 0.2 }}
                     />
-                  </motion.div>
+                  </m.div>
                 )}
 
-                <motion.h2
+                <m.h2
                   className="text-4xl sm:text-5xl font-bold mb-8 tracking-tight text-text-primary grid-interaction-blocked"
                   style={{ lineHeight: "1" }}
                 >
                   {section.title}
-                </motion.h2>
+                </m.h2>
 
                 {section.description && (
-                  <motion.p className="text-base mb-8 max-w-lg leading-relaxed text-gray-700 grid-interaction-blocked">
+                  <m.p className="text-base mb-8 max-w-lg leading-relaxed text-gray-700 grid-interaction-blocked">
                     {section.description}
-                  </motion.p>
+                  </m.p>
                 )}
 
                 {section.bullets && (
                   <ul className="space-y-3 grid-interaction-blocked">
                     {section.bullets.map((bullet, bulletIndex) => (
-                      <motion.li
+                      <m.li
                         key={`bullet-mobile-${bulletIndex}`}
                         className="flex items-start"
                         initial={{ opacity: 0, x: -20 }}
@@ -535,11 +535,11 @@ export const StickyScrollReveal = ({
                         <span className="text-base text-gray-700">
                           {bullet}
                         </span>
-                      </motion.li>
+                      </m.li>
                     ))}
                   </ul>
                 )}
-              </motion.div>
+              </m.div>
             </div>
           ))}
         </div>
@@ -556,7 +556,7 @@ export const StickyScrollReveal = ({
           <div className="lg:w-1/2">
             {sections.map((section, index) => (
               <TextSection
-                key={`section-${index}`}
+                key={`section-${section.title}`}
                 section={section}
                 index={index}
                 sectionRef={sectionRefs[index]}
@@ -577,7 +577,7 @@ export const StickyScrollReveal = ({
               <div style={{ height: "calc(50vh - 300px)" }} />
 
               {/* Sticky container */}
-              <motion.div
+              <m.div
                 className="w-full mx-auto"
                 style={{
                   position: "sticky",
@@ -595,7 +595,7 @@ export const StickyScrollReveal = ({
                 <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl">
                   {sections.map((section, index) => (
                     <ImagePanel
-                      key={`image-${index}`}
+                      key={`image-${section.title}`}
                       section={section}
                       index={index}
                       contentClassName={contentClassName}
@@ -604,7 +604,7 @@ export const StickyScrollReveal = ({
                     />
                   ))}
                 </div>
-              </motion.div>
+              </m.div>
             </div>
           </div>
         </div>
