@@ -191,14 +191,14 @@ function StreamVideoComponent({
       className={`relative overflow-hidden ${className}`}
       style={{ aspectRatio: `${ratio}` }}
     >
-      {/* Poster/Loading state */}
-      {!isLoaded && posterUrl && (
+      {/* Poster: shown while loading OR when video is paused (not in view) */}
+      {(!isLoaded || !autoPlay) && posterUrl && (
         <Image
           src={posterUrl}
           alt=""
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
-          className="object-cover"
+          className="object-cover z-[1]"
           loading="lazy"
         />
       )}

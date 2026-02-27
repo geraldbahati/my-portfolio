@@ -218,7 +218,7 @@ function ProjectCardComponent({
   const prefersReducedMotion = useReducedMotion();
   const isMobile = useIsMobile();
 
-  // Track visibility for analytics
+  // Track visibility for analytics and video play/pause
   const isVisible = useVisibility(containerRef, {
     threshold: 0.2,
     rootMargin: "50px",

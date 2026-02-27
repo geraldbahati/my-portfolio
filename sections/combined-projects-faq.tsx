@@ -20,6 +20,34 @@ interface CombinedProjectsFaqSectionProps {
   projects: Project[];
 }
 
+/**
+ * Client-only IntersectionObserver hook. Returns true once the element
+ * enters the viewport. No SSR attributes = no hydration mismatch.
+ */
+function useIntersectOnce(ref: React.RefObject<HTMLElement | null>) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [ref]);
+
+  return visible;
+}
+
 // Social Icons - memoized
 const WhatsAppIcon = memo(
   ({ size = 20, className }: { size?: number; className?: string }) => (
@@ -53,17 +81,11 @@ const XIcon = memo(
 );
 XIcon.displayName = "XIcon";
 
-// Stagger delay classes for social icon entrance animations
-const staggerDelays = [
-  "delay-0",
-  "delay-100",
-  "delay-200",
-  "delay-300",
-  "delay-500",
-] as const;
-
-// Social Sidebar - uses CSS transitions + intersect instead of Framer Motion
+// Social Sidebar - uses useIntersectOnce + CSS transitions (no SSR attribute mismatch)
 const SocialSidebar = memo(function SocialSidebar() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const visible = useIntersectOnce(containerRef);
+
   const socialLinks = useMemo(
     () => [
       {
@@ -92,7 +114,7 @@ const SocialSidebar = memo(function SocialSidebar() {
   );
 
   return (
-    <div className="hidden lg:flex flex-col gap-6 intersect-once">
+    <div ref={containerRef} className="hidden lg:flex flex-col gap-6">
       {socialLinks.map((social, index) => {
         const Icon = social.icon;
         return (
@@ -102,11 +124,12 @@ const SocialSidebar = memo(function SocialSidebar() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label={social.label}
-            className={`text-gray-400 hover:text-text-inverted cursor-pointer
-              opacity-0 -translate-x-5 transition-all duration-500 ease-out
-              intersect:opacity-100 intersect:translate-x-0
-              ${staggerDelays[index] || ""}
-              hover:scale-110 active:scale-95`}
+            className="text-gray-400 hover:text-text-inverted cursor-pointer transition-all duration-500 ease-out hover:scale-110 active:scale-95"
+            style={{
+              opacity: visible ? 1 : 0,
+              transform: visible ? "translateX(0)" : "translateX(-20px)",
+              transitionDelay: `${index * 100}ms`,
+            }}
           >
             <Icon size={20} />
           </a>
@@ -126,8 +149,8 @@ const SocialSidebar = memo(function SocialSidebar() {
  * - The marginTop pulls FAQ up only to the space below projects (not overlapping)
  *
  * Animation strategy:
- * - Header entrance: tailwindcss-intersect + tailwindcss-motion (IntersectionObserver, no Framer Motion)
- * - Social icons: Rombo tailwindcss-motion + tailwindcss-intersect (zero JS)
+ * - Header entrance: useIntersectOnce hook + CSS transitions (no hydration mismatch)
+ * - Social icons: useIntersectOnce hook + inline transition styles
  * - Horizontal scrollLeft: JS rAF (no CSS equivalent)
  * - FAQ translateY + background color: JS direct DOM manipulation (coupled to scrollLeft progress)
  */
@@ -139,7 +162,13 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
   const stickyContainerRef = useRef<HTMLDivElement>(null);
   const projectsAreaRef = useRef<HTMLDivElement>(null);
   const faqSectionRef = useRef<HTMLElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLDivElement>(null);
+  const descRef = useRef<HTMLDivElement>(null);
   const rafIdRef = useRef<number | null>(null);
+
+  // Header entrance animation via IntersectionObserver (client-only, no SSR attributes)
+  const headerVisible = useIntersectOnce(headerRef);
 
   // Dynamic: how much space is below projects in the sticky container (as vh)
   const [spaceBelow, setSpaceBelow] = useState(30);
@@ -318,11 +347,26 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
           ref={stickyContainerRef}
           className="sticky top-0 h-screen overflow-hidden transition-colors duration-500 bg-surface-light"
         >
-          {/* Header - intersect-once entrance via CSS transitions (no Framer Motion) */}
-          <div className="absolute top-0 left-0 right-0 z-40 pt-16 intersect-once opacity-0 translate-y-8 transition-all duration-500 ease-out intersect:opacity-100 intersect:translate-y-0">
+          {/* Header - entrance via useIntersectOnce + CSS transitions */}
+          <div
+            ref={headerRef}
+            className="absolute top-0 left-0 right-0 z-40 pt-16 transition-all duration-500 ease-out"
+            style={{
+              opacity: headerVisible ? 1 : 0,
+              transform: headerVisible ? "translateY(0)" : "translateY(32px)",
+            }}
+          >
             <div className="max-w-7xl mx-auto px-6 pb-12">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-                <div className="intersect-once opacity-0 translate-y-4 transition-all duration-500 ease-out delay-100 intersect:opacity-100 intersect:translate-y-0">
+                <div
+                  ref={titleRef}
+                  className="transition-all duration-500 ease-out"
+                  style={{
+                    opacity: headerVisible ? 1 : 0,
+                    transform: headerVisible ? "translateY(0)" : "translateY(16px)",
+                    transitionDelay: "100ms",
+                  }}
+                >
                   <h1
                     data-projects-title
                     className="text-4xl lg:text-5xl font-medium leading-tight tracking-tight transition-colors duration-500 text-text-primary"
@@ -333,7 +377,15 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
                     Website Creations and Client Projects
                   </h1>
                 </div>
-                <div className="lg:pl-12 intersect-once opacity-0 translate-y-4 transition-all duration-500 ease-out delay-200 intersect:opacity-100 intersect:translate-y-0">
+                <div
+                  ref={descRef}
+                  className="lg:pl-12 transition-all duration-500 ease-out"
+                  style={{
+                    opacity: headerVisible ? 1 : 0,
+                    transform: headerVisible ? "translateY(0)" : "translateY(16px)",
+                    transitionDelay: "200ms",
+                  }}
+                >
                   <p
                     data-projects-desc
                     className="text-base leading-relaxed transition-colors duration-500 text-text-secondary"
