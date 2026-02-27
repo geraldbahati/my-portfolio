@@ -60,14 +60,11 @@ export async function getCachedProjects(): Promise<Project[]> {
   cacheTag("projects");
   cacheLife("days");
 
-  try {
-    const projects = await fetchQuery(api.projects.getPublishedProjects);
-    return projects as Project[];
-  } catch (error) {
-    console.error("Error fetching projects:", error);
-    // Return empty array as fallback
-    return [];
-  }
+  // Don't catch errors here — if the fetch fails, the error propagates
+  // and "use cache" won't store the failed result. The Suspense boundary
+  // in the parent handles the loading state, and the next request retries.
+  const projects = await fetchQuery(api.projects.getPublishedProjects);
+  return projects as Project[];
 }
 
 /**
