@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 
 @plugin "@tailwindcss/typography";
+@plugin "tailwindcss-motion";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -335,6 +336,74 @@
 
 .animate-glitch-shimmer {
   animation: glitch-shimmer 10s linear infinite alternate;
+}
+
+/* Scroll-driven animations - compositor thread, zero JS overhead */
+@supports (animation-timeline: scroll()) {
+  @keyframes hero-scale-on-scroll {
+    from { transform: scale(1) translateZ(0); }
+    to { transform: scale(0.85) translateZ(0); }
+  }
+
+  @keyframes bio-image-entrance {
+    from { transform: translateY(100px) scale(0.6) translateZ(0); opacity: 0; }
+    40% { opacity: 1; }
+    to { transform: translateY(0) scale(1) translateZ(0); opacity: 1; }
+  }
+
+  @keyframes bio-cta-entrance {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes bio-bg-opacity {
+    from { opacity: 0.3; }
+    50% { opacity: 1; }
+    to { opacity: 1; }
+  }
+
+  /*
+   * animation-range uses absolute lengths to match the Framer Motion
+   * useScroll({ offset: ["start start", "center start"] }) behavior:
+   * scrollYProgress 0→1 maps to scroll position 0→100vh.
+   *
+   * Hero scale:       scrollYProgress 0→1       → 0vh–100vh
+   * Bio image:        contentProgress [0.4,1]   → 40vh–100vh
+   * Bio CTA:          textProgress [0.7,1] of scrollYProgress [0.55,1]
+   *                   → ~86.5vh–100vh
+   * Bio background:   scrollYProgress [0,0.5,1] → 0vh–50vh (full opacity)
+   */
+
+  /* Applied to hero image wrapper inside the 200vh scroll container */
+  .scroll-hero-scale {
+    animation: hero-scale-on-scroll linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0vh 100vh;
+    will-change: transform;
+  }
+
+  /* Bio image: scale + opacity + translateY driven by scroll */
+  .scroll-bio-image {
+    animation: bio-image-entrance linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 40vh 100vh;
+    will-change: transform, opacity;
+  }
+
+  /* Bio CTA: fade in at end of scroll */
+  .scroll-bio-cta {
+    animation: bio-cta-entrance linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 86vh 100vh;
+    will-change: opacity, transform;
+  }
+
+  /* Bio background blobs */
+  .scroll-bio-bg {
+    animation: bio-bg-opacity linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0vh 50vh;
+  }
 }
 
 @media print {

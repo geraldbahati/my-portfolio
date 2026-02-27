@@ -70,11 +70,13 @@ StaticCharacter.displayName = "StaticCharacter";
 
 interface BioOverlayProps {
   scrollProgress: MotionValue<number>;
+  cssScrollSupported?: boolean;
 }
 
-export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
+export default function BioOverlay({ scrollProgress, cssScrollSupported }: BioOverlayProps) {
   const charRefsMap = useRef<Map<string, HTMLSpanElement>>(new Map());
 
+  // JS fallback transforms - only used when CSS scroll not supported
   const contentProgress = useTransform(scrollProgress, [0.4, 1], [0, 1]);
   const textProgress = useTransform(scrollProgress, [0.55, 1], [0, 1]);
 
@@ -83,6 +85,7 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
   const imageY = useTransform(contentProgress, [0, 1], [100, 0]);
   const ctaOpacity = useTransform(textProgress, [0.7, 1], [0, 1]);
   const ctaY = useTransform(textProgress, [0.7, 1], [20, 0]);
+  const bgOpacity = useTransform(scrollProgress, [0, 0.5, 1], [0.3, 1, 1]);
 
   const tagline = "Shipping Production Impact";
   const mainText =
@@ -98,16 +101,19 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
 
       const charIndexMap = new Map<string, number>();
 
+      // Compute word char offsets without mutable variables (React Compiler compatible)
       const taglineWords = tagline.split(" ");
-      let taglineCharIdx = 0;
+      const taglineWordOffsets = taglineWords.map((_, i) =>
+        taglineWords.slice(0, i).reduce((acc, w) => acc + w.length + 1, 0),
+      );
       const taglineData: WordData[] = taglineWords.map((word, wordIdx) => {
+        const wordOffset = taglineWordOffsets[wordIdx];
         const chars = word.split("").map((char, charIdx) => {
-          const idx = taglineCharIdx + charIdx;
+          const idx = wordOffset + charIdx;
           const key = `tag-${idx}`;
           charIndexMap.set(key, idx);
           return { char, charIndex: idx, key };
         });
-        taglineCharIdx += word.length + 1;
         return {
           word,
           chars,
@@ -125,16 +131,18 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
       });
 
       const mainTextWords = mainText.split(" ");
-      let mainCharIdx = 0;
       const charOffset = taglineChars.length + numberChars.length;
+      const mainWordOffsets = mainTextWords.map((_, i) =>
+        mainTextWords.slice(0, i).reduce((acc, w) => acc + w.length + 1, 0),
+      );
       const mainTextData: WordData[] = mainTextWords.map((word, wordIdx) => {
+        const wordOffset = charOffset + mainWordOffsets[wordIdx];
         const chars = word.split("").map((char, charIdx) => {
-          const idx = charOffset + mainCharIdx + charIdx;
+          const idx = wordOffset + charIdx;
           const key = `main-${idx}`;
           charIndexMap.set(key, idx);
           return { char, charIndex: idx, key };
         });
-        mainCharIdx += word.length + 1;
         return {
           word,
           chars,
@@ -160,19 +168,23 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
     }
   }, []);
 
+  // Per-character text reveal - stays in JS (cannot be done in CSS)
+  // Optimized with rAF batching to avoid layout thrashing
   useMotionValueEvent(textProgress, "change", (progress) => {
-    charRefsMap.current.forEach((el, key) => {
-      const charIndex = charIndexMap.get(key);
-      if (charIndex === undefined) return;
+    requestAnimationFrame(() => {
+      charRefsMap.current.forEach((el, key) => {
+        const charIndex = charIndexMap.get(key);
+        if (charIndex === undefined) return;
 
-      const charStart = charIndex / totalChars;
-      const charWidth = 3 / totalChars;
-      const opacity = Math.min(
-        1,
-        Math.max(0, (progress - charStart) / charWidth),
-      );
+        const charStart = charIndex / totalChars;
+        const charWidth = 3 / totalChars;
+        const opacity = Math.min(
+          1,
+          Math.max(0, (progress - charStart) / charWidth),
+        );
 
-      el.style.opacity = String(opacity);
+        el.style.opacity = String(opacity);
+      });
     });
   });
 
@@ -182,6 +194,58 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
     });
   }, []);
 
+  // Shared image content
+  const imageContent = (
+    <CutoutMaskImage
+      imageUrl="/original.jpeg"
+      clickToChangeImage={false}
+      maxWidth={282}
+      className="w-full max-w-[282px]"
+      alt="Profile portrait"
+      priority={true}
+      quality={75}
+      sizes="(max-width: 640px) 282px, (max-width: 1024px) 400px, 500px"
+    />
+  );
+
+  // Shared CTA button content
+  const ctaContent = (
+    <Link
+      href="/projects"
+      prefetch={true}
+      onClick={() =>
+        Analytics.trackButtonClick(
+          "View Selected Work",
+          "Bio Overlay CTA",
+        )
+      }
+    >
+      <motion.button
+        className="group inline-flex items-center gap-3 text-sm font-medium tracking-wider uppercase text-gray-900 transition-colors hover:text-gray-600"
+        whileHover={{ x: 5 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        <span className="relative">
+          View Selected Work
+          <span className="absolute bottom-0 left-0 w-full h-px bg-gray-900 origin-left transition-transform duration-300 scale-x-100 group-hover:scale-x-0" />
+        </span>
+        <svg
+          className="w-4 h-4 transition-transform group-hover:translate-x-1"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 5l7 7-7 7"
+          />
+        </svg>
+      </motion.button>
+    </Link>
+  );
+
   return (
     <section
       className="relative h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-t-xl sm:rounded-t-[1rem] lg:rounded-t-[2rem] overflow-y-auto"
@@ -190,39 +254,47 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
       }}
     >
       {/* Subtle background elements */}
-      <motion.div
-        className="absolute inset-0 overflow-hidden pointer-events-none"
-        style={{
-          opacity: useTransform(scrollProgress, [0, 0.5, 1], [0.3, 1, 1]),
-        }}
-      >
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-purple-100/20 to-transparent rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-blue-100/20 to-transparent rounded-full blur-3xl" />
-      </motion.div>
+      {cssScrollSupported ? (
+        <div
+          className="absolute inset-0 overflow-hidden pointer-events-none scroll-bio-bg"
+        >
+          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-purple-100/20 to-transparent rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-blue-100/20 to-transparent rounded-full blur-3xl" />
+        </div>
+      ) : (
+        <motion.div
+          className="absolute inset-0 overflow-hidden pointer-events-none"
+          style={{
+            opacity: bgOpacity,
+          }}
+        >
+          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-purple-100/20 to-transparent rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-blue-100/20 to-transparent rounded-full blur-3xl" />
+        </motion.div>
+      )}
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-[210px_1fr] gap-12 lg:gap-24 items-center">
           {/* Left: Animated Cutout Mask Image */}
-          <motion.div
-            className="flex justify-center lg:justify-start"
-            style={{
-              scale: imageScale,
-              opacity: imageOpacity,
-              y: imageY,
-              transform: "translateZ(0)",
-            }}
-          >
-            <CutoutMaskImage
-              imageUrl="/original.jpeg"
-              clickToChangeImage={false}
-              maxWidth={282}
-              className="w-full max-w-[282px]"
-              alt="Profile portrait"
-              priority={true}
-              quality={75}
-              sizes="(max-width: 640px) 282px, (max-width: 1024px) 400px, 500px"
-            />
-          </motion.div>
+          {cssScrollSupported ? (
+            <div
+              className="flex justify-center lg:justify-start scroll-bio-image"
+            >
+              {imageContent}
+            </div>
+          ) : (
+            <motion.div
+              className="flex justify-center lg:justify-start"
+              style={{
+                scale: imageScale,
+                opacity: imageOpacity,
+                y: imageY,
+                transform: "translateZ(0)",
+              }}
+            >
+              {imageContent}
+            </motion.div>
+          )}
 
           {/* Right: Synchronized Text Content */}
           <div className="space-y-8">
@@ -291,48 +363,21 @@ export default function BioOverlay({ scrollProgress }: BioOverlayProps) {
             </h2>
 
             {/* CTA Button - appears after text */}
-            <motion.div
-              style={{
-                opacity: ctaOpacity,
-                y: ctaY,
-                transform: "translateZ(0)",
-              }}
-            >
-              <Link
-                href="/projects"
-                prefetch={true}
-                onClick={() =>
-                  Analytics.trackButtonClick(
-                    "View Selected Work",
-                    "Bio Overlay CTA",
-                  )
-                }
+            {cssScrollSupported ? (
+              <div className="scroll-bio-cta">
+                {ctaContent}
+              </div>
+            ) : (
+              <motion.div
+                style={{
+                  opacity: ctaOpacity,
+                  y: ctaY,
+                  transform: "translateZ(0)",
+                }}
               >
-                <motion.button
-                  className="group inline-flex items-center gap-3 text-sm font-medium tracking-wider uppercase text-gray-900 transition-colors hover:text-gray-600"
-                  whileHover={{ x: 5 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <span className="relative">
-                    View Selected Work
-                    <span className="absolute bottom-0 left-0 w-full h-px bg-gray-900 origin-left transition-transform duration-300 scale-x-100 group-hover:scale-x-0" />
-                  </span>
-                  <svg
-                    className="w-4 h-4 transition-transform group-hover:translate-x-1"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </motion.button>
-              </Link>
-            </motion.div>
+                {ctaContent}
+              </motion.div>
+            )}
           </div>
         </div>
       </div>
