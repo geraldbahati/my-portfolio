@@ -3,6 +3,7 @@
 
 @plugin "@tailwindcss/typography";
 @plugin "tailwindcss-motion";
+@plugin "tailwindcss-intersect";
 
 @custom-variant dark (&:is(.dark *));
 

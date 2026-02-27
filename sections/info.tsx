@@ -1,9 +1,8 @@
 "use client";
 
-import React, { memo } from "react";
+import React, { memo, useRef, useEffect } from "react";
 import { StickyScrollReveal } from "@/components/ui/sticky-scroll-reveal";
 import GridPattern from "@/components/ui/shadcn-io/grid-pattern";
-import { motion } from "framer-motion";
 
 // Static sections data - defined outside component to prevent recreation on each render
 const sections = [
@@ -66,6 +65,35 @@ const sections = [
 ];
 
 const InfoSection = memo(function InfoSection() {
+  const closingRef = useRef<HTMLParagraphElement>(null);
+
+  // Animate closing paragraph on intersection (manual IO avoids hydration mismatch)
+  useEffect(() => {
+    const el = closingRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            el.style.transition =
+              "opacity 600ms ease, transform 600ms ease";
+            el.style.opacity = "1";
+            el.style.transform = "translateY(0)";
+          } else {
+            el.style.transition = "none";
+            el.style.opacity = "0";
+            el.style.transform = "translateY(50px)";
+          }
+        });
+      },
+      { threshold: 0.3 },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div className="relative bg-white">
       {/* Grid Background Layer - Behind everything */}
@@ -91,18 +119,16 @@ const InfoSection = memo(function InfoSection() {
         {/* Closing paragraph */}
         <div className="w-full px-8 flex items-center justify-center min-h-[30vh]">
           <div className="max-w-7xl mx-auto">
-            <motion.p
+            <p
+              ref={closingRef}
               className="text-3xl md:text-4xl lg:text-[51.2px] leading-none tracking-tight indent-8 md:indent-80 lg:indent-96 grid-interaction-blocked"
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, amount: 0.3 }}
-              transition={{ duration: 0.6 }}
+              style={{ opacity: 0, transform: "translateY(50px)" }}
             >
               <span>Product Engineering</span> is about shipping solutions that
               matter. I focus on the intersection of performance, reliability,
               and user experience — building systems that are fast to use, fast
               to ship, and built to scale.
-            </motion.p>
+            </p>
           </div>
         </div>
       </div>

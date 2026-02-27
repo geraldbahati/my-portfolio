@@ -2,11 +2,11 @@
 
 import { memo, useMemo, useRef, useEffect, useCallback } from "react";
 import {
-  motion,
+  m,
   MotionValue,
   useTransform,
   useMotionValueEvent,
-} from "framer-motion";
+} from "motion/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import Analytics from "@/lib/analytics";
@@ -51,15 +51,12 @@ const StaticCharacter = memo(
     }
 
     return (
-      <span className="relative inline-block">
-        <span className="opacity-20">{char}</span>
-        <span
-          ref={(el) => registerRef(charKey, el)}
-          className="absolute inset-0"
-          style={{ opacity: 0 }}
-        >
-          {char}
-        </span>
+      <span
+        ref={(el) => registerRef(charKey, el)}
+        className="inline-block"
+        style={{ opacity: 0.2 }}
+      >
+        {char}
       </span>
     );
   },
@@ -178,19 +175,16 @@ export default function BioOverlay({ scrollProgress, cssScrollSupported }: BioOv
 
         const charStart = charIndex / totalChars;
         const charWidth = 3 / totalChars;
-        const opacity = Math.min(
-          1,
-          Math.max(0, (progress - charStart) / charWidth),
-        );
-
-        el.style.opacity = String(opacity);
+        const t = Math.min(1, Math.max(0, (progress - charStart) / charWidth));
+        // Animate from 0.2 (dim) to 1 (fully visible)
+        el.style.opacity = String(0.2 + 0.8 * t);
       });
     });
   });
 
   useEffect(() => {
     charRefsMap.current.forEach((el) => {
-      el.style.opacity = "0";
+      el.style.opacity = "0.2";
     });
   }, []);
 
@@ -220,7 +214,7 @@ export default function BioOverlay({ scrollProgress, cssScrollSupported }: BioOv
         )
       }
     >
-      <motion.button
+      <m.button
         className="group inline-flex items-center gap-3 text-sm font-medium tracking-wider uppercase text-gray-900 transition-colors hover:text-gray-600"
         whileHover={{ x: 5 }}
         whileTap={{ scale: 0.98 }}
@@ -242,7 +236,7 @@ export default function BioOverlay({ scrollProgress, cssScrollSupported }: BioOv
             d="M9 5l7 7-7 7"
           />
         </svg>
-      </motion.button>
+      </m.button>
     </Link>
   );
 
@@ -262,7 +256,7 @@ export default function BioOverlay({ scrollProgress, cssScrollSupported }: BioOv
           <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-blue-100/20 to-transparent rounded-full blur-3xl" />
         </div>
       ) : (
-        <motion.div
+        <m.div
           className="absolute inset-0 overflow-hidden pointer-events-none"
           style={{
             opacity: bgOpacity,
@@ -270,7 +264,7 @@ export default function BioOverlay({ scrollProgress, cssScrollSupported }: BioOv
         >
           <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-purple-100/20 to-transparent rounded-full blur-3xl" />
           <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-blue-100/20 to-transparent rounded-full blur-3xl" />
-        </motion.div>
+        </m.div>
       )}
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -283,7 +277,7 @@ export default function BioOverlay({ scrollProgress, cssScrollSupported }: BioOv
               {imageContent}
             </div>
           ) : (
-            <motion.div
+            <m.div
               className="flex justify-center lg:justify-start"
               style={{
                 scale: imageScale,
@@ -293,7 +287,7 @@ export default function BioOverlay({ scrollProgress, cssScrollSupported }: BioOv
               }}
             >
               {imageContent}
-            </motion.div>
+            </m.div>
           )}
 
           {/* Right: Synchronized Text Content */}
@@ -368,7 +362,7 @@ export default function BioOverlay({ scrollProgress, cssScrollSupported }: BioOv
                 {ctaContent}
               </div>
             ) : (
-              <motion.div
+              <m.div
                 style={{
                   opacity: ctaOpacity,
                   y: ctaY,
@@ -376,7 +370,7 @@ export default function BioOverlay({ scrollProgress, cssScrollSupported }: BioOv
                 }}
               >
                 {ctaContent}
-              </motion.div>
+              </m.div>
             )}
           </div>
         </div>

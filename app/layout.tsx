@@ -6,6 +6,7 @@ import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { MotionProvider } from "@/components/MotionProvider";
 import { AnalyticsProvider } from "@/components/analytics-provider";
 import { ConsoleFilter } from "@/components/console-filter";
+import { IntersectObserver } from "@/components/IntersectObserver";
 
 const syne = Syne({
   subsets: ["latin"],
@@ -108,6 +109,7 @@ export default function RootLayout({
         <ConvexClientProvider>
           <MotionProvider>
             <ConsoleFilter />
+            <IntersectObserver />
             {children}
             <AnalyticsProvider />
           </MotionProvider>

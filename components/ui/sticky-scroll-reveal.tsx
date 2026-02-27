@@ -8,12 +8,6 @@ import React, {
   useCallback,
   memo,
 } from "react";
-import {
-  m,
-  useScroll,
-  useTransform,
-  useMotionValueEvent,
-} from "framer-motion";
 import Image from "next/image";
 
 // ============================================================================
@@ -28,7 +22,6 @@ function useImagePreloader(
   const preloadedRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    // Preload current and next N images
     const indicesToPreload = Array.from(
       { length: preloadAhead + 1 },
       (_, i) => currentIndex + i,
@@ -78,6 +71,66 @@ function useActiveSectionIndex(
   return activeIndex;
 }
 
+// ============================================================================
+// Color interpolation helpers for raw DOM scroll handler
+// ============================================================================
+
+// oklch color values from globals.css
+const COLOR_GRAY_400 = "oklch(0.702 0 0)";
+const COLOR_TEXT_PRIMARY = "oklch(0 0 0)";
+const COLOR_GRAY_700 = "oklch(0.3725 0.0168 264.5)";
+
+// Parsed oklch components for interpolation
+const GRAY_400 = { l: 0.702, c: 0, h: 0 };
+const TEXT_PRIMARY = { l: 0, c: 0, h: 0 };
+const GRAY_700 = { l: 0.3725, c: 0.0168, h: 264.5 };
+
+function lerpOklch(
+  a: { l: number; c: number; h: number },
+  b: { l: number; c: number; h: number },
+  t: number,
+): string {
+  const l = a.l + (b.l - a.l) * t;
+  const c = a.c + (b.c - a.c) * t;
+  const h = a.h + (b.h - a.h) * t;
+  return `oklch(${l} ${c} ${h})`;
+}
+
+/** Multi-stop interpolation: maps progress through keyframes [0, 0.1, 0.9, 1] */
+function interpolateColor(
+  progress: number,
+  dimColor: { l: number; c: number; h: number },
+  activeColor: { l: number; c: number; h: number },
+): string {
+  if (progress <= 0.1) {
+    // dim → active
+    const t = progress / 0.1;
+    return lerpOklch(dimColor, activeColor, t);
+  } else if (progress <= 0.9) {
+    // fully active
+    return lerpOklch(activeColor, activeColor, 1);
+  } else {
+    // active → dim
+    const t = (progress - 0.9) / 0.1;
+    return lerpOklch(activeColor, dimColor, t);
+  }
+}
+
+/** Multi-stop opacity: [0, 0.1, 0.9, 1] → [0.3, 1, 1, 0.3] */
+function interpolateOpacity(progress: number): number {
+  if (progress <= 0.1) {
+    return 0.3 + (1 - 0.3) * (progress / 0.1);
+  } else if (progress <= 0.9) {
+    return 1;
+  } else {
+    return 1 - (1 - 0.3) * ((progress - 0.9) / 0.1);
+  }
+}
+
+// ============================================================================
+// TextSection — Desktop: raw DOM scroll mutations (zero React re-renders)
+// ============================================================================
+
 interface TextSectionProps {
   section: {
     label?: string;
@@ -90,111 +143,171 @@ interface TextSectionProps {
 }
 
 const TextSection = memo(({ section, index, sectionRef }: TextSectionProps) => {
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start center", "end center"],
-  });
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const labelWrapperRef = useRef<HTMLDivElement>(null);
+  const labelUnderlineRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const descriptionRef = useRef<HTMLParagraphElement>(null);
+  const bulletRefs = useRef<Map<number, HTMLLIElement>>(new Map());
+  const bulletSvgRefs = useRef<Map<number, SVGSVGElement>>(new Map());
+  const bulletSpanRefs = useRef<Map<number, HTMLSpanElement>>(new Map());
 
-  // Extract all useTransform calls to component body (stable references)
-  const opacity = useTransform(
-    scrollYProgress,
-    [0, 0.1, 0.9, 1],
-    [0.3, 1, 1, 0.3],
-  );
-  const labelWidth = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
-  const titleColor = useTransform(
-    scrollYProgress,
-    [0, 0.1, 0.9, 1],
-    [
-      "var(--gray-400)",
-      "var(--text-primary)",
-      "var(--text-primary)",
-      "var(--gray-400)",
-    ],
-  );
-  const descriptionColor = useTransform(
-    scrollYProgress,
-    [0, 0.1, 0.9, 1],
-    [
-      "var(--gray-400)",
-      "var(--gray-700)",
-      "var(--gray-700)",
-      "var(--gray-400)",
-    ],
-  );
+  useEffect(() => {
+    const sectionEl = sectionRef.current;
+    if (!sectionEl) return;
+
+    const handleScroll = () => {
+      const rect = sectionEl.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+
+      // Same offset as original: ["start center", "end center"]
+      const start = rect.top + rect.height;
+      const end = rect.top;
+      const center = viewportHeight / 2;
+
+      // progress 0→1 as section scrolls through viewport center
+      const rawProgress = (center - end) / (start - end);
+      const progress = Math.min(1, Math.max(0, rawProgress));
+
+      // Opacity: [0, 0.1, 0.9, 1] → [0.3, 1, 1, 0.3]
+      const opacity = interpolateOpacity(progress);
+
+      // Label underline: scaleX 0→1
+      if (labelUnderlineRef.current) {
+        labelUnderlineRef.current.style.transform = `scaleX(${progress})`;
+      }
+
+      // Label wrapper opacity
+      if (labelWrapperRef.current) {
+        labelWrapperRef.current.style.opacity = String(opacity);
+      }
+
+      // Title color
+      if (titleRef.current) {
+        titleRef.current.style.color = interpolateColor(
+          progress,
+          GRAY_400,
+          TEXT_PRIMARY,
+        );
+      }
+
+      // Description color
+      if (descriptionRef.current) {
+        descriptionRef.current.style.color = interpolateColor(
+          progress,
+          GRAY_400,
+          GRAY_700,
+        );
+      }
+
+      // Bullet items: opacity + icon color + text color
+      bulletRefs.current.forEach((li, i) => {
+        li.style.opacity = String(opacity);
+      });
+      bulletSvgRefs.current.forEach((svg) => {
+        svg.style.color = interpolateColor(progress, GRAY_400, TEXT_PRIMARY);
+      });
+      bulletSpanRefs.current.forEach((span) => {
+        span.style.color = interpolateColor(progress, GRAY_400, GRAY_700);
+      });
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [sectionRef]);
 
   return (
     <div ref={sectionRef} className="min-h-screen flex items-center py-16">
-      <m.div
-        className="w-full"
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: false, amount: 0.3 }}
-        transition={{ duration: 0.6 }}
-      >
+      <div ref={wrapperRef} className="w-full">
         {section.label && (
-          <m.div
+          <div
+            ref={labelWrapperRef}
             className="mb-8 grid-interaction-blocked"
-            style={{ opacity }}
+            style={{ opacity: 0.3 }}
           >
             <span className="inline-block text-sm font-medium uppercase tracking-[0.2em] text-accent-orange">
               {section.label}
             </span>
-            <m.div
+            <div
+              ref={labelUnderlineRef}
               className="mt-3 h-[1px] bg-accent-orange-muted"
-              style={{ width: labelWidth }}
+              style={{
+                transform: "scaleX(0)",
+                transformOrigin: "left",
+                width: "100%",
+              }}
             />
-          </m.div>
+          </div>
         )}
 
-        <m.h2
-          className="text-6xl lg:text-7xl font-bold mb-12 tracking-tight transition-colors duration-500 grid-interaction-blocked"
-          style={{ lineHeight: "0.9", color: titleColor }}
+        <h2
+          ref={titleRef}
+          className="text-6xl lg:text-7xl font-bold mb-12 tracking-tight grid-interaction-blocked"
+          style={{ lineHeight: "0.9", color: COLOR_GRAY_400 }}
         >
           {section.title}
-        </m.h2>
+        </h2>
 
         {section.description && (
-          <m.p
-            className="text-base mb-12 max-w-lg leading-relaxed transition-colors duration-500 grid-interaction-blocked"
-            style={{ color: descriptionColor }}
+          <p
+            ref={descriptionRef}
+            className="text-base mb-12 max-w-lg leading-relaxed grid-interaction-blocked"
+            style={{ color: COLOR_GRAY_400 }}
           >
             {section.description}
-          </m.p>
+          </p>
         )}
 
         {section.bullets && (
           <ul className="space-y-4 grid-interaction-blocked">
             {section.bullets.map((bullet: string, bulletIndex: number) => (
-              <m.li
+              <li
                 key={`bullet-${bulletIndex}`}
+                ref={(el) => {
+                  if (el) bulletRefs.current.set(bulletIndex, el);
+                  else bulletRefs.current.delete(bulletIndex);
+                }}
                 className="flex items-start"
-                style={{ opacity }}
+                style={{ opacity: 0.3 }}
               >
-                <m.svg
-                  className="w-4 h-4 mt-1.5 mr-4 flex-shrink-0 transition-all duration-300"
-                  style={{ color: titleColor }}
+                <svg
+                  ref={(el) => {
+                    if (el) bulletSvgRefs.current.set(bulletIndex, el);
+                    else bulletSvgRefs.current.delete(bulletIndex);
+                  }}
+                  className="w-4 h-4 mt-1.5 mr-4 flex-shrink-0"
+                  style={{ color: COLOR_GRAY_400 }}
                   fill="currentColor"
                   viewBox="0 0 16 16"
                 >
                   <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
-                </m.svg>
-                <m.span
-                  className="text-base transition-colors duration-300"
-                  style={{ color: descriptionColor }}
+                </svg>
+                <span
+                  ref={(el) => {
+                    if (el) bulletSpanRefs.current.set(bulletIndex, el);
+                    else bulletSpanRefs.current.delete(bulletIndex);
+                  }}
+                  className="text-base"
+                  style={{ color: COLOR_GRAY_400 }}
                 >
                   {bullet}
-                </m.span>
-              </m.li>
+                </span>
+              </li>
             ))}
           </ul>
         )}
-      </m.div>
+      </div>
     </div>
   );
 });
 
 TextSection.displayName = "TextSection";
+
+// ============================================================================
+// ImagePanel — unchanged
+// ============================================================================
 
 interface ImagePanelProps {
   section: {
@@ -309,6 +422,9 @@ export const StickyScrollReveal = ({
   // Ref registry for image panels - for direct DOM updates
   const imagePanelRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
+  // Ref for desktop sticky container entrance animation
+  const stickyContainerRef = useRef<HTMLDivElement>(null);
+
   // Create refs for each section
   const sectionRefs = useMemo(
     () => sections.map(() => React.createRef<HTMLDivElement>()),
@@ -338,7 +454,6 @@ export const StickyScrollReveal = ({
 
   // ============================================================================
   // SINGLE SCROLL SUBSCRIPTION for all image panel clipPaths
-  // Replaces N separate useScroll hooks with one consolidated handler
   // ============================================================================
   useEffect(() => {
     if (isMobile) return;
@@ -353,25 +468,22 @@ export const StickyScrollReveal = ({
         const rect = sectionRef.current.getBoundingClientRect();
         const viewportHeight = window.innerHeight;
 
-        // Calculate progress: 0 when section bottom is at viewport bottom,
-        // 1 when section top is at viewport center
         const sectionCenter = rect.top + rect.height / 2;
-        const start = viewportHeight; // When section bottom enters viewport
-        const end = viewportHeight / 2; // When section top reaches center
+        const start = viewportHeight;
+        const end = viewportHeight / 2;
 
         const progress = Math.min(
           1,
           Math.max(0, (start - sectionCenter) / (start - end)),
         );
 
-        // Calculate clipPath based on progress
         const clipValue = `inset(${(1 - progress) * 100}% 0 0 0)`;
         panelEl.style.clipPath = clipValue;
       });
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll(); // Initial call
+    handleScroll();
 
     return () => window.removeEventListener("scroll", handleScroll);
   }, [sectionRefs, isMobile]);
@@ -379,7 +491,7 @@ export const StickyScrollReveal = ({
   // Detect mobile/desktop
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024); // lg breakpoint
+      setIsMobile(window.innerWidth < 1024);
     };
 
     checkMobile();
@@ -388,7 +500,32 @@ export const StickyScrollReveal = ({
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Mobile Layout - Image above content (simplified, no scroll animations)
+  // Sticky container entrance animation (once, via IntersectionObserver + CSS transition)
+  useEffect(() => {
+    const el = stickyContainerRef.current;
+    if (!el || isMobile) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            // Apply transition then animate to visible state
+            el.style.transition =
+              "opacity 1.4s cubic-bezier(0.25, 0.1, 0.25, 1), transform 1.4s cubic-bezier(0.25, 0.1, 0.25, 1)";
+            el.style.opacity = "1";
+            el.style.transform = "translateY(0) translateZ(0)";
+            observer.disconnect();
+          }
+        });
+      },
+      { threshold: 0.3 },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [isMobile]);
+
+  // Mobile Layout - CSS-only animations via tailwindcss-intersect
   if (isMobile) {
     return (
       <div className={`relative ${containerClassName || ""}`}>
@@ -399,13 +536,7 @@ export const StickyScrollReveal = ({
               className="min-h-screen flex flex-col justify-center py-16"
             >
               {/* Image Section for Mobile */}
-              <m.div
-                className="mb-12"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: false, amount: 0.3 }}
-                transition={{ duration: 0.6 }}
-              >
+              <div className="mb-12 opacity-0 intersect:motion-opacity-in intersect:motion-translate-y-in-[30px] intersect:motion-duration-[600ms] intersect-half">
                 <div
                   className={`relative w-full rounded-2xl overflow-hidden shadow-xl ${contentClassName || ""}`}
                   style={{
@@ -418,7 +549,6 @@ export const StickyScrollReveal = ({
                     section.content
                   ) : section.image ? (
                     <div className="relative w-full h-full overflow-hidden">
-                      {/* Background blurred image */}
                       <div
                         className="absolute inset-0 w-full h-full"
                         style={{ zIndex: 1 }}
@@ -438,7 +568,6 @@ export const StickyScrollReveal = ({
                         />
                       </div>
 
-                      {/* Centered sharp image - bigger size */}
                       <div
                         className="absolute inset-0 flex items-center justify-center p-8"
                         style={{ zIndex: 2 }}
@@ -467,62 +596,48 @@ export const StickyScrollReveal = ({
                     </div>
                   )}
                 </div>
-              </m.div>
+              </div>
 
               {/* Content Section for Mobile */}
-              <m.div
-                className="w-full"
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: false, amount: 0.3 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-              >
+              <div className="w-full opacity-0 intersect:motion-opacity-in intersect:motion-translate-y-in-[50px] intersect:motion-duration-[600ms] intersect:motion-delay-[200ms] intersect-half">
                 {section.label && (
-                  <m.div
-                    className="mb-6 grid-interaction-blocked"
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: false }}
-                    transition={{ duration: 0.5 }}
-                  >
+                  <div className="mb-6 grid-interaction-blocked opacity-0 intersect:motion-opacity-in intersect:motion-translate-x-in-[-20px] intersect:motion-duration-[500ms] intersect-half">
                     <span className="inline-block text-sm font-medium uppercase tracking-[0.2em] text-accent-orange">
                       {section.label}
                     </span>
-                    <m.div
-                      className="mt-3 h-[1px] bg-accent-orange-muted"
-                      initial={{ width: 0 }}
-                      whileInView={{ width: 120 }}
-                      viewport={{ once: false }}
-                      transition={{ duration: 0.5, delay: 0.2 }}
+                    <div
+                      className="mt-3 h-[1px] bg-accent-orange-muted intersect:motion-scale-x-in intersect:motion-duration-[500ms] intersect:motion-delay-[200ms]"
+                      style={{
+                        transformOrigin: "left",
+                        transform: "scaleX(0)",
+                        width: "120px",
+                      }}
                     />
-                  </m.div>
+                  </div>
                 )}
 
-                <m.h2
+                <h2
                   className="text-4xl sm:text-5xl font-bold mb-8 tracking-tight text-text-primary grid-interaction-blocked"
                   style={{ lineHeight: "1" }}
                 >
                   {section.title}
-                </m.h2>
+                </h2>
 
                 {section.description && (
-                  <m.p className="text-base mb-8 max-w-lg leading-relaxed text-gray-700 grid-interaction-blocked">
+                  <p className="text-base mb-8 max-w-lg leading-relaxed text-gray-700 grid-interaction-blocked">
                     {section.description}
-                  </m.p>
+                  </p>
                 )}
 
                 {section.bullets && (
                   <ul className="space-y-3 grid-interaction-blocked">
                     {section.bullets.map((bullet, bulletIndex) => (
-                      <m.li
+                      <li
                         key={`bullet-mobile-${bulletIndex}`}
-                        className="flex items-start"
-                        initial={{ opacity: 0, x: -20 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: false }}
-                        transition={{
-                          duration: 0.5,
-                          delay: 0.3 + bulletIndex * 0.05,
+                        className="flex items-start opacity-0 intersect:motion-opacity-in intersect:motion-translate-x-in-[-20px] intersect:motion-duration-[500ms] intersect-half"
+                        style={{
+                          // @ts-expect-error -- CSS custom property for staggered delay
+                          "--motion-delay": `${300 + bulletIndex * 50}ms`,
                         }}
                       >
                         <svg
@@ -535,11 +650,11 @@ export const StickyScrollReveal = ({
                         <span className="text-base text-gray-700">
                           {bullet}
                         </span>
-                      </m.li>
+                      </li>
                     ))}
                   </ul>
                 )}
-              </m.div>
+              </div>
             </div>
           ))}
         </div>
@@ -576,20 +691,19 @@ export const StickyScrollReveal = ({
               {/* Spacer to push sticky element down so it starts centered with first content */}
               <div style={{ height: "calc(50vh - 300px)" }} />
 
-              {/* Sticky container */}
-              <m.div
+              {/* Sticky container — JS entrance animation (sticky + intersect CSS don't mix) */}
+              <div
+                ref={stickyContainerRef}
                 className="w-full mx-auto"
                 style={{
                   position: "sticky",
                   top: "calc(50vh - 300px)",
                   width: "600px",
                   height: "600px",
-                  transform: "translateZ(0)",
+                  opacity: 0,
+                  transform: "translateY(350px) translateZ(0)",
+                  transition: "none",
                 }}
-                initial={{ opacity: 0, y: 350 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.3 }}
-                transition={{ duration: 1.4, ease: [0.25, 0.1, 0.25, 1] }}
               >
                 {/* Image container */}
                 <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl">
@@ -604,7 +718,7 @@ export const StickyScrollReveal = ({
                     />
                   ))}
                 </div>
-              </m.div>
+              </div>
             </div>
           </div>
         </div>
