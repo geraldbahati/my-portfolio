@@ -28,11 +28,16 @@ interface GridPatternProps {
   [key: string]: unknown;
 }
 
+const SVG_NS = "http://www.w3.org/2000/svg";
+const TRAIL_DURATION = 800;
+
 /**
  * GridPattern component with optimized hover effects.
  *
- * Uses direct DOM manipulation for interactive squares instead of React state
- * to prevent parent component re-renders during mouse movement.
+ * Performance improvements over original:
+ * - RAF loop only runs when there's something to animate (demand-driven)
+ * - SVG rect pool: reuses elements instead of destroy/recreate every frame
+ * - Avoids document.elementFromPoint() (layout thrash) — uses CSS pointer-events instead
  */
 export default function GridPattern({
   width = 40,
@@ -58,7 +63,10 @@ export default function GridPattern({
   const isMovingRef = useRef(false);
   const rafIdRef = useRef<number | null>(null);
   const mouseMoveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const animateRef = useRef<(() => void) | null>(null);
+
+  // SVG rect element pool — avoids createElement/removeChild churn
+  const rectPoolRef = useRef<SVGRectElement[]>([]);
+  const activeRectCountRef = useRef(0);
 
   // Memoize static squares
   const staticSquares = useMemo(() => squares || [], [squares]);
@@ -107,40 +115,79 @@ export default function GridPattern({
   // Cache the primary color to avoid repeated DOM queries
   const primaryColorRef = useRef<string | null>(null);
 
-  // Get computed primary color from CSS - converts to RGB for SVG compatibility
   const getPrimaryColor = useCallback(() => {
-    // Return cached value if available
     if (primaryColorRef.current) return primaryColorRef.current;
+    if (typeof window === "undefined") return "rgb(249, 115, 22)";
 
-    if (typeof window === "undefined") return "rgb(249, 115, 22)"; // fallback orange
-
-    // Create a temporary element to compute the actual color value
     const tempEl = document.createElement("div");
     tempEl.style.color = "var(--primary)";
     tempEl.style.display = "none";
     document.body.appendChild(tempEl);
-
     const computedColor = getComputedStyle(tempEl).color;
     document.body.removeChild(tempEl);
 
-    // Cache the result
     primaryColorRef.current = computedColor || "rgb(249, 115, 22)";
     return primaryColorRef.current;
   }, []);
 
-  // Animation loop using RAF - uses direct DOM manipulation, NO React state updates
-  const animate = useCallback(() => {
+  // =========================================================================
+  // Rect pool helpers — grow pool on demand, hide unused rects
+  // =========================================================================
+  const getPooledRect = useCallback(
+    (index: number): SVGRectElement => {
+      const pool = rectPoolRef.current;
+      const group = interactiveGroupRef.current!;
+
+      if (index < pool.length) {
+        const rect = pool[index];
+        // Unhide if it was hidden
+        rect.removeAttribute("display");
+        return rect;
+      }
+
+      // Grow pool
+      const rect = document.createElementNS(SVG_NS, "rect");
+      rect.setAttribute("fill", "none");
+      group.appendChild(rect);
+      pool.push(rect);
+      return rect;
+    },
+    [],
+  );
+
+  const hideUnusedRects = useCallback((usedCount: number) => {
+    const pool = rectPoolRef.current;
+    for (let i = usedCount; i < pool.length; i++) {
+      pool[i].setAttribute("display", "none");
+    }
+  }, []);
+
+  // =========================================================================
+  // Demand-driven animation — only runs when there's work to do
+  // =========================================================================
+  const isAnimatingRef = useRef(false);
+
+  // Animation tick ref — called via ref to avoid stale closures
+  const animationTickRef = useRef<(() => void) | null>(null);
+
+  const scheduleAnimation = useCallback(() => {
+    if (isAnimatingRef.current || disableInteraction) return;
+    isAnimatingRef.current = true;
+    rafIdRef.current = requestAnimationFrame(() => animationTickRef.current?.());
+  }, [disableInteraction]);
+
+  // Keep tick in sync on every render (no deps needed — always fresh)
+  animationTickRef.current = () => {
     if (disableInteraction || !interactiveGroupRef.current) {
-      rafIdRef.current = requestAnimationFrame(() => animateRef.current?.());
+      isAnimatingRef.current = false;
       return;
     }
 
     const now = Date.now();
-    const group = interactiveGroupRef.current;
 
     // Remove expired highlights
     highlightSquaresRef.current = highlightSquaresRef.current.filter(
-      (square) => now - square.timestamp < 800,
+      (sq) => now - sq.timestamp < TRAIL_DURATION,
     );
 
     // Build array of squares to render
@@ -156,30 +203,17 @@ export default function GridPattern({
     // Add current active cells if moving
     if (currentCellRef.current && isMovingRef.current) {
       const { x: cx, y: cy } = currentCellRef.current;
-      squaresToRender.push({
-        x: cx,
-        y: cy,
-        opacity: 1,
-        scale: 1,
-        isCenter: true,
-      });
+      squaresToRender.push({ x: cx, y: cy, opacity: 1, scale: 1, isCenter: true });
       currentSurroundingRef.current.forEach((cell) => {
-        squaresToRender.push({
-          ...cell,
-          opacity: 0.8,
-          scale: 1,
-          isCenter: false,
-        });
+        squaresToRender.push({ ...cell, opacity: 0.8, scale: 1, isCenter: false });
       });
     }
 
     // Add trail highlights
     highlightSquaresRef.current.forEach((square) => {
-      // Skip if already in active cells
-      if (squaresToRender.some((s) => s.x === square.x && s.y === square.y))
-        return;
+      if (squaresToRender.some((s) => s.x === square.x && s.y === square.y)) return;
 
-      const age = Math.min(1, (now - square.timestamp) / 800);
+      const age = Math.min(1, (now - square.timestamp) / TRAIL_DURATION);
       const opacity = Math.max(0, (square.isCenter ? 0.7 : 0.5) * (1 - age));
       if (opacity > 0) {
         squaresToRender.push({
@@ -192,53 +226,51 @@ export default function GridPattern({
       }
     });
 
-    // Get primary color
     const primaryColor = getPrimaryColor();
 
-    // Update DOM directly - clear and rebuild
-    // This is more efficient than tracking individual elements for this use case
-    while (group.firstChild) {
-      group.removeChild(group.firstChild);
-    }
-
-    squaresToRender.forEach((square) => {
-      const rect = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "rect",
-      );
+    // Update pooled rects (no create/destroy churn)
+    squaresToRender.forEach((square, i) => {
+      const rect = getPooledRect(i);
       rect.setAttribute("x", String(square.x * width + 0.5));
       rect.setAttribute("y", String(square.y * height + 0.5));
       rect.setAttribute("width", String(width - 1));
       rect.setAttribute("height", String(height - 1));
-      rect.setAttribute("fill", "none");
       rect.setAttribute("stroke", primaryColor);
       rect.setAttribute("stroke-width", square.isCenter ? "2" : "1.5");
       rect.setAttribute("opacity", String(square.opacity));
       rect.style.transform = `scale(${square.scale})`;
       rect.style.transformOrigin = `${square.x * width + width / 2}px ${square.y * height + height / 2}px`;
-      group.appendChild(rect);
     });
+    hideUnusedRects(squaresToRender.length);
+    activeRectCountRef.current = squaresToRender.length;
 
-    rafIdRef.current = requestAnimationFrame(() => animateRef.current?.());
-  }, [disableInteraction, width, height, getPrimaryColor]);
+    // Decide whether to keep the loop running
+    const hasWork =
+      squaresToRender.length > 0 || highlightSquaresRef.current.length > 0;
 
-  useEffect(() => {
-    animateRef.current = animate;
-  });
+    if (hasWork) {
+      rafIdRef.current = requestAnimationFrame(() => animationTickRef.current?.());
+    } else {
+      isAnimatingRef.current = false;
+    }
+  };
 
-  // Throttled mouse handler
+  // =========================================================================
+  // Mouse handlers
+  // =========================================================================
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
       if (!svgRef.current || disableInteraction) return;
 
-      // Check if mouse is over blocked area
-      const elementUnderMouse = document.elementFromPoint(e.clientX, e.clientY);
-      if (elementUnderMouse?.closest(".grid-interaction-blocked")) {
-        currentCellRef.current = null;
-        currentSurroundingRef.current = [];
-        isMovingRef.current = false;
-        if (mouseMoveTimeoutRef.current) {
-          clearTimeout(mouseMoveTimeoutRef.current);
+      // Check if mouse is over a blocked area (uses event target — no layout thrash)
+      const target = e.target as Element | null;
+      if (target?.closest?.(".grid-interaction-blocked")) {
+        if (currentCellRef.current) {
+          currentCellRef.current = null;
+          currentSurroundingRef.current = [];
+          isMovingRef.current = false;
+          if (mouseMoveTimeoutRef.current) clearTimeout(mouseMoveTimeoutRef.current);
+          scheduleAnimation();
         }
         return;
       }
@@ -246,6 +278,9 @@ export default function GridPattern({
       const rect = svgRef.current.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
+
+      // Out of bounds check
+      if (mouseX < 0 || mouseY < 0 || mouseX > rect.width || mouseY > rect.height) return;
 
       const gridX = Math.floor(mouseX / width);
       const gridY = Math.floor(mouseY / height);
@@ -256,19 +291,18 @@ export default function GridPattern({
           currentCellRef.current.x === gridX &&
           currentCellRef.current.y === gridY;
 
-        // Set moving state to true
         isMovingRef.current = true;
 
-        // Clear existing timeout
         if (mouseMoveTimeoutRef.current) {
           clearTimeout(mouseMoveTimeoutRef.current);
         }
 
-        // Set timeout to detect when mouse stops moving
         mouseMoveTimeoutRef.current = setTimeout(() => {
           isMovingRef.current = false;
           currentCellRef.current = null;
           currentSurroundingRef.current = [];
+          // One last tick to clear visuals
+          scheduleAnimation();
         }, 100);
 
         if (!isSameCell) {
@@ -300,25 +334,22 @@ export default function GridPattern({
             const now = Date.now();
             highlightSquaresRef.current = [
               ...highlightSquaresRef.current.filter(
-                (s) => now - s.timestamp < 800,
+                (s) => now - s.timestamp < TRAIL_DURATION,
               ),
               ...fadeSquares,
             ];
           }
 
-          // Generate new surrounding cells
-          currentSurroundingRef.current = generateSurroundingCells(
-            gridX,
-            gridY,
-          );
+          currentSurroundingRef.current = generateSurroundingCells(gridX, gridY);
           currentCellRef.current = { x: gridX, y: gridY };
         }
+
+        scheduleAnimation();
       }
     },
-    [width, height, generateSurroundingCells, disableInteraction],
+    [width, height, generateSurroundingCells, disableInteraction, scheduleAnimation],
   );
 
-  // Mouse leave handler
   const handleMouseLeave = useCallback(() => {
     if (mouseMoveTimeoutRef.current) {
       clearTimeout(mouseMoveTimeoutRef.current);
@@ -357,23 +388,10 @@ export default function GridPattern({
     currentCellRef.current = null;
     currentSurroundingRef.current = [];
     isMovingRef.current = false;
-  }, []);
 
-  // Start animation loop
-  useEffect(() => {
-    if (disableInteraction) return;
-
-    rafIdRef.current = requestAnimationFrame(animate);
-
-    return () => {
-      if (rafIdRef.current) {
-        cancelAnimationFrame(rafIdRef.current);
-      }
-      if (mouseMoveTimeoutRef.current) {
-        clearTimeout(mouseMoveTimeoutRef.current);
-      }
-    };
-  }, [animate, disableInteraction]);
+    // Keep animating to fade out trails
+    scheduleAnimation();
+  }, [scheduleAnimation]);
 
   // Handle mouse events
   useEffect(() => {
@@ -390,6 +408,14 @@ export default function GridPattern({
       if (svg) {
         svg.removeEventListener("mouseleave", handleMouseLeave);
       }
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
+      if (mouseMoveTimeoutRef.current) {
+        clearTimeout(mouseMoveTimeoutRef.current);
+      }
+      isAnimatingRef.current = false;
     };
   }, [handleMouseMove, handleMouseLeave, disableInteraction]);
 
@@ -440,7 +466,7 @@ export default function GridPattern({
         </svg>
       )}
 
-      {/* Interactive hover squares - rendered via direct DOM manipulation */}
+      {/* Interactive hover squares - rendered via pooled DOM manipulation */}
       {!disableInteraction && (
         <g ref={interactiveGroupRef} className="interactive-squares" />
       )}

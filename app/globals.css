@@ -405,6 +405,7 @@
     animation-timeline: scroll(root block);
     animation-range: 0vh 50vh;
   }
+
 }
 
 @media print {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, {
+import {
   useEffect,
   useRef,
   useState,
@@ -8,7 +8,6 @@ import React, {
   useMemo,
   memo,
 } from "react";
-import { m } from "framer-motion";
 import ProjectCard from "@/components/project-card";
 import Image from "next/image";
 import { Instagram, Linkedin, Github } from "lucide-react";
@@ -54,7 +53,16 @@ const XIcon = memo(
 );
 XIcon.displayName = "XIcon";
 
-// Social Sidebar
+// Stagger delay classes for social icon entrance animations
+const staggerDelays = [
+  "delay-0",
+  "delay-100",
+  "delay-200",
+  "delay-300",
+  "delay-500",
+] as const;
+
+// Social Sidebar - uses CSS transitions + intersect instead of Framer Motion
 const SocialSidebar = memo(function SocialSidebar() {
   const socialLinks = useMemo(
     () => [
@@ -84,25 +92,24 @@ const SocialSidebar = memo(function SocialSidebar() {
   );
 
   return (
-    <div className="hidden lg:flex flex-col gap-6">
+    <div className="hidden lg:flex flex-col gap-6 intersect-once">
       {socialLinks.map((social, index) => {
         const Icon = social.icon;
         return (
-          <m.a
+          <a
             key={social.label}
             href={social.href}
             target="_blank"
             rel="noopener noreferrer"
             aria-label={social.label}
-            className="text-gray-400 hover:text-text-inverted transition-colors duration-300 cursor-pointer"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.1 }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
+            className={`text-gray-400 hover:text-text-inverted cursor-pointer
+              opacity-0 -translate-x-5 transition-all duration-500 ease-out
+              intersect:opacity-100 intersect:translate-x-0
+              ${staggerDelays[index] || ""}
+              hover:scale-110 active:scale-95`}
           >
             <Icon size={20} />
-          </m.a>
+          </a>
         );
       })}
     </div>
@@ -115,8 +122,14 @@ const SocialSidebar = memo(function SocialSidebar() {
  * Architecture:
  * - Projects section: sticky container with horizontal scroll
  * - FAQ section: normal document flow, uses dynamic marginTop based on where projects end
- * - FAQ slides up from translateY(100vh) to translateY(0)
+ * - FAQ slides up from translateY(spaceBelow vh) to translateY(0)
  * - The marginTop pulls FAQ up only to the space below projects (not overlapping)
+ *
+ * Animation strategy:
+ * - Header entrance: tailwindcss-intersect + tailwindcss-motion (IntersectionObserver, no Framer Motion)
+ * - Social icons: Rombo tailwindcss-motion + tailwindcss-intersect (zero JS)
+ * - Horizontal scrollLeft: JS rAF (no CSS equivalent)
+ * - FAQ translateY + background color: JS direct DOM manipulation (coupled to scrollLeft progress)
  */
 const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
   projects,
@@ -127,11 +140,6 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
   const projectsAreaRef = useRef<HTMLDivElement>(null);
   const faqSectionRef = useRef<HTMLElement>(null);
   const rafIdRef = useRef<number | null>(null);
-  const lastUpdateTimeRef = useRef(0);
-  const updateScrollPositionRef = useRef<(() => void) | null>(null);
-
-  const [isHeaderVisible, setIsHeaderVisible] = useState(false);
-  const [isFaqShowing, setIsFaqShowing] = useState(false);
 
   // Dynamic: how much space is below projects in the sticky container (as vh)
   const [spaceBelow, setSpaceBelow] = useState(30);
@@ -143,12 +151,8 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
     scrollableDistance: 0,
   });
 
-  const scrollValuesRef = useRef({
-    isHeaderVisible: false,
-    isFaqShowing: false,
-    lastHeaderUpdate: 0,
-    lastFaqUpdate: 0,
-  });
+  // Track last FAQ-showing state to avoid redundant className toggles
+  const lastFaqShowingRef = useRef(false);
 
   // Measure the space below projects (responsive)
   useEffect(() => {
@@ -190,7 +194,8 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
     };
   }, [projects]);
 
-  // Optimized scroll handler - uses cached measurements
+  // Scroll handler: horizontal scrollLeft + FAQ translateY + background color
+  // All done via direct DOM manipulation (no React state = no re-renders during scroll)
   const updateScrollPosition = useCallback(() => {
     if (
       !scrollTriggerRef.current ||
@@ -199,29 +204,10 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
     )
       return;
 
-    const now = performance.now();
-    if (now - lastUpdateTimeRef.current < 16) {
-      rafIdRef.current = requestAnimationFrame(() => updateScrollPositionRef.current?.());
-      return;
-    }
-    lastUpdateTimeRef.current = now;
-
-    // Use cached measurements instead of reading DOM every frame
-    const { sectionHeight, viewportHeight, scrollableDistance } =
-      cachedMeasurementsRef.current;
+    const { scrollableDistance } = cachedMeasurementsRef.current;
 
     // Only read rect.top - single layout trigger
     const rect = scrollTriggerRef.current.getBoundingClientRect();
-
-    // Header visibility with debounce (100ms threshold)
-    const isInView = rect.top <= viewportHeight * 0.8;
-    if (isInView !== scrollValuesRef.current.isHeaderVisible) {
-      if (now - scrollValuesRef.current.lastHeaderUpdate > 100) {
-        scrollValuesRef.current.isHeaderVisible = isInView;
-        scrollValuesRef.current.lastHeaderUpdate = now;
-        setIsHeaderVisible(isInView);
-      }
-    }
     const scrolled = -rect.top;
     const totalProgress = Math.max(
       0,
@@ -245,12 +231,23 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
       // FAQ stays below viewport (pushed down by spaceBelow vh)
       faqSectionRef.current.style.transform = `translateY(${spaceBelow}vh)`;
 
-      // FAQ not showing yet - debounced
-      if (scrollValuesRef.current.isFaqShowing) {
-        if (now - scrollValuesRef.current.lastFaqUpdate > 100) {
-          scrollValuesRef.current.isFaqShowing = false;
-          scrollValuesRef.current.lastFaqUpdate = now;
-          setIsFaqShowing(false);
+      // Toggle background color via class (only when state changes)
+      if (lastFaqShowingRef.current) {
+        lastFaqShowingRef.current = false;
+        scrollTriggerRef.current.classList.remove("bg-surface-dark");
+        scrollTriggerRef.current.classList.add("bg-surface-light");
+        stickyContainerRef.current!.classList.remove("bg-surface-dark");
+        stickyContainerRef.current!.classList.add("bg-surface-light");
+        // Toggle text colors
+        const title = scrollTriggerRef.current.querySelector("[data-projects-title]");
+        const desc = scrollTriggerRef.current.querySelector("[data-projects-desc]");
+        if (title) {
+          title.classList.remove("text-text-inverted");
+          title.classList.add("text-text-primary");
+        }
+        if (desc) {
+          desc.classList.remove("text-text-muted");
+          desc.classList.add("text-text-secondary");
         }
       }
     } else {
@@ -270,20 +267,27 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
       const translateY = (1 - clampedSlide) * spaceBelow;
       faqSectionRef.current.style.transform = `translateY(${translateY}vh)`;
 
-      // FAQ is now showing - debounced
-      if (!scrollValuesRef.current.isFaqShowing) {
-        if (now - scrollValuesRef.current.lastFaqUpdate > 100) {
-          scrollValuesRef.current.isFaqShowing = true;
-          scrollValuesRef.current.lastFaqUpdate = now;
-          setIsFaqShowing(true);
+      // Toggle background color via class (only when state changes)
+      if (!lastFaqShowingRef.current) {
+        lastFaqShowingRef.current = true;
+        scrollTriggerRef.current.classList.remove("bg-surface-light");
+        scrollTriggerRef.current.classList.add("bg-surface-dark");
+        stickyContainerRef.current!.classList.remove("bg-surface-light");
+        stickyContainerRef.current!.classList.add("bg-surface-dark");
+        // Toggle text colors
+        const title = scrollTriggerRef.current.querySelector("[data-projects-title]");
+        const desc = scrollTriggerRef.current.querySelector("[data-projects-desc]");
+        if (title) {
+          title.classList.remove("text-text-primary");
+          title.classList.add("text-text-inverted");
+        }
+        if (desc) {
+          desc.classList.remove("text-text-secondary");
+          desc.classList.add("text-text-muted");
         }
       }
     }
   }, [spaceBelow]);
-
-  useEffect(() => {
-    updateScrollPositionRef.current = updateScrollPosition;
-  });
 
   useEffect(() => {
     const handleScroll = () => {
@@ -305,65 +309,43 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
       {/* PROJECTS SECTION */}
       <div
         ref={scrollTriggerRef}
-        className={`relative transition-colors duration-500 ${isFaqShowing ? "bg-surface-dark" : "bg-surface-light"}`}
+        className="relative transition-colors duration-500 bg-surface-light"
         style={{
           height: "200vh",
         }}
       >
         <div
           ref={stickyContainerRef}
-          className={`sticky top-0 h-screen overflow-hidden transition-colors duration-500 ${isFaqShowing ? "bg-surface-dark" : "bg-surface-light"}`}
+          className="sticky top-0 h-screen overflow-hidden transition-colors duration-500 bg-surface-light"
         >
-          {/* Header */}
-          <m.div
-            className="absolute top-0 left-0 right-0 z-40 pt-16"
-            initial={{ opacity: 0, y: 32 }}
-            animate={
-              isHeaderVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 32 }
-            }
-            transition={{ duration: 0.4, ease: "easeOut" }}
-          >
+          {/* Header - intersect-once entrance via CSS transitions (no Framer Motion) */}
+          <div className="absolute top-0 left-0 right-0 z-40 pt-16 intersect-once opacity-0 translate-y-8 transition-all duration-500 ease-out intersect:opacity-100 intersect:translate-y-0">
             <div className="max-w-7xl mx-auto px-6 pb-12">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-                <m.div
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={
-                    isHeaderVisible
-                      ? { opacity: 1, y: 0 }
-                      : { opacity: 0, y: 16 }
-                  }
-                  transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
-                >
+                <div className="intersect-once opacity-0 translate-y-4 transition-all duration-500 ease-out delay-100 intersect:opacity-100 intersect:translate-y-0">
                   <h1
-                    className={`text-4xl lg:text-5xl font-medium leading-tight tracking-tight transition-colors duration-500 ${isFaqShowing ? "text-text-inverted" : "text-text-primary"}`}
+                    data-projects-title
+                    className="text-4xl lg:text-5xl font-medium leading-tight tracking-tight transition-colors duration-500 text-text-primary"
                     style={{
                       fontSize: "2.25rem",
                     }}
                   >
                     Website Creations and Client Projects
                   </h1>
-                </m.div>
-                <m.div
-                  className="lg:pl-12"
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={
-                    isHeaderVisible
-                      ? { opacity: 1, y: 0 }
-                      : { opacity: 0, y: 16 }
-                  }
-                  transition={{ duration: 0.5, ease: "easeOut", delay: 0.2 }}
-                >
+                </div>
+                <div className="lg:pl-12 intersect-once opacity-0 translate-y-4 transition-all duration-500 ease-out delay-200 intersect:opacity-100 intersect:translate-y-0">
                   <p
-                    className={`text-base leading-relaxed transition-colors duration-500 ${isFaqShowing ? "text-text-muted" : "text-text-secondary"}`}
+                    data-projects-desc
+                    className="text-base leading-relaxed transition-colors duration-500 text-text-secondary"
                   >
                     Get to know me, my work style and my values through an
                     insight into my projects that stand for quality, structure
                     and sustainable solutions.
                   </p>
-                </m.div>
+                </div>
               </div>
             </div>
-          </m.div>
+          </div>
 
           {/* Horizontal scroll projects */}
           <div className="h-full flex items-start pb-20 pt-80 lg:pt-64">
