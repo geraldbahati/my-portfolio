@@ -1,7 +1,7 @@
 "use client";
 
 import React, { memo, useEffect, useState, useCallback } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import { Linkedin, Github, MessageCircle, Instagram } from "lucide-react";
 import Image from "next/image";
 import Analytics from "@/lib/analytics";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useSyncExternalStore } from "react";
-import { useScroll } from "framer-motion";
+import { useScroll } from "motion/react";
 import HeroSection from "@/sections/hero";
 import BioOverlay from "@/sections/bio-overlay";
 

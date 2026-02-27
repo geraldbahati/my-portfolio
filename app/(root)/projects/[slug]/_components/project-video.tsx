@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect, useCallback, memo, useMemo } from "react";
-import { m, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "motion/react";
 import { EyeIcon } from "lucide-react";
 import Image from "next/image";
 import { MediaRenderer } from "@/components/media";

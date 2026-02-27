@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
-import { m } from "framer-motion";
+import { m } from "motion/react";
 import { TextScramble } from "@/components/ui/text-scramble";
 import GridPattern from "@/components/ui/shadcn-io/grid-pattern";
 import { ArrowLeft } from "lucide-react";

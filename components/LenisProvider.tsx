@@ -33,11 +33,33 @@ export function LenisProvider({ children }: { children: ReactNode }) {
 
     setLenis(instance);
 
+    // Demand-driven rAF: only loop while Lenis is actively animating.
+    // Lenis emits "scroll" on every interpolated frame and stops when
+    // the lerp settles, so we use it to start the loop and let it
+    // self-terminate when isScrolling becomes false.
+    let running = false;
+
     function raf(time: number) {
       instance.raf(time);
-      rafId.current = requestAnimationFrame(raf);
+      if (instance.isScrolling) {
+        rafId.current = requestAnimationFrame(raf);
+      } else {
+        running = false;
+      }
     }
-    rafId.current = requestAnimationFrame(raf);
+
+    function startLoop() {
+      if (!running) {
+        running = true;
+        rafId.current = requestAnimationFrame(raf);
+      }
+    }
+
+    // Kick the loop on every new scroll input
+    instance.on("scroll", startLoop);
+    // Also start on wheel/touch so the first frame isn't missed
+    window.addEventListener("wheel", startLoop, { passive: true });
+    window.addEventListener("touchstart", startLoop, { passive: true });
 
     // Listen for changes to prefers-reduced-motion
     function onChange(e: MediaQueryListEvent) {
@@ -51,6 +73,8 @@ export function LenisProvider({ children }: { children: ReactNode }) {
 
     return () => {
       mq.removeEventListener("change", onChange);
+      window.removeEventListener("wheel", startLoop);
+      window.removeEventListener("touchstart", startLoop);
       cancelAnimationFrame(rafId.current);
       instance.destroy();
     };

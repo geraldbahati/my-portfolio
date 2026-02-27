@@ -2,7 +2,7 @@
 
 import { memo, useRef, useState, useCallback, useEffect } from "react";
 import Link from "next/link";
-import { m, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "motion/react";
 import { EyeIcon } from "lucide-react";
 import { Cursor } from "@/components/ui/cursor";
 import { MediaRenderer } from "@/components/media";
