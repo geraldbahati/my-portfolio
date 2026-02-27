@@ -1,51 +1,101 @@
-# Welcome to your Convex + Next.js + Clerk app
+# Gerald Bahati - Digital Portfolio
 
-This is a [Convex](https://convex.dev/) project created with [`npm create convex`](https://www.npmjs.com/package/create-convex).
+A modern, high-performance portfolio showcasing my software engineering experience, projects, and services. Built with Next.js 16, React 19, and Convex, featuring edge-first rendering and scroll-driven animations.
 
-After the initial setup (<2 minutes) you'll have a working full-stack app using:
+I specialize in building edge-first e-commerce and real-time systems, providing multi-layer caching, AI integrations, and M-Pesa payment implementations. My focus is on the intersection of performance, reliability, and user experience — building robust systems that are fast to use, fast to ship, and built to scale.
 
-- Convex as your backend (database, server logic)
-- [React](https://react.dev/) as your frontend (web page interactivity)
-- [Next.js](https://nextjs.org/) for optimized web hosting and page routing
-- [Tailwind](https://tailwindcss.com/) for building great looking accessible UI
-- [Clerk](https://clerk.com/) for authentication
+🌍 **Live Site:** [geraldbahati.dev](https://geraldbahati.dev)
 
-## Get started
+## 🚀 Key Features
 
-If you just cloned this codebase and didn't use `npm create convex`, run:
+- **Modern Tech Stack:** Built with the latest Next.js 16 (App Router) features and React 19.
+- **Performance First:** Edge rendering, optimized image delivery, and smooth animations (Framer Motion, Lenis).
+- **Rich Interactivity:** Scroll-driven animations, interactive overlays, and dynamic background patterns.
+- **Robust Backend:** Powered by Convex for real-time capabilities and type-safe database schemas.
+- **SEO Optimized:** Comprehensive metadata, JSON-LD structured data, and accessible markup.
+
+## 🛠️ Technology Stack
+
+**Frontend Framework**
+
+- [Next.js 16](https://nextjs.org/) (App Router)
+- [React 19](https://react.dev/)
+- [TypeScript](https://www.typescriptlang.org/)
+
+**Styling & UI**
+
+- [Tailwind CSS v4](https://tailwindcss.com/)
+- [Framer Motion](https://motion.dev/)
+- [shadcn/ui](https://ui.shadcn.com/) (Components)
+- [Lenis](https://lenis.darkroom.engineering/) (Smooth Scrolling)
+
+**Backend & Data**
+
+- [Convex](https://convex.dev/) (Backend-as-a-Service)
+- [Clerk](https://clerk.com/) (Authentication - configured, ready for use)
+
+**Analytics & Performance**
+
+- [Vercel Analytics](https://vercel.com/analytics)
+- [Vercel Speed Insights](https://vercel.com/speed-insights)
+
+## 📁 Project Structure
 
 ```
-npm install
-npm run dev
+├── app/                  # Next.js App Router pages and layouts
+├── components/           # Reusable UI components (shadcn ui, custom elements)
+├── sections/             # Core page sections (Hero, Info, Projects, Contact)
+├── convex/               # Convex backend functions and schema
+├── hooks/                # Custom React hooks
+├── lib/                  # Utility functions and analytics setup
+├── content/              # MDX files for rich content
+└── public/               # Static assets (images, fonts)
 ```
 
-If you're reading this README on GitHub and want to use this template, run:
+## 💻 Getting Started
 
-```
-npm create convex@latest -- -t nextjs-clerk
-```
+### Prerequisites
 
-Then:
+- Node.js (v18 or higher recommended)
+- npm or pnpm
 
-1. Open your app. There should be a "Claim your application" button from Clerk in the bottom right of your app.
-2. Follow the steps to claim your application and link it to this app.
-3. Follow step 3 in the [Convex Clerk onboarding guide](https://docs.convex.dev/auth/clerk#get-started) to create a Convex JWT template.
-4. Uncomment the Clerk provider in `convex/auth.config.ts`
-5. Paste the Issuer URL as `CLERK_JWT_ISSUER_DOMAIN` to your dev deployment environment variable settings on the Convex dashboard (see [docs](https://docs.convex.dev/auth/clerk#configuring-dev-and-prod-instances))
+### Installation
 
-If you want to sync Clerk user data via webhooks, check out this [example repo](https://github.com/thomasballinger/convex-clerk-users-table/).
+1.  **Clone the repository:**
 
-## Learn more
+    ```bash
+    git clone https://github.com/geraldbahati/portfolio.git
+    cd portfolio
+    ```
 
-To learn more about developing your project with Convex, check out:
+2.  **Install dependencies:**
 
-- The [Tour of Convex](https://docs.convex.dev/get-started) for a thorough introduction to Convex principles.
-- The rest of [Convex docs](https://docs.convex.dev/) to learn about all Convex features.
-- [Stack](https://stack.convex.dev/) for in-depth articles on advanced topics.
+    ```bash
+    npm install
+    # or
+    pnpm install
+    ```
 
-## Join the community
+3.  **Set up Environment Variables:**
+    Create a `.env.local` file in the root directory and add the necessary environment variables. You can reference `.env.local.example` for the required keys.
+    - **Convex:** Requires `CONVEX_DEPLOYMENT` and `NEXT_PUBLIC_CONVEX_URL`.
+    - **Clerk (Optional):** Requires basic Clerk public/secret keys depending on your auth requirements.
 
-Join thousands of developers building full-stack apps with Convex:
+4.  **Run the development server:**
 
-- Join the [Convex Discord community](https://convex.dev/community) to get help in real-time.
-- Follow [Convex on GitHub](https://github.com/get-convex/), star and contribute to the open-source implementation of Convex.
+    ```bash
+    npm run dev
+    ```
+
+    This command concurrently starts the Next.js frontend and the Convex backend environment.
+
+5.  **Open the app:**
+    Navigate to [http://localhost:3000](http://localhost:3000) in your browser to see the result.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
