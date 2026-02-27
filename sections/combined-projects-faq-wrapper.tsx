@@ -10,19 +10,21 @@
  */
 
 import { Suspense } from "react";
+import { cacheLife, cacheTag } from "next/cache";
 import CombinedProjectsFaqSection from "./combined-projects-faq";
 import { getCachedProjects } from "@/lib/data/projects";
 
 /**
  * Projects Content - Fetches and passes data to client component
  *
- * No "use cache" here — caching is handled by:
- * 1. getCachedProjects() which caches the Convex query for days
- * 2. The parent Home page which caches the full render for hours
- * Adding a third cache layer here previously caused stale empty data
- * to persist for days when the build-time fetch failed.
+ * Safe to cache because getCachedProjects() now throws on error
+ * instead of returning []. Errors propagate and won't be cached.
  */
 async function ProjectsFaqContent() {
+  "use cache";
+  cacheLife("days");
+  cacheTag("projects");
+
   const projects = await getCachedProjects();
   return <CombinedProjectsFaqSection projects={projects} />;
 }
