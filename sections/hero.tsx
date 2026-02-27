@@ -1,7 +1,6 @@
 "use client";
 
-import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { MotionValue } from "framer-motion";
+import { memo, useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
@@ -111,12 +110,12 @@ const TextScrambleHoverTrigger = memo(() => {
 TextScrambleHoverTrigger.displayName = "TextScrambleHoverTrigger";
 
 interface HeroSectionProps {
-  scrollProgress?: MotionValue<number>;
+  scaleRef?: RefObject<HTMLDivElement | null>;
+  cssScrollSupported?: boolean;
 }
 
-export default function HeroSection({ scrollProgress }: HeroSectionProps) {
+export default function HeroSection({ scaleRef, cssScrollSupported }: HeroSectionProps) {
   const [nameScrambling, setNameScrambling] = useState(true);
-  const [imageScale, setImageScale] = useState(1);
 
   const prefersReducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
 
@@ -127,16 +126,6 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
     }, 800);
     return () => clearTimeout(timer);
   }, [prefersReducedMotion]);
-
-  useEffect(() => {
-    if (!scrollProgress || prefersReducedMotion) return;
-
-    const unsubscribe = scrollProgress.on("change", (progress: number) => {
-      const newScale = 1 - progress * 0.15;
-      setImageScale(newScale);
-    });
-    return () => unsubscribe();
-  }, [scrollProgress, prefersReducedMotion]);
 
   return (
     <section
@@ -149,9 +138,10 @@ export default function HeroSection({ scrollProgress }: HeroSectionProps) {
       {/* Profile Background Image - scales on scroll */}
       <div className="absolute inset-0 z-0 flex items-center justify-center">
         <div
-          className="relative w-full h-full transition-transform duration-100 ease-out"
-          style={{
-            transform: `scale(${imageScale}) translateZ(0)`,
+          ref={scaleRef}
+          className={`relative w-full h-full${cssScrollSupported ? " scroll-hero-scale" : ""}`}
+          style={cssScrollSupported ? undefined : {
+            transform: "scale(1) translateZ(0)",
           }}
         >
           <Image

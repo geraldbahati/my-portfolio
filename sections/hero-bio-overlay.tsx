@@ -1,9 +1,15 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { useScroll } from "framer-motion";
 import HeroSection from "@/sections/hero";
 import BioOverlay from "@/sections/bio-overlay";
+
+// Stable references for useSyncExternalStore (value never changes after hydration)
+const noop = () => () => {};
+const getCssScrollSupport = () =>
+  CSS.supports("animation-timeline", "scroll()");
+const serverSnapshot = () => false;
 
 /**
  * HeroBioOverlay Component
@@ -12,11 +18,23 @@ import BioOverlay from "@/sections/bio-overlay";
  * - The hero section remains fixed in place
  * - The bio section slides up from the bottom as the user scrolls
  * - The bio section's position is directly tied to scroll progress
- * - Animation is smooth and performance-optimized using Framer Motion
+ * - Animation is smooth and performance-optimized using CSS Scroll-Driven
+ *   Animations (compositor thread) with Framer Motion as fallback
  */
 export default function HeroBioOverlay() {
   // Reference to the scroll container that triggers the animation
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Ref for direct DOM manipulation of hero image scale (JS fallback only)
+  const heroScaleRef = useRef<HTMLDivElement>(null);
+
+  // Feature detection: CSS Scroll-Driven Animations
+  // useSyncExternalStore avoids the flash from useEffect+setState on mount
+  const cssScrollSupported = useSyncExternalStore(
+    noop,
+    getCssScrollSupport,
+    serverSnapshot,
+  );
 
   // Track scroll progress within the container - Memoized for performance
   // offset: ["start start", "center start"] means:
@@ -28,8 +46,18 @@ export default function HeroBioOverlay() {
     offset: ["start start", "center start"],
   });
 
-  // useTransform is already optimized internally by Framer Motion
-  // No need to memoize - it handles its own caching
+  // Forward scroll progress to hero image scale via direct DOM mutation (JS fallback)
+  // Only runs when CSS scroll-driven animations are NOT supported
+  useEffect(() => {
+    if (cssScrollSupported) return;
+    const unsubscribe = scrollYProgress.on("change", (progress: number) => {
+      if (heroScaleRef.current) {
+        const scale = 1 - progress * 0.15;
+        heroScaleRef.current.style.transform = `scale(${scale}) translateZ(0)`;
+      }
+    });
+    return () => unsubscribe();
+  }, [scrollYProgress, cssScrollSupported]);
 
   return (
     <>
@@ -60,7 +88,10 @@ export default function HeroBioOverlay() {
             transform: "translateZ(0)",
           }}
         >
-          <HeroSection scrollProgress={scrollYProgress} />
+          <HeroSection
+            scaleRef={cssScrollSupported ? undefined : heroScaleRef}
+            cssScrollSupported={cssScrollSupported}
+          />
         </div>
 
         {/* Bio Section - slides up from bottom based on scroll position */}
@@ -76,7 +107,10 @@ export default function HeroBioOverlay() {
             transform: "translateZ(0)",
           }}
         >
-          <BioOverlay scrollProgress={scrollYProgress} />
+          <BioOverlay
+            scrollProgress={scrollYProgress}
+            cssScrollSupported={cssScrollSupported}
+          />
         </div>
       </div>
     </>
