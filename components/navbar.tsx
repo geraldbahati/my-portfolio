@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Linkedin, Github, MessageCircle, Instagram } from "lucide-react";
 import Image from "next/image";
 import Analytics from "@/lib/analytics";
+import { useLenis } from "@/components/LenisProvider";
 
 // ============================================================================
 // TYPES
@@ -228,18 +229,22 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number }>> = {
 
 const Navbar = memo(function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const lenis = useLenis();
 
   // Prevent body scroll when menu is open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
+      lenis?.stop();
     } else {
       document.body.style.overflow = "unset";
+      lenis?.start();
     }
     return () => {
       document.body.style.overflow = "unset";
+      lenis?.start();
     };
-  }, [isOpen]);
+  }, [isOpen, lenis]);
 
   return (
     <>

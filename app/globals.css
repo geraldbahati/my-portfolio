@@ -260,6 +260,16 @@
 }
 
 
+/* Lenis smooth scroll resets */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
