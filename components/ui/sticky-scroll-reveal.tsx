@@ -9,6 +9,13 @@ import React, {
   memo,
 } from "react";
 import Image from "next/image";
+import { m } from "motion/react";
+
+// Animation variants for mobile layout (whileInView replaces tailwindcss-intersect)
+const mobileRevealUp = { hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } };
+const mobileRevealUpLarge = { hidden: { opacity: 0, y: 50 }, visible: { opacity: 1, y: 0 } };
+const mobileRevealLeft = { hidden: { opacity: 0, x: -20 }, visible: { opacity: 1, x: 0 } };
+const mobileScaleX = { hidden: { scaleX: 0 }, visible: { scaleX: 1 } };
 
 // ============================================================================
 // Image Preloading Hook - Preloads upcoming images before they're needed
@@ -525,7 +532,7 @@ export const StickyScrollReveal = ({
     return () => observer.disconnect();
   }, [isMobile]);
 
-  // Mobile Layout - CSS-only animations via tailwindcss-intersect
+  // Mobile Layout - motion/react whileInView animations
   if (isMobile) {
     return (
       <div className={`relative ${containerClassName || ""}`}>
@@ -536,7 +543,14 @@ export const StickyScrollReveal = ({
               className="min-h-screen flex flex-col justify-center py-16"
             >
               {/* Image Section for Mobile */}
-              <div className="mb-12 opacity-0 intersect:motion-opacity-in intersect:motion-translate-y-in-[30px] intersect:motion-duration-[600ms] intersect-half">
+              <m.div
+                className="mb-12"
+                variants={mobileRevealUp}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.5 }}
+                transition={{ duration: 0.6 }}
+              >
                 <div
                   className={`relative w-full rounded-2xl overflow-hidden shadow-xl ${contentClassName || ""}`}
                   style={{
@@ -596,24 +610,42 @@ export const StickyScrollReveal = ({
                     </div>
                   )}
                 </div>
-              </div>
+              </m.div>
 
               {/* Content Section for Mobile */}
-              <div className="w-full opacity-0 intersect:motion-opacity-in intersect:motion-translate-y-in-[50px] intersect:motion-duration-[600ms] intersect:motion-delay-[200ms] intersect-half">
+              <m.div
+                className="w-full"
+                variants={mobileRevealUpLarge}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.5 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
                 {section.label && (
-                  <div className="mb-6 grid-interaction-blocked opacity-0 intersect:motion-opacity-in intersect:motion-translate-x-in-[-20px] intersect:motion-duration-[500ms] intersect-half">
+                  <m.div
+                    className="mb-6 grid-interaction-blocked"
+                    variants={mobileRevealLeft}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, amount: 0.5 }}
+                    transition={{ duration: 0.5 }}
+                  >
                     <span className="inline-block text-sm font-medium uppercase tracking-[0.2em] text-accent-orange">
                       {section.label}
                     </span>
-                    <div
-                      className="mt-3 h-[1px] bg-accent-orange-muted intersect:motion-scale-x-in intersect:motion-duration-[500ms] intersect:motion-delay-[200ms]"
+                    <m.div
+                      className="mt-3 h-[1px] bg-accent-orange-muted"
                       style={{
                         transformOrigin: "left",
-                        transform: "scaleX(0)",
                         width: "120px",
                       }}
+                      variants={mobileScaleX}
+                      initial="hidden"
+                      whileInView="visible"
+                      viewport={{ once: true, amount: 0.5 }}
+                      transition={{ duration: 0.5, delay: 0.2 }}
                     />
-                  </div>
+                  </m.div>
                 )}
 
                 <h2
@@ -632,13 +664,14 @@ export const StickyScrollReveal = ({
                 {section.bullets && (
                   <ul className="space-y-3 grid-interaction-blocked">
                     {section.bullets.map((bullet, bulletIndex) => (
-                      <li
+                      <m.li
                         key={`bullet-mobile-${bulletIndex}`}
-                        className="flex items-start opacity-0 intersect:motion-opacity-in intersect:motion-translate-x-in-[-20px] intersect:motion-duration-[500ms] intersect-half"
-                        style={{
-                          // @ts-expect-error -- CSS custom property for staggered delay
-                          "--motion-delay": `${300 + bulletIndex * 50}ms`,
-                        }}
+                        className="flex items-start"
+                        variants={mobileRevealLeft}
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{ once: true, amount: 0.5 }}
+                        transition={{ duration: 0.5, delay: 0.3 + bulletIndex * 0.05 }}
                       >
                         <svg
                           className="w-4 h-4 mt-1.5 mr-3 flex-shrink-0 text-text-primary"
@@ -650,11 +683,11 @@ export const StickyScrollReveal = ({
                         <span className="text-base text-gray-700">
                           {bullet}
                         </span>
-                      </li>
+                      </m.li>
                     ))}
                   </ul>
                 )}
-              </div>
+              </m.div>
             </div>
           ))}
         </div>
