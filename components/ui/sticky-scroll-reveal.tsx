@@ -226,7 +226,7 @@ const TextSection = memo(({ section, index, sectionRef }: TextSectionProps) => {
   }, [sectionRef]);
 
   return (
-    <div ref={sectionRef} className="min-h-screen flex items-center py-16">
+    <div ref={sectionRef} className="min-h-screen flex items-center py-16 short:py-8">
       <div ref={wrapperRef} className="w-full">
         {section.label && (
           <div
@@ -251,7 +251,7 @@ const TextSection = memo(({ section, index, sectionRef }: TextSectionProps) => {
 
         <h2
           ref={titleRef}
-          className="text-6xl lg:text-7xl font-bold mb-12 tracking-tight grid-interaction-blocked"
+          className="text-6xl lg:text-7xl short:text-5xl font-bold mb-12 short:mb-8 tracking-tight grid-interaction-blocked"
           style={{ lineHeight: "0.9", color: COLOR_GRAY_400 }}
         >
           {section.title}
@@ -260,7 +260,7 @@ const TextSection = memo(({ section, index, sectionRef }: TextSectionProps) => {
         {section.description && (
           <p
             ref={descriptionRef}
-            className="text-base mb-12 max-w-lg leading-relaxed grid-interaction-blocked"
+            className="text-base mb-12 short:mb-8 max-w-lg leading-relaxed grid-interaction-blocked"
             style={{ color: COLOR_GRAY_400 }}
           >
             {section.description}
@@ -722,17 +722,13 @@ export const StickyScrollReveal = ({
               }}
             >
               {/* Spacer to push sticky element down so it starts centered with first content */}
-              <div style={{ height: "calc(50vh - 300px)" }} />
+              <div className="h-[calc(50vh-300px)] short:h-[calc(50vh-210px)]" />
 
               {/* Sticky container — JS entrance animation (sticky + intersect CSS don't mix) */}
               <div
                 ref={stickyContainerRef}
-                className="w-full mx-auto"
+                className="w-full mx-auto sticky w-[600px] h-[600px] short:w-[420px] short:h-[420px] top-[calc(50vh-300px)] short:top-[calc(50vh-210px)]"
                 style={{
-                  position: "sticky",
-                  top: "calc(50vh - 300px)",
-                  width: "600px",
-                  height: "600px",
                   opacity: 0,
                   transform: "translateY(350px) translateZ(0)",
                   transition: "none",

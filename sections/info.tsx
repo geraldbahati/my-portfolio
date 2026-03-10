@@ -121,7 +121,7 @@ const InfoSection = memo(function InfoSection() {
           <div className="max-w-7xl mx-auto">
             <p
               ref={closingRef}
-              className="text-3xl md:text-4xl lg:text-[51.2px] leading-none tracking-tight indent-8 md:indent-80 lg:indent-96 grid-interaction-blocked"
+              className="text-3xl md:text-4xl lg:text-[51.2px] short:text-3xl leading-none tracking-tight indent-8 md:indent-80 lg:indent-96 short:indent-40 grid-interaction-blocked"
               style={{ opacity: 0, transform: "translateY(50px)" }}
             >
               <span>Product Engineering</span> is about shipping solutions that

@@ -6,6 +6,7 @@
 @plugin "tailwindcss-intersect";
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant short (@media (max-height: 800px) and (min-width: 1024px));
 
 @theme inline {
   /* Core Colors */

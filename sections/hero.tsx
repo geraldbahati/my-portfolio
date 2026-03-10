@@ -186,10 +186,10 @@ export default function HeroSection({ scaleRef, cssScrollSupported }: HeroSectio
       )}
 
       {/* Hero Content - Renders immediately for fast LCP */}
-      <div className="relative z-10 min-h-screen flex items-end justify-center lg:justify-end px-4 sm:px-6 lg:px-8 sm:pb-12 pb-16 pointer-events-none">
+      <div className="relative z-10 min-h-screen flex items-end justify-center lg:justify-end px-4 sm:px-6 lg:px-8 sm:pb-12 pb-16 short:pb-8 pointer-events-none">
         <div className="w-full max-w-7xl mx-auto text-center lg:text-left">
           {/* Name section - Single render with CSS animation + TextScramble */}
-          <div className="mb-8 overflow-hidden">
+          <div className="mb-8 short:mb-4 overflow-hidden">
             <div
               className={`reveal-up transition-[filter] duration-700 ease-out ${
                 nameScrambling && !prefersReducedMotion ? "blur-[1px]" : "blur-0"
@@ -209,10 +209,10 @@ export default function HeroSection({ scaleRef, cssScrollSupported }: HeroSectio
           </div>
 
           {/* Main Title - Clip reveal animation (text slides up together from greater distance) */}
-          <div className="mb-8 sm:mb-10 lg:mb-12">
+          <div className="mb-8 sm:mb-10 lg:mb-12 short:mb-6">
             <h1
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-thin leading-tight sm:leading-none tracking-tight grid-interaction-blocked pointer-events-auto text-white"
-              style={{ fontSize: "clamp(2.25rem, 8vw, 6rem)" }}
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl short:text-6xl font-thin leading-tight sm:leading-none tracking-tight grid-interaction-blocked pointer-events-auto text-white"
+              style={{ fontSize: "clamp(2.25rem, 6vw, 5rem)" }}
             >
               {/* "Product" with clip reveal */}
               <span className="inline-block overflow-hidden align-bottom">
@@ -242,7 +242,7 @@ export default function HeroSection({ scaleRef, cssScrollSupported }: HeroSectio
           <div className="flex flex-col items-center lg:items-start lg:flex-row lg:justify-between gap-6 sm:gap-8">
             {/* Description with clip reveal */}
             <div className="max-w-xl lg:max-w-2xl overflow-hidden">
-              <p className="text-sm sm:text-base lg:text-lg text-muted-foreground font-light leading-relaxed tracking-wide grid-interaction-blocked pointer-events-auto reveal-up">
+              <p className="text-sm sm:text-base lg:text-lg short:text-base text-muted-foreground font-light leading-relaxed tracking-wide grid-interaction-blocked pointer-events-auto reveal-up">
                 Building edge-first e-commerce and real-time systems with
                 multi-layer caching, AI recommendations, and M-Pesa payment
                 integrations.

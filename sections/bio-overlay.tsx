@@ -268,7 +268,7 @@ export default function BioOverlay({ scrollProgress, cssScrollSupported }: BioOv
       )}
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-[210px_1fr] gap-12 lg:gap-24 items-center">
+        <div className="grid lg:grid-cols-[210px_1fr] gap-12 lg:gap-24 short:gap-12 items-center">
           {/* Left: Animated Cutout Mask Image */}
           {cssScrollSupported ? (
             <div
@@ -291,7 +291,7 @@ export default function BioOverlay({ scrollProgress, cssScrollSupported }: BioOv
           )}
 
           {/* Right: Synchronized Text Content */}
-          <div className="space-y-8">
+          <div className="space-y-8 short:space-y-4">
             {/* Tagline and Number */}
             <div className="flex justify-between items-start">
               <div className="text-xs sm:text-sm font-medium tracking-[0.2em] uppercase text-gray-600">
@@ -333,7 +333,7 @@ export default function BioOverlay({ scrollProgress, cssScrollSupported }: BioOv
             </div>
 
             {/* Main Text */}
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl leading-tight font-light text-gray-900">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl short:text-3xl leading-tight font-light text-gray-900">
               {mainTextData.map(({ chars, wordIdx, isLast }) => (
                 <span
                   key={`main-word-${wordIdx}`}

@@ -350,14 +350,14 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
           {/* Header - entrance via useIntersectOnce + CSS transitions */}
           <div
             ref={headerRef}
-            className="absolute top-0 left-0 right-0 z-40 pt-16 transition-all duration-500 ease-out"
+            className="absolute top-0 left-0 right-0 z-40 pt-16 short:pt-6 transition-all duration-500 ease-out"
             style={{
               opacity: headerVisible ? 1 : 0,
               transform: headerVisible ? "translateY(0)" : "translateY(32px)",
             }}
           >
-            <div className="max-w-7xl mx-auto px-6 pb-12">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            <div className="max-w-7xl mx-auto px-6 pb-12 short:pb-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 short:gap-4 items-center">
                 <div
                   ref={titleRef}
                   className="transition-all duration-500 ease-out"
@@ -369,7 +369,7 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
                 >
                   <h1
                     data-projects-title
-                    className="text-4xl lg:text-5xl font-medium leading-tight tracking-tight transition-colors duration-500 text-text-primary"
+                    className="text-4xl lg:text-5xl short:text-3xl font-medium leading-tight tracking-tight transition-colors duration-500 text-text-primary"
                     style={{
                       fontSize: "2.25rem",
                     }}
@@ -400,7 +400,7 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
           </div>
 
           {/* Horizontal scroll projects */}
-          <div className="h-full flex items-start pb-20 pt-80 lg:pt-64">
+          <div className="h-full flex items-start pb-20 short:pb-4 pt-80 lg:pt-64 short:pt-28">
             <div
               ref={scrollContainerRef}
               data-projects-area
@@ -413,7 +413,7 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
                 {projects.map((project) => (
                   <div
                     key={project.id}
-                    className="w-[90vw] md:w-[500px] lg:w-[666px] flex-shrink-0"
+                    className="w-[90vw] md:w-[500px] lg:w-[666px] short:w-[500px] flex-shrink-0"
                   >
                     <ProjectCard
                       id={project.id}
@@ -447,8 +447,8 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
           transform: `translateY(${spaceBelow}vh)`,
         }}
       >
-        <div className="pb-32">
-          <div className="container mx-auto max-w-7xl px-6 lg:px-16 pt-20">
+        <div className="pb-32 short:pb-16">
+          <div className="container mx-auto max-w-7xl px-6 lg:px-16 pt-20 short:pt-10">
             <SectionDivider
               label="WHY YOU SHOULD WORK WITH ME"
               counter="(04)"
@@ -458,8 +458,8 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
             />
           </div>
 
-          <div className="container mx-auto max-w-7xl px-6 lg:px-16 py-20">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center mb-32">
+          <div className="container mx-auto max-w-7xl px-6 lg:px-16 py-20 short:py-10">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 short:gap-12 items-center mb-32 short:mb-16">
               <div className="flex items-end gap-6">
                 <SocialSidebar />
                 <div className="relative w-full max-w-[540px] overflow-hidden rounded-lg">
@@ -477,7 +477,7 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
               </div>
 
               <div className="max-w-xl">
-                <h2 className="text-3xl font-light mb-8 tracking-tight">
+                <h2 className="text-3xl short:text-2xl font-light mb-8 short:mb-4 tracking-tight">
                   Trust in the expertise
                 </h2>
                 <p className="text-gray-400 text-base leading-relaxed font-light">

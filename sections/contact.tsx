@@ -74,7 +74,7 @@ const ContactSection = memo(function ContactSection({
   return (
     <section
       data-section-id="ContactSection"
-      className={`h-[60vh] relative flex items-center justify-center p-8 ${className}`}
+      className={`h-[60vh] short:h-[50vh] relative flex items-center justify-center p-8 short:p-4 ${className}`}
       aria-label="Contact call-to-action section"
     >
       <div className="absolute inset-0 w-full h-full z-0">
@@ -87,7 +87,7 @@ const ContactSection = memo(function ContactSection({
         />
       </div>
       <div className="relative z-10 text-center max-w-7xl mx-auto grid-interaction-blocked">
-        <h2 className="text-4xl sm:text-6xl md:text-7xl lg:text-7xl font-light text-white tracking-wide drop-shadow-2xl">
+        <h2 className="text-4xl sm:text-6xl md:text-7xl lg:text-7xl short:text-5xl font-light text-white tracking-wide drop-shadow-2xl">
           <Link
             href="/contact"
             className="group inline transition-opacity duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded-lg"
@@ -131,7 +131,7 @@ const ContactSection = memo(function ContactSection({
                 alt=""
                 width={64}
                 height={64}
-                className="w-12 h-12 sm:w-16 sm:h-16 md:w-24 md:h-24 lg:w-32 lg:h-32 xl:w-40 xl:h-40 object-contain rounded-xl"
+                className="w-12 h-12 sm:w-16 sm:h-16 md:w-24 md:h-24 lg:w-32 lg:h-32 xl:w-40 xl:h-40 short:w-20 short:h-20 object-contain rounded-xl"
                 priority={false}
                 unoptimized
               />
