@@ -272,7 +272,7 @@ const NavBar = memo(function NavBar({ isOpen, setIsOpen }: NavBarProps) {
       }`}
     >
       <div className="relative mx-auto px-6 lg:px-12">
-        <div className="relative flex items-center justify-between py-6">
+        <div className="relative flex items-center justify-between py-6 short:py-3">
           {/* Logo */}
           <motion.a
             href="/"
@@ -296,7 +296,7 @@ const NavBar = memo(function NavBar({ isOpen, setIsOpen }: NavBarProps) {
               height={80}
               priority
               sizes="(max-width: 640px) 48px, (max-width: 768px) 56px, (max-width: 1024px) 56px, (max-width: 1280px) 64px, 80px"
-              className="w-12 h-12 sm:w-14 sm:h-14 md:w-14 md:h-14 lg:w-16 lg:h-16 xl:w-20 xl:h-20 invert brightness-0 transition-all duration-300"
+              className="w-12 h-12 sm:w-14 sm:h-14 md:w-14 md:h-14 lg:w-16 lg:h-16 xl:w-20 xl:h-20 short:w-14 short:h-14 invert brightness-0 transition-all duration-300"
             />
           </motion.a>
 
@@ -386,7 +386,7 @@ const MenuOverlay = memo(function MenuOverlay({ setIsOpen }: MenuOverlayProps) {
       exit="exit"
     >
       <div className="container mx-auto px-6 lg:px-12 h-full flex">
-        <div className="flex flex-col lg:flex-row w-full h-full py-12 sm:py-16 lg:py-32">
+        <div className="flex flex-col lg:flex-row w-full h-full py-12 sm:py-16 lg:py-32 short:py-16">
           {/* Left Section - Menu Items */}
           <div className="flex-1 flex flex-col justify-center items-center lg:items-start lg:relative">
             {/* Menu Items */}
@@ -397,12 +397,12 @@ const MenuOverlay = memo(function MenuOverlay({ setIsOpen }: MenuOverlayProps) {
               animate="animate"
               exit="exit"
             >
-              <ul className="space-y-4 sm:space-y-6 lg:space-y-8 text-center lg:text-left">
+              <ul className="space-y-4 sm:space-y-6 lg:space-y-8 short:space-y-3 text-center lg:text-left">
                 {MENU_ITEMS.map((item) => (
                   <motion.li key={item.label} variants={ITEM_VARIANTS}>
                     <motion.a
                       href={item.href}
-                      className="text-white hover:text-primary text-3xl sm:text-4xl lg:text-6xl xl:text-8xl font-medium block cursor-pointer transition-colors duration-300"
+                      className="text-white hover:text-primary text-3xl sm:text-4xl lg:text-6xl xl:text-8xl short:text-5xl font-medium block cursor-pointer transition-colors duration-300"
                       onClick={() => handleMenuItemClick(item.label, item.href)}
                       initial={{ letterSpacing: "0em" }}
                       whileHover={{
@@ -454,7 +454,7 @@ const MenuOverlay = memo(function MenuOverlay({ setIsOpen }: MenuOverlayProps) {
           {/* Right Section - Image & Mobile Social Links */}
           <div className="flex-1 flex flex-col items-center justify-center mt-8 lg:mt-0 relative">
             <motion.div
-              className="relative w-64 h-80 sm:w-72 sm:h-88 md:w-80 md:h-96 lg:w-[500px] lg:h-[600px] xl:w-[600px] xl:h-[700px]"
+              className="relative w-64 h-80 sm:w-72 sm:h-88 md:w-80 md:h-96 lg:w-[500px] lg:h-[600px] xl:w-[600px] xl:h-[700px] short:w-[340px] short:h-[420px]"
               variants={IMAGE_VARIANTS}
               initial="initial"
               animate="animate"
