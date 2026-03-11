@@ -54,7 +54,8 @@ async function initHlsPlayer(
       const hls = new HlsModule({
         enableWorker: true,
         lowLatencyMode: false,
-        startLevel: -1,
+        // Start at lowest quality on mobile for faster first frame, auto on desktop
+        startLevel: isMobileDevice ? 0 : -1,
         maxBufferLength: isMobileDevice ? 15 : 30,
         maxMaxBufferLength: isMobileDevice ? 30 : 60,
       });

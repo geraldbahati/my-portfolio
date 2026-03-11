@@ -191,7 +191,7 @@ export default function BioOverlay({ scrollProgress, cssScrollSupported }: BioOv
   // Shared image content
   const imageContent = (
     <CutoutMaskImage
-      imageUrl="/original.jpeg"
+      imageUrl="/man-sitting.webp"
       clickToChangeImage={false}
       maxWidth={282}
       className="w-full max-w-[282px]"

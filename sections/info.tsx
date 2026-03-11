@@ -18,7 +18,7 @@ const sections = [
       "Core Web Vitals & performance tuning",
       "Design system implementation",
     ],
-    image: "/web-design.jpg",
+    image: "/web-design.webp",
   },
   {
     label: "BACKEND",
@@ -32,7 +32,7 @@ const sections = [
       "Payment integration (M-Pesa, Stripe)",
       "Rate limiting, validation & error handling",
     ],
-    image: "/backend.jpg",
+    image: "/backend.webp",
   },
   {
     label: "INFRASTRUCTURE",
@@ -60,7 +60,7 @@ const sections = [
       "Generative UI components",
       "Event-driven microservices",
     ],
-    image: "/ai.jpg",
+    image: "/ai.webp",
   },
 ];
 

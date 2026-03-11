@@ -12,9 +12,18 @@ import Image from "next/image";
 import { m } from "motion/react";
 
 // Animation variants for mobile layout (whileInView replaces tailwindcss-intersect)
-const mobileRevealUp = { hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } };
-const mobileRevealUpLarge = { hidden: { opacity: 0, y: 50 }, visible: { opacity: 1, y: 0 } };
-const mobileRevealLeft = { hidden: { opacity: 0, x: -20 }, visible: { opacity: 1, x: 0 } };
+const mobileRevealUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0 },
+};
+const mobileRevealUpLarge = {
+  hidden: { opacity: 0, y: 50 },
+  visible: { opacity: 1, y: 0 },
+};
+const mobileRevealLeft = {
+  hidden: { opacity: 0, x: -20 },
+  visible: { opacity: 1, x: 0 },
+};
 const mobileScaleX = { hidden: { scaleX: 0 }, visible: { scaleX: 1 } };
 
 // ============================================================================
@@ -226,7 +235,10 @@ const TextSection = memo(({ section, index, sectionRef }: TextSectionProps) => {
   }, [sectionRef]);
 
   return (
-    <div ref={sectionRef} className="min-h-screen flex items-center py-16 short:py-8">
+    <div
+      ref={sectionRef}
+      className="min-h-screen flex items-center py-16 short:py-8"
+    >
       <div ref={wrapperRef} className="w-full">
         {section.label && (
           <div
@@ -239,7 +251,7 @@ const TextSection = memo(({ section, index, sectionRef }: TextSectionProps) => {
             </span>
             <div
               ref={labelUnderlineRef}
-              className="mt-3 h-[1px] bg-accent-orange-muted"
+              className="mt-3 h-px bg-accent-orange-muted"
               style={{
                 transform: "scaleX(0)",
                 transformOrigin: "left",
@@ -284,7 +296,7 @@ const TextSection = memo(({ section, index, sectionRef }: TextSectionProps) => {
                     if (el) bulletSvgRefs.current.set(bulletIndex, el);
                     else bulletSvgRefs.current.delete(bulletIndex);
                   }}
-                  className="w-4 h-4 mt-1.5 mr-4 flex-shrink-0"
+                  className="w-4 h-4 mt-1.5 mr-4 shrink-0"
                   style={{ color: COLOR_GRAY_400 }}
                   fill="currentColor"
                   viewBox="0 0 16 16"
@@ -350,28 +362,28 @@ const ImagePanel = memo(
           section.content
         ) : section.image ? (
           <div className="relative w-full h-full overflow-hidden">
-            {/* Background blurred image */}
+            {/* Single image serves as both background (via CSS blur overlay) and sharp center */}
+            <Image
+              src={section.image}
+              alt={`${section.title} background`}
+              fill
+              className="object-cover"
+              priority={index === 0}
+              loading={shouldLoad ? "eager" : "lazy"}
+              quality={80}
+              sizes="(max-width: 1024px) 500px, 600px"
+            />
+            {/* Blur + dim overlay using backdrop-filter (no second image request) */}
             <div
-              className="absolute inset-0 w-full h-full"
-              style={{ zIndex: 1 }}
-            >
-              <Image
-                src={section.image}
-                alt={`${section.title} background`}
-                fill
-                className="object-cover"
-                style={{
-                  filter: "blur(10px) brightness(0.95)",
-                  transform: "scale(1.1)",
-                }}
-                priority={index === 0}
-                loading={shouldLoad ? "eager" : "lazy"}
-                quality={50}
-                sizes="(max-width: 1024px) 500px, 600px"
-              />
-            </div>
+              className="absolute inset-0"
+              style={{
+                zIndex: 1,
+                backdropFilter: "blur(10px) brightness(0.95)",
+                WebkitBackdropFilter: "blur(10px) brightness(0.95)",
+              }}
+            />
 
-            {/* Centered sharp image */}
+            {/* Centered sharp image — reuses cached image from above */}
             <div
               className="absolute inset-0 flex items-center justify-center p-8"
               style={{ zIndex: 2 }}
@@ -384,14 +396,14 @@ const ImagePanel = memo(
                   className="object-cover"
                   priority={index === 0}
                   loading={shouldLoad ? "eager" : "lazy"}
-                  quality={95}
+                  quality={90}
                   sizes="(max-width: 1024px) 320px, 450px"
                 />
               </div>
             </div>
           </div>
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+          <div className="w-full h-full bg-linear-to-br from-gray-100 to-gray-200 flex items-center justify-center">
             <span className="text-text-tertiary text-xl font-medium">
               {section.title}
             </span>
@@ -563,24 +575,23 @@ export const StickyScrollReveal = ({
                     section.content
                   ) : section.image ? (
                     <div className="relative w-full h-full overflow-hidden">
+                      <Image
+                        src={section.image}
+                        alt={`${section.title} background`}
+                        fill
+                        className="object-cover"
+                        priority={index === 0}
+                        quality={80}
+                        sizes="(max-width: 640px) 90vw, 500px"
+                      />
                       <div
-                        className="absolute inset-0 w-full h-full"
-                        style={{ zIndex: 1 }}
-                      >
-                        <Image
-                          src={section.image}
-                          alt={`${section.title} background`}
-                          fill
-                          className="object-cover"
-                          style={{
-                            filter: "blur(10px) brightness(0.95)",
-                            transform: "scale(1.1)",
-                          }}
-                          priority={index === 0}
-                          quality={50}
-                          sizes="(max-width: 640px) 90vw, 500px"
-                        />
-                      </div>
+                        className="absolute inset-0"
+                        style={{
+                          zIndex: 1,
+                          backdropFilter: "blur(10px) brightness(0.95)",
+                          WebkitBackdropFilter: "blur(10px) brightness(0.95)",
+                        }}
+                      />
 
                       <div
                         className="absolute inset-0 flex items-center justify-center p-8"
@@ -592,18 +603,15 @@ export const StickyScrollReveal = ({
                             alt={section.title}
                             fill
                             className="object-cover"
-                            style={{
-                              filter: "none",
-                            }}
                             priority={index === 0}
-                            quality={95}
+                            quality={90}
                             sizes="(max-width: 640px) 70vw, 320px"
                           />
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                    <div className="w-full h-full bg-linear-to-br from-gray-100 to-gray-200 flex items-center justify-center">
                       <span className="text-text-tertiary text-lg font-medium text-center px-4">
                         {section.title}
                       </span>
@@ -634,7 +642,7 @@ export const StickyScrollReveal = ({
                       {section.label}
                     </span>
                     <m.div
-                      className="mt-3 h-[1px] bg-accent-orange-muted"
+                      className="mt-3 h-px bg-accent-orange-muted"
                       style={{
                         transformOrigin: "left",
                         width: "120px",
@@ -671,10 +679,13 @@ export const StickyScrollReveal = ({
                         initial="hidden"
                         whileInView="visible"
                         viewport={{ once: true, amount: 0.5 }}
-                        transition={{ duration: 0.5, delay: 0.3 + bulletIndex * 0.05 }}
+                        transition={{
+                          duration: 0.5,
+                          delay: 0.3 + bulletIndex * 0.05,
+                        }}
                       >
                         <svg
-                          className="w-4 h-4 mt-1.5 mr-3 flex-shrink-0 text-text-primary"
+                          className="w-4 h-4 mt-1.5 mr-3 shrink-0 text-text-primary"
                           fill="currentColor"
                           viewBox="0 0 16 16"
                         >
@@ -727,7 +738,7 @@ export const StickyScrollReveal = ({
               {/* Sticky container — JS entrance animation (sticky + intersect CSS don't mix) */}
               <div
                 ref={stickyContainerRef}
-                className="w-full mx-auto sticky w-[600px] h-[600px] short:w-[420px] short:h-[420px] top-[calc(50vh-300px)] short:top-[calc(50vh-210px)]"
+                className="w-full mx-auto sticky h-[600px] short:w-[420px] short:h-[420px] top-[calc(50vh-300px)] short:top-[calc(50vh-210px)]"
                 style={{
                   opacity: 0,
                   transform: "translateY(350px) translateZ(0)",

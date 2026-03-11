@@ -56,32 +56,31 @@ export const metadata: Metadata = {
 
 const BASE_URL = "https://geraldbahati.dev";
 
-const jsonLd = [
-  {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    name: "Gerald Bahati Portfolio",
-    url: BASE_URL,
+const websiteLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Gerald Bahati Portfolio",
+  url: BASE_URL,
+};
+
+const personLd = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: "Gerald Bahati",
+  url: BASE_URL,
+  jobTitle: "Product Software Engineer",
+  email: "contact@geraldbahati.dev",
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Nairobi",
+    addressCountry: "KE",
   },
-  {
-    "@context": "https://schema.org",
-    "@type": "Person",
-    name: "Gerald Bahati",
-    url: BASE_URL,
-    jobTitle: "Product Software Engineer",
-    email: "contact@geraldbahati.dev",
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: "Nairobi",
-      addressCountry: "KE",
-    },
-    sameAs: [
-      "https://www.linkedin.com/in/geraldbahati/",
-      "https://github.com/geraldbahati",
-      "https://x.com/gerald_baha",
-    ],
-  },
-];
+  sameAs: [
+    "https://www.linkedin.com/in/geraldbahati/",
+    "https://github.com/geraldbahati",
+    "https://x.com/gerald_baha",
+  ],
+};
 
 export default async function Home() {
   "use cache";
@@ -89,10 +88,12 @@ export default async function Home() {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <script type="application/ld+json">
+        {JSON.stringify(websiteLd)}
+      </script>
+      <script type="application/ld+json">
+        {JSON.stringify(personLd)}
+      </script>
 
       <PageAnalytics trackPageView trackScroll trackTime />
 

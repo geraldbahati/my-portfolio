@@ -1,9 +1,10 @@
 "use client";
 
-import React, { memo, useEffect, useState, useCallback } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import React, { memo, useEffect, useState, useCallback, useRef } from "react";
 import { Linkedin, Github, MessageCircle, Instagram } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Analytics from "@/lib/analytics";
 import { useLenis } from "@/components/LenisProvider";
 
@@ -23,6 +24,7 @@ interface MenuButtonProps {
 
 interface MenuOverlayProps {
   isOpen: boolean;
+  isClosing: boolean;
   setIsOpen: (isOpen: boolean) => void;
 }
 
@@ -56,117 +58,17 @@ const SOCIAL_LINKS = [
   { id: "github", href: "https://github.com/geraldbahati", label: "GitHub" },
 ] as const;
 
-// ============================================================================
-// ANIMATION VARIANTS - Hoisted to module scope to prevent recreation
-// ============================================================================
+// Stagger delays for menu items (enter)
+const ITEM_ENTER_DELAYS = [0.3, 0.4, 0.5] as const; // delayChildren 0.3 + stagger 0.1
+// Stagger delays for menu items (exit) - reverse order
+const ITEM_EXIT_DELAYS = [0.1, 0.05, 0] as const; // reverse stagger 0.05
 
-const OVERLAY_VARIANTS = {
-  initial: {
-    clipPath: "inset(0% 0% 100% 0%)",
-  },
-  animate: {
-    clipPath: "inset(0% 0% 0% 0%)",
-    transition: {
-      duration: 0.6,
-      ease: [0.76, 0, 0.24, 1] as [number, number, number, number],
-    },
-  },
-  exit: {
-    clipPath: "inset(0% 0% 100% 0%)",
-    transition: {
-      duration: 0.8,
-      ease: [0.76, 0, 0.24, 1] as [number, number, number, number],
-    },
-  },
-};
+// Stagger delays for social links
+const SOCIAL_ENTER_DELAYS = [0.3, 0.4, 0.5, 0.6, 0.7] as const;
+const SOCIAL_EXIT_DELAYS = [0.2, 0.15, 0.1, 0.05, 0] as const;
 
-const CONTAINER_VARIANTS = {
-  initial: {},
-  animate: {
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.3,
-    },
-  },
-  exit: {
-    transition: {
-      staggerChildren: 0.05,
-      staggerDirection: -1,
-    },
-  },
-};
-
-const ITEM_VARIANTS = {
-  initial: {
-    y: 100,
-    opacity: 0,
-  },
-  animate: {
-    y: 0,
-    opacity: 1,
-    transition: {
-      duration: 0.8,
-      ease: [0.76, 0, 0.24, 1] as [number, number, number, number],
-    },
-  },
-  exit: {
-    y: 100,
-    opacity: 0,
-    transition: {
-      duration: 0.3,
-      ease: [0.76, 0, 0.24, 1] as [number, number, number, number],
-    },
-  },
-};
-
-const SOCIAL_VARIANTS = {
-  initial: {
-    y: 20,
-    opacity: 0,
-  },
-  animate: {
-    y: 0,
-    opacity: 1,
-    transition: {
-      duration: 0.5,
-      ease: "easeOut" as const,
-    },
-  },
-  exit: {
-    y: 20,
-    opacity: 0,
-    transition: {
-      duration: 0.2,
-    },
-  },
-};
-
-const IMAGE_VARIANTS = {
-  initial: {
-    y: 200,
-    opacity: 0,
-    scale: 0.8,
-  },
-  animate: {
-    y: 0,
-    opacity: 1,
-    scale: 1,
-    transition: {
-      duration: 1,
-      delay: 0.8,
-      ease: [0.76, 0, 0.24, 1] as [number, number, number, number],
-    },
-  },
-  exit: {
-    y: 200,
-    opacity: 0,
-    scale: 0.8,
-    transition: {
-      duration: 0.4,
-      ease: [0.76, 0, 0.24, 1] as [number, number, number, number],
-    },
-  },
-};
+// Exit animation duration (longest exit animation to wait for before unmount)
+const EXIT_DURATION_MS = 800;
 
 // ============================================================================
 // ICON COMPONENTS - Memoized
@@ -229,7 +131,55 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number }>> = {
 
 const Navbar = memo(function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const [shouldRender, setShouldRender] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
   const lenis = useLenis();
+  const exitTimerRef = useRef<NodeJS.Timeout>(null);
+
+  // Handle open/close with exit animation delay
+  const handleSetIsOpen = useCallback(
+    (open: boolean) => {
+      // Block clicks while an animation is in progress
+      if (isAnimating) return;
+
+      // Always cancel any pending exit timer
+      if (exitTimerRef.current) {
+        clearTimeout(exitTimerRef.current);
+        exitTimerRef.current = null;
+      }
+
+      setIsAnimating(true);
+
+      if (open) {
+        // Opening: render immediately, then trigger enter
+        setShouldRender(true);
+        setIsClosing(false);
+        setIsOpen(true);
+        // Unlock after enter animation completes
+        exitTimerRef.current = setTimeout(() => {
+          setIsAnimating(false);
+        }, 600); // matches nav-overlay-enter duration
+      } else {
+        // Closing: trigger exit animations, then unmount after delay
+        setIsClosing(true);
+        setIsOpen(false);
+        exitTimerRef.current = setTimeout(() => {
+          setShouldRender(false);
+          setIsClosing(false);
+          setIsAnimating(false);
+        }, EXIT_DURATION_MS);
+      }
+    },
+    [isAnimating],
+  );
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
+    };
+  }, []);
 
   // Prevent body scroll when menu is open
   useEffect(() => {
@@ -248,10 +198,14 @@ const Navbar = memo(function Navbar() {
 
   return (
     <>
-      <NavBar isOpen={isOpen} setIsOpen={setIsOpen} />
-      <AnimatePresence>
-        {isOpen && <MenuOverlay isOpen={isOpen} setIsOpen={setIsOpen} />}
-      </AnimatePresence>
+      <NavBar isOpen={isOpen} setIsOpen={handleSetIsOpen} />
+      {shouldRender && (
+        <MenuOverlay
+          isOpen={isOpen}
+          isClosing={isClosing}
+          setIsOpen={handleSetIsOpen}
+        />
+      )}
     </>
   );
 });
@@ -274,23 +228,16 @@ const NavBar = memo(function NavBar({ isOpen, setIsOpen }: NavBarProps) {
       <div className="relative mx-auto px-6 lg:px-12">
         <div className="relative flex items-center justify-between py-6 short:py-3">
           {/* Logo */}
-          <motion.a
+          <Link
             href="/"
-            className="relative block cursor-pointer"
-            initial={{ y: -100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{
-              duration: 0.8,
-              delay: 0.2,
-              ease: [0.22, 1, 0.36, 1],
-            }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            prefetch={true}
+            className="relative block cursor-pointer animate-nav-slide-down hover:scale-105 active:scale-95 transition-transform duration-200"
+            style={{ animationDelay: "0.2s" }}
             aria-label="Home"
             onClick={handleLogoClick}
           >
             <Image
-              src="/logo.png"
+              src="/logo.webp"
               alt="Portfolio Logo"
               width={80}
               height={80}
@@ -298,7 +245,7 @@ const NavBar = memo(function NavBar({ isOpen, setIsOpen }: NavBarProps) {
               sizes="(max-width: 640px) 48px, (max-width: 768px) 56px, (max-width: 1024px) 56px, (max-width: 1280px) 64px, 80px"
               className="w-12 h-12 sm:w-14 sm:h-14 md:w-14 md:h-14 lg:w-16 lg:h-16 xl:w-20 xl:h-20 short:w-14 short:h-14 invert brightness-0 transition-all duration-300"
             />
-          </motion.a>
+          </Link>
 
           {/* Menu Button */}
           <MenuButton isOpen={isOpen} setIsOpen={setIsOpen} />
@@ -323,40 +270,32 @@ const MenuButton = memo(function MenuButton({
   }, [isOpen, setIsOpen]);
 
   return (
-    <motion.button
-      className="relative z-50 w-12 h-12 flex flex-col items-center justify-center"
+    <button
+      className="relative z-50 w-12 h-12 flex flex-col items-center justify-center animate-nav-slide-down hover:scale-110 active:scale-90 transition-transform duration-200"
+      style={{ animationDelay: "0.3s" }}
       onClick={handleMenuToggle}
       aria-label={isOpen ? "Close menu" : "Open menu"}
       aria-expanded={isOpen}
-      initial={{ y: -100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{
-        duration: 0.8,
-        delay: 0.3,
-        ease: [0.22, 1, 0.36, 1],
-      }}
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.9 }}
     >
       <div className="relative w-8 h-6 flex flex-col justify-center">
-        <motion.span
-          className="absolute h-0.5 w-full bg-white"
-          animate={{
-            rotate: isOpen ? 45 : 0,
-            y: isOpen ? 0 : -4,
+        <span
+          className="absolute h-0.5 w-full bg-white transition-all duration-300 ease-in-out"
+          style={{
+            transform: isOpen
+              ? "rotate(45deg) translateY(0)"
+              : "rotate(0deg) translateY(-4px)",
           }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
         />
-        <motion.span
-          className="absolute h-0.5 w-full bg-white"
-          animate={{
-            rotate: isOpen ? -45 : 0,
-            y: isOpen ? 0 : 4,
+        <span
+          className="absolute h-0.5 w-full bg-white transition-all duration-300 ease-in-out"
+          style={{
+            transform: isOpen
+              ? "rotate(-45deg) translateY(0)"
+              : "rotate(0deg) translateY(4px)",
           }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
         />
       </div>
-    </motion.button>
+    </button>
   );
 });
 
@@ -364,7 +303,20 @@ const MenuButton = memo(function MenuButton({
 // MENU OVERLAY
 // ============================================================================
 
-const MenuOverlay = memo(function MenuOverlay({ setIsOpen }: MenuOverlayProps) {
+const MenuOverlay = memo(function MenuOverlay({
+  isOpen,
+  isClosing,
+  setIsOpen,
+}: MenuOverlayProps) {
+  const router = useRouter();
+
+  // Eagerly prefetch all menu routes when overlay mounts
+  useEffect(() => {
+    for (const item of MENU_ITEMS) {
+      router.prefetch(item.href);
+    }
+  }, [router]);
+
   const handleMenuItemClick = useCallback(
     (label: string, href: string) => {
       Analytics.trackLinkClick(label, href, "internal");
@@ -377,105 +329,97 @@ const MenuOverlay = memo(function MenuOverlay({ setIsOpen }: MenuOverlayProps) {
     Analytics.trackSocialShare(label, "profile-link", source);
   }, []);
 
+  const isEntering = isOpen && !isClosing;
+
   return (
-    <motion.div
-      className="fixed inset-0 bg-black z-40"
-      variants={OVERLAY_VARIANTS}
-      initial="initial"
-      animate="animate"
-      exit="exit"
+    <div
+      className={`fixed inset-0 bg-black z-40 ${
+        isEntering ? "nav-overlay-enter" : "nav-overlay-exit"
+      }`}
     >
       <div className="container mx-auto px-6 lg:px-12 h-full flex">
         <div className="flex flex-col lg:flex-row w-full h-full py-12 sm:py-16 lg:py-32 short:py-16">
           {/* Left Section - Menu Items */}
           <div className="flex-1 flex flex-col justify-center items-center lg:items-start lg:relative">
             {/* Menu Items */}
-            <motion.nav
-              className="w-full flex justify-center lg:justify-start mb-8 lg:mb-0"
-              variants={CONTAINER_VARIANTS}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-            >
+            <nav className="w-full flex justify-center lg:justify-start mb-8 lg:mb-0">
               <ul className="space-y-4 sm:space-y-6 lg:space-y-8 short:space-y-3 text-center lg:text-left">
-                {MENU_ITEMS.map((item) => (
-                  <motion.li key={item.label} variants={ITEM_VARIANTS}>
-                    <motion.a
+                {MENU_ITEMS.map((item, index) => (
+                  <li
+                    key={item.label}
+                    className={
+                      isEntering
+                        ? "animate-nav-item-enter"
+                        : "animate-nav-item-exit"
+                    }
+                    style={{
+                      animationDelay: isEntering
+                        ? `${ITEM_ENTER_DELAYS[index]}s`
+                        : `${ITEM_EXIT_DELAYS[index]}s`,
+                    }}
+                  >
+                    <Link
                       href={item.href}
-                      className="text-white hover:text-primary text-3xl sm:text-4xl lg:text-6xl xl:text-8xl short:text-5xl font-medium block cursor-pointer transition-colors duration-300"
+                      prefetch={true}
+                      className="text-white hover:text-primary hover:tracking-[0.1em] text-3xl sm:text-4xl lg:text-6xl xl:text-8xl short:text-5xl font-medium block cursor-pointer transition-all duration-300"
                       onClick={() => handleMenuItemClick(item.label, item.href)}
-                      initial={{ letterSpacing: "0em" }}
-                      whileHover={{
-                        letterSpacing: "0.1em",
-                        transition: {
-                          duration: 0.3,
-                          ease: "easeOut",
-                        },
-                      }}
-                      whileTap={{ scale: 0.95 }}
                     >
                       {item.label}
-                    </motion.a>
-                  </motion.li>
+                    </Link>
+                  </li>
                 ))}
               </ul>
-            </motion.nav>
+            </nav>
 
             {/* Social Links - Desktop only */}
-            <motion.div
-              className="hidden lg:flex gap-4 absolute bottom-0 left-0"
-              variants={CONTAINER_VARIANTS}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-            >
-              {SOCIAL_LINKS.map((social) => {
+            <div className="hidden lg:flex gap-4 absolute bottom-0 left-0">
+              {SOCIAL_LINKS.map((social, index) => {
                 const Icon = ICON_MAP[social.id];
                 return (
-                  <motion.a
+                  <a
                     key={social.label}
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={social.label}
-                    className="text-white hover:opacity-70 transition-opacity duration-300 cursor-pointer"
-                    variants={SOCIAL_VARIANTS}
-                    whileHover={{ scale: 1.2, rotate: 5 }}
-                    whileTap={{ scale: 0.9 }}
+                    className={`text-white hover:opacity-70 hover:scale-120 hover:rotate-5 active:scale-90 transition-all duration-300 cursor-pointer ${
+                      isEntering
+                        ? "animate-nav-social-enter"
+                        : "animate-nav-social-exit"
+                    }`}
+                    style={{
+                      animationDelay: isEntering
+                        ? `${SOCIAL_ENTER_DELAYS[index]}s`
+                        : `${SOCIAL_EXIT_DELAYS[index]}s`,
+                    }}
                     onClick={() => handleSocialClick(social.label, "navbar")}
                   >
                     <Icon size={24} />
-                  </motion.a>
+                  </a>
                 );
               })}
-            </motion.div>
+            </div>
           </div>
 
           {/* Right Section - Image & Mobile Social Links */}
           <div className="flex-1 flex flex-col items-center justify-center mt-8 lg:mt-0 relative">
-            <motion.div
-              className="relative w-64 h-80 sm:w-72 sm:h-88 md:w-80 md:h-96 lg:w-[500px] lg:h-[600px] xl:w-[600px] xl:h-[700px] short:w-[340px] short:h-[420px]"
-              variants={IMAGE_VARIANTS}
-              initial="initial"
-              animate="animate"
-              exit="exit"
+            <div
+              className={`relative w-64 h-80 sm:w-72 sm:h-88 md:w-80 md:h-96 lg:w-[500px] lg:h-[600px] xl:w-[600px] xl:h-[700px] short:w-[340px] short:h-[420px] ${
+                isEntering
+                  ? "animate-nav-image-enter"
+                  : "animate-nav-image-exit"
+              }`}
             >
-              <div className="relative w-full h-full overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-gray-900/20 to-gray-900/40" />
+              <div className="relative w-full h-full overflow-hidden group">
+                <div className="absolute inset-0 bg-linear-to-b from-transparent via-gray-900/20 to-gray-900/40" />
                 <Image
-                  src="/man-sitting.jpeg"
+                  src="/man-sitting.webp"
                   alt="Profile"
                   fill
                   sizes="(max-width: 640px) 256px, (max-width: 768px) 288px, (max-width: 1024px) 320px, 500px"
                   className="object-cover filter grayscale"
                 />
-                <motion.div
-                  className="absolute inset-0 bg-black"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 0 }}
-                  whileHover={{ opacity: 0.2 }}
-                  transition={{ duration: 0.3 }}
-                />
+                <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
               </div>
 
               {/* Glitch effect overlay - CSS animation for better performance */}
@@ -487,42 +431,42 @@ const MenuOverlay = memo(function MenuOverlay({ setIsOpen }: MenuOverlayProps) {
                   backgroundSize: "200% 200%",
                 }}
               />
-            </motion.div>
+            </div>
 
             {/* Social Links - Mobile only */}
-            <motion.div
-              className="flex lg:hidden gap-4 mt-6 justify-center w-full"
-              variants={CONTAINER_VARIANTS}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-            >
-              {SOCIAL_LINKS.map((social) => {
+            <div className="flex lg:hidden gap-4 mt-6 justify-center w-full">
+              {SOCIAL_LINKS.map((social, index) => {
                 const Icon = ICON_MAP[social.id];
                 return (
-                  <motion.a
+                  <a
                     key={social.label}
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={social.label}
-                    className="text-white hover:opacity-70 transition-opacity duration-300 cursor-pointer"
-                    variants={SOCIAL_VARIANTS}
-                    whileHover={{ scale: 1.2, rotate: 5 }}
-                    whileTap={{ scale: 0.9 }}
+                    className={`text-white hover:opacity-70 hover:scale-120 hover:rotate-5 active:scale-90 transition-all duration-300 cursor-pointer ${
+                      isEntering
+                        ? "animate-nav-social-enter"
+                        : "animate-nav-social-exit"
+                    }`}
+                    style={{
+                      animationDelay: isEntering
+                        ? `${SOCIAL_ENTER_DELAYS[index]}s`
+                        : `${SOCIAL_EXIT_DELAYS[index]}s`,
+                    }}
                     onClick={() =>
                       handleSocialClick(social.label, "navbar-mobile")
                     }
                   >
                     <Icon size={24} />
-                  </motion.a>
+                  </a>
                 );
               })}
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 });
 
