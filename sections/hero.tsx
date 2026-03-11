@@ -1,6 +1,13 @@
 "use client";
 
-import { memo, useCallback, useEffect, useRef, useState, type RefObject } from "react";
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
@@ -83,7 +90,7 @@ const TextScrambleHoverTrigger = memo(() => {
       className="inline-block pointer-events-auto"
     >
       <div
-        className={`flex-shrink-0 cursor-pointer relative inline-block border-b transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ${
+        className={`shrink-0 cursor-pointer relative inline-block border-b transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ${
           isHovered ? "border-primary" : "border-muted-foreground/50"
         }`}
         onMouseEnter={handleMouseEnter}
@@ -114,10 +121,15 @@ interface HeroSectionProps {
   cssScrollSupported?: boolean;
 }
 
-export default function HeroSection({ scaleRef, cssScrollSupported }: HeroSectionProps) {
+export default function HeroSection({
+  scaleRef,
+  cssScrollSupported,
+}: HeroSectionProps) {
   const [nameScrambling, setNameScrambling] = useState(true);
 
-  const prefersReducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
+  const prefersReducedMotion = useMediaQuery(
+    "(prefers-reduced-motion: reduce)",
+  );
 
   useEffect(() => {
     if (prefersReducedMotion) return;
@@ -140,12 +152,16 @@ export default function HeroSection({ scaleRef, cssScrollSupported }: HeroSectio
         <div
           ref={scaleRef}
           className={`relative w-full h-full${cssScrollSupported ? " scroll-hero-scale" : ""}`}
-          style={cssScrollSupported ? undefined : {
-            transform: "scale(1) translateZ(0)",
-          }}
+          style={
+            cssScrollSupported
+              ? undefined
+              : {
+                  transform: "scale(1) translateZ(0)",
+                }
+          }
         >
           <Image
-            src="/hero-image.png"
+            src="/hero-image.webp"
             alt="Gerald Bahati - Product Software Engineer"
             fill
             priority
@@ -159,14 +175,14 @@ export default function HeroSection({ scaleRef, cssScrollSupported }: HeroSectio
 
       {/* Edge Fade Overlay - Gentle vignette effect */}
       <div
-        className="absolute inset-0 z-[5]"
+        className="absolute inset-0 z-5"
         style={{
           background:
             "linear-gradient(to right, var(--hero-overlay) 0%, transparent 20%, transparent 80%, var(--hero-overlay) 100%)",
         }}
       />
       <div
-        className="absolute inset-0 z-[5]"
+        className="absolute inset-0 z-5"
         style={{
           background:
             "linear-gradient(to bottom, var(--hero-overlay) 0%, transparent 20%, transparent 80%, var(--hero-overlay) 100%)",
@@ -192,11 +208,17 @@ export default function HeroSection({ scaleRef, cssScrollSupported }: HeroSectio
           <div className="mb-8 short:mb-4 overflow-hidden">
             <div
               className={`reveal-up transition-[filter] duration-700 ease-out ${
-                nameScrambling && !prefersReducedMotion ? "blur-[1px]" : "blur-0"
+                nameScrambling && !prefersReducedMotion
+                  ? "blur-[1px]"
+                  : "blur-0"
               }`}
             >
               <TextScramble
-                key={nameScrambling && !prefersReducedMotion ? "scrambling" : "stopped"}
+                key={
+                  nameScrambling && !prefersReducedMotion
+                    ? "scrambling"
+                    : "stopped"
+                }
                 className="text-xs sm:text-sm lg:text-base font-light text-primary tracking-[0.2em] sm:tracking-[0.3em] uppercase"
                 trigger={nameScrambling && !prefersReducedMotion}
                 duration={ANIMATION_DURATIONS.NAME_SCRAMBLE}
@@ -250,7 +272,7 @@ export default function HeroSection({ scaleRef, cssScrollSupported }: HeroSectio
             </div>
 
             {/* CTA Text with clip reveal - Single render */}
-            <div className="flex-shrink-0 overflow-hidden">
+            <div className="shrink-0 overflow-hidden">
               <div className="reveal-up">
                 <TextScrambleHoverTrigger />
               </div>

@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { ImageResponse } from "next/og";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
@@ -41,12 +42,12 @@ export default async function Image({
   } else {
     try {
       const imageBuffer = await readFile(
-        join(process.cwd(), "public/original.jpeg"),
+        join(process.cwd(), "public/man-sitting.jpg"),
       );
       base64Image = `data:image/jpeg;base64,${imageBuffer.toString("base64")}`;
     } catch (e) {
       // Emergency fallback if file read fails (unlikely)
-      base64Image = "https://geraldbahati.dev/original.jpeg";
+      base64Image = "https://geraldbahati.dev/man-sitting.jpg";
     }
   }
 

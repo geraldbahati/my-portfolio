@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { ImageResponse } from "next/og";
 import { join } from "node:path";
 import { readFile } from "node:fs/promises";
@@ -15,7 +16,7 @@ export default async function Image() {
   // Load image and fonts locally for reliability and performance
   const [imageData, interMediumData, interSemiBoldData, interBoldData] =
     await Promise.all([
-      readFile(join(process.cwd(), "public/original.jpeg"), "base64"),
+      readFile(join(process.cwd(), "public/man-sitting.jpg"), "base64"),
       readFile(join(process.cwd(), "app/fonts/Inter-Medium.woff")),
       readFile(join(process.cwd(), "app/fonts/Inter-SemiBold.woff")),
       readFile(join(process.cwd(), "app/fonts/Inter-Bold.woff")),

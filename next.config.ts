@@ -28,8 +28,8 @@ const nextConfig: NextConfig = {
     formats: ["image/webp", "image/avif"], // Use modern formats
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 60,
-    qualities: [50, 60, 75, 85, 90, 95, 100], // Added 50 for blur backgrounds and 95 for sharp center images
+    minimumCacheTTL: 31536000, // 1 year — images rarely change
+    qualities: [50, 60, 75, 80, 85, 90, 95, 100],
   },
 
   // Experimental optimizations

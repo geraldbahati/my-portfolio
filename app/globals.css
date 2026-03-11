@@ -350,6 +350,147 @@ html.lenis body {
   animation: glitch-shimmer 10s linear infinite alternate;
 }
 
+/* ============================================================================
+   NAVBAR ANIMATIONS - CSS replacements for Framer Motion
+   ============================================================================ */
+
+/* Logo & menu button entrance: slide down from above */
+@keyframes nav-slide-down {
+  from {
+    transform: translateY(-100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-nav-slide-down {
+  animation: nav-slide-down 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Menu overlay: clipPath reveal from top */
+@keyframes nav-overlay-enter {
+  from {
+    clip-path: inset(0% 0% 100% 0%);
+  }
+  to {
+    clip-path: inset(0% 0% 0% 0%);
+  }
+}
+
+@keyframes nav-overlay-exit {
+  from {
+    clip-path: inset(0% 0% 0% 0%);
+  }
+  to {
+    clip-path: inset(0% 0% 100% 0%);
+  }
+}
+
+.nav-overlay-enter {
+  animation: nav-overlay-enter 0.6s cubic-bezier(0.76, 0, 0.24, 1) both;
+}
+
+.nav-overlay-exit {
+  animation: nav-overlay-exit 0.8s cubic-bezier(0.76, 0, 0.24, 1) both;
+}
+
+/* Menu item entrance: slide up from below */
+@keyframes nav-item-enter {
+  from {
+    transform: translateY(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Menu item exit: slide down */
+@keyframes nav-item-exit {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100px);
+    opacity: 0;
+  }
+}
+
+.animate-nav-item-enter {
+  animation: nav-item-enter 0.8s cubic-bezier(0.76, 0, 0.24, 1) both;
+}
+
+.animate-nav-item-exit {
+  animation: nav-item-exit 0.3s cubic-bezier(0.76, 0, 0.24, 1) both;
+}
+
+/* Social link entrance */
+@keyframes nav-social-enter {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes nav-social-exit {
+  from {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+}
+
+.animate-nav-social-enter {
+  animation: nav-social-enter 0.5s ease-out both;
+}
+
+.animate-nav-social-exit {
+  animation: nav-social-exit 0.2s ease-out both;
+}
+
+/* Image entrance */
+@keyframes nav-image-enter {
+  from {
+    transform: translateY(200px) scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes nav-image-exit {
+  from {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(200px) scale(0.8);
+    opacity: 0;
+  }
+}
+
+.animate-nav-image-enter {
+  animation: nav-image-enter 1s cubic-bezier(0.76, 0, 0.24, 1) 0.8s both;
+}
+
+.animate-nav-image-exit {
+  animation: nav-image-exit 0.4s cubic-bezier(0.76, 0, 0.24, 1) both;
+}
+
 /* Scroll-driven animations - compositor thread, zero JS overhead */
 @supports (animation-timeline: scroll()) {
   @keyframes hero-scale-on-scroll {

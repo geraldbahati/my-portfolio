@@ -19,6 +19,8 @@ interface ProjectVideoProps {
 // Static filter style for arrow GIFs - extracted to avoid recreation
 const ARROW_FILTER_STYLE = {
   filter: "sepia(100%) saturate(300%) brightness(90%) hue-rotate(-10deg)",
+  width: "auto",
+  height: "auto",
 } as const;
 
 // Animation variants - extracted outside component to prevent recreation
