@@ -93,8 +93,6 @@ function useActiveSectionIndex(
 
 // oklch color values from globals.css
 const COLOR_GRAY_400 = "oklch(0.702 0 0)";
-const COLOR_TEXT_PRIMARY = "oklch(0 0 0)";
-const COLOR_GRAY_700 = "oklch(0.3725 0.0168 264.5)";
 
 // Parsed oklch components for interpolation
 const GRAY_400 = { l: 0.702, c: 0, h: 0 };
@@ -158,7 +156,7 @@ interface TextSectionProps {
   sectionRef: React.RefObject<HTMLDivElement | null>;
 }
 
-const TextSection = memo(({ section, index, sectionRef }: TextSectionProps) => {
+const TextSection = memo(({ section, sectionRef }: TextSectionProps) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const labelWrapperRef = useRef<HTMLDivElement>(null);
   const labelUnderlineRef = useRef<HTMLDivElement>(null);
@@ -217,7 +215,7 @@ const TextSection = memo(({ section, index, sectionRef }: TextSectionProps) => {
       }
 
       // Bullet items: opacity + icon color + text color
-      bulletRefs.current.forEach((li, i) => {
+      bulletRefs.current.forEach((li) => {
         li.style.opacity = String(opacity);
       });
       bulletSvgRefs.current.forEach((svg) => {

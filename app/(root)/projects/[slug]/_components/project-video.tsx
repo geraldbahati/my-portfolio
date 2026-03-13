@@ -7,7 +7,6 @@ import Image from "next/image";
 import { MediaRenderer } from "@/components/media";
 import { Cursor } from "@/components/ui/cursor";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ProjectVideoProps {
   videoUrl?: string | null;

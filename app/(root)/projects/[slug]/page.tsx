@@ -45,15 +45,17 @@ interface PageProps {
 export async function generateStaticParams() {
   try {
     const projects = await fetchQuery(api.projects.getPublishedProjects, {});
-    return projects.map((project) => ({
-      slug: project.id,
-    }));
+    if (projects.length > 0) {
+      return projects.map((project) => ({
+        slug: project.id,
+      }));
+    }
   } catch (error) {
-    // If Convex is unreachable during build, return empty array
-    // Pages will be generated on-demand with ISR
     console.warn("Could not fetch projects for static generation:", error);
-    return [];
   }
+  // Next.js 16 with Cache Components requires at least one result;
+  // return a placeholder slug that will be handled by notFound() at runtime
+  return [{ slug: "_" }];
 }
 
 // Generate dynamic metadata for each project page
