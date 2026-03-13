@@ -70,7 +70,10 @@ interface BioOverlayProps {
   cssScrollSupported?: boolean;
 }
 
-export default function BioOverlay({ scrollProgress, cssScrollSupported }: BioOverlayProps) {
+export default function BioOverlay({
+  scrollProgress,
+  cssScrollSupported,
+}: BioOverlayProps) {
   const charRefsMap = useRef<Map<string, HTMLSpanElement>>(new Map());
 
   // JS fallback transforms - only used when CSS scroll not supported
@@ -208,10 +211,7 @@ export default function BioOverlay({ scrollProgress, cssScrollSupported }: BioOv
       href="/projects"
       prefetch={true}
       onClick={() =>
-        Analytics.trackButtonClick(
-          "View Selected Work",
-          "Bio Overlay CTA",
-        )
+        Analytics.trackButtonClick("View Selected Work", "Bio Overlay CTA")
       }
     >
       <m.button
@@ -242,18 +242,16 @@ export default function BioOverlay({ scrollProgress, cssScrollSupported }: BioOv
 
   return (
     <section
-      className="relative h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-50 rounded-t-xl sm:rounded-t-[1rem] lg:rounded-t-[2rem] overflow-y-auto"
+      className="relative h-screen flex items-center justify-center bg-linear-to-br from-gray-50 via-white to-gray-50 rounded-t-xl sm:rounded-t-2xl lg:rounded-t-4xl overflow-y-auto"
       style={{
         contain: "layout style paint",
       }}
     >
       {/* Subtle background elements */}
       {cssScrollSupported ? (
-        <div
-          className="absolute inset-0 overflow-hidden pointer-events-none scroll-bio-bg"
-        >
-          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-purple-100/20 to-transparent rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-blue-100/20 to-transparent rounded-full blur-3xl" />
+        <div className="absolute inset-0 overflow-hidden pointer-events-none scroll-bio-bg">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-linear-to-br from-purple-100/20 to-transparent rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-linear-to-tr from-blue-100/20 to-transparent rounded-full blur-3xl" />
         </div>
       ) : (
         <m.div
@@ -262,8 +260,8 @@ export default function BioOverlay({ scrollProgress, cssScrollSupported }: BioOv
             opacity: bgOpacity,
           }}
         >
-          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-purple-100/20 to-transparent rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-blue-100/20 to-transparent rounded-full blur-3xl" />
+          <div className="absolute top-0 right-0 w-96 h-96 bg-linear-to-br from-purple-100/20 to-transparent rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-linear-to-tr from-blue-100/20 to-transparent rounded-full blur-3xl" />
         </m.div>
       )}
 
@@ -271,9 +269,7 @@ export default function BioOverlay({ scrollProgress, cssScrollSupported }: BioOv
         <div className="grid lg:grid-cols-[210px_1fr] gap-12 lg:gap-24 short:gap-12 items-center">
           {/* Left: Animated Cutout Mask Image */}
           {cssScrollSupported ? (
-            <div
-              className="flex justify-center lg:justify-start scroll-bio-image"
-            >
+            <div className="flex justify-center lg:justify-start scroll-bio-image">
               {imageContent}
             </div>
           ) : (
@@ -333,7 +329,7 @@ export default function BioOverlay({ scrollProgress, cssScrollSupported }: BioOv
             </div>
 
             {/* Main Text */}
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl short:text-3xl leading-tight font-light text-gray-900">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl short:text-4xl leading-tight font-light text-gray-900">
               {mainTextData.map(({ chars, wordIdx, isLast }) => (
                 <span
                   key={`main-word-${wordIdx}`}
@@ -358,9 +354,7 @@ export default function BioOverlay({ scrollProgress, cssScrollSupported }: BioOv
 
             {/* CTA Button - appears after text */}
             {cssScrollSupported ? (
-              <div className="scroll-bio-cta">
-                {ctaContent}
-              </div>
+              <div className="scroll-bio-cta">{ctaContent}</div>
             ) : (
               <m.div
                 style={{

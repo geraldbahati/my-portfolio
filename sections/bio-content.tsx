@@ -22,7 +22,8 @@ export default function BioContent({
   const taglineChars = tagline.split("");
   const numberChars = numberText.split("");
   const mainChars = mainText.split("");
-  const totalChars = taglineChars.length + numberChars.length + mainChars.length;
+  const totalChars =
+    taglineChars.length + numberChars.length + mainChars.length;
 
   // Build word-level spans for tagline
   const taglineWords = tagline.split(" ");
@@ -51,8 +52,8 @@ export default function BioContent({
         data-bio-bg
         style={cssScrollSupported === false ? { opacity: 0.3 } : undefined}
       >
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-purple-100/20 to-transparent rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-blue-100/20 to-transparent rounded-full blur-3xl" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-linear-to-br from-purple-100/20 to-transparent rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-linear-to-tr from-blue-100/20 to-transparent rounded-full blur-3xl" />
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -63,7 +64,10 @@ export default function BioContent({
             data-bio-image
             style={
               cssScrollSupported === false
-                ? { transform: "translateY(100px) scale(0.6) translateZ(0)", opacity: 0 }
+                ? {
+                    transform: "translateY(100px) scale(0.6) translateZ(0)",
+                    opacity: 0,
+                  }
                 : undefined
             }
           >
@@ -171,7 +175,9 @@ export default function BioContent({
 
             {/* CTA Button */}
             <div
-              className={cssScrollSupported !== false ? "scroll-bio-cta" : undefined}
+              className={
+                cssScrollSupported !== false ? "scroll-bio-cta" : undefined
+              }
               data-bio-cta
               style={
                 cssScrollSupported === false
@@ -179,13 +185,8 @@ export default function BioContent({
                   : undefined
               }
             >
-              <Link
-                href="/projects"
-                prefetch={true}
-              >
-                <button
-                  className="bio-cta-button group inline-flex items-center gap-3 text-sm font-medium tracking-wider uppercase text-gray-900 transition-colors hover:text-gray-600"
-                >
+              <Link href="/projects" prefetch={true}>
+                <button className="bio-cta-button group inline-flex items-center gap-3 text-sm font-medium tracking-wider uppercase text-gray-900 transition-colors hover:text-gray-600">
                   <span className="relative">
                     View Selected Work
                     <span className="absolute bottom-0 left-0 w-full h-px bg-gray-900 origin-left transition-transform duration-300 scale-x-100 group-hover:scale-x-0" />
