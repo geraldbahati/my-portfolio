@@ -20,7 +20,7 @@ jobs:
 
       - run: npm ci
 
-      - run: npm run lint
+      - run: npx eslint .
 
       - run: npm run build
         env:
