@@ -106,13 +106,14 @@ export const SectionDivider = memo(function SectionDivider({
         </div>
       </div>
 
-      {/* Animated Divider */}
+      {/* Animated Divider — uses scaleX (composited) instead of width */}
       <div className="relative h-[1px] w-full overflow-hidden">
         <div
-          className={`absolute inset-y-0 left-0 ${dividerColor}`}
+          className={`absolute inset-y-0 left-0 w-full ${dividerColor}`}
           style={{
-            width: isInView ? "100%" : "0%",
-            transition: `width ${duration}s ease-out`,
+            transform: isInView ? "scaleX(1)" : "scaleX(0)",
+            transformOrigin: "left",
+            transition: `transform ${duration}s ease-out`,
           }}
         />
       </div>
