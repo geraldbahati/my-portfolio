@@ -85,7 +85,7 @@ export default function HeroContent({
           <div className="mb-8 sm:mb-10 lg:mb-12 short:mb-6">
             <h1
               className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl short:text-6xl font-thin leading-tight sm:leading-none tracking-tight grid-interaction-blocked pointer-events-auto text-white"
-              style={{ fontSize: "clamp(2.25rem, 6vw, 5rem)" }}
+              style={{ fontSize: "clamp(2.25rem, 6vw, 6rem)" }}
             >
               <span className="inline-block overflow-hidden align-bottom">
                 <span className="inline-block font-medium reveal-up-title">
@@ -126,9 +126,7 @@ export default function HeroContent({
                     className="inline-block pointer-events-auto"
                     prefetch={true}
                   >
-                    <span
-                      className="shrink-0 cursor-pointer relative inline-block border-b border-muted-foreground/50 hover:border-primary transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
-                    >
+                    <span className="shrink-0 cursor-pointer relative inline-block border-b border-muted-foreground/50 hover:border-primary transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]">
                       <span className="text-white font-light text-sm sm:text-base uppercase tracking-[0.2em]">
                         Request a project
                       </span>
