@@ -1,0 +1,67 @@
+name: Lighthouse
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+
+      - run: npm start &
+        env:
+          PORT: 3000
+
+      - name: Wait for server
+        run: npx wait-on http://localhost:3000 --timeout 30000
+
+      - name: Run Lighthouse
+        id: lighthouse
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          urls: http://localhost:3000
+          uploadArtifacts: true
+          budgetPath: .github/lighthouse-budget.json
+
+      - name: Format results
+        id: format
+        uses: actions/github-script@v7
+        if: always() && steps.lighthouse.outcome == 'success'
+        with:
+          script: |
+            const results = ${{ steps.lighthouse.outputs.manifest }};
+            const r = results[0].summary;
+            const score = (v) => Math.round(v * 100);
+            const emoji = (v) => v >= 0.9 ? '🟢' : v >= 0.5 ? '🟠' : '🔴';
+            const body = [
+              '### Lighthouse Results',
+              '',
+              '| Category | Score |',
+              '|----------|-------|',
+              `| ${emoji(r.performance)} Performance | ${score(r.performance)} |`,
+              `| ${emoji(r.accessibility)} Accessibility | ${score(r.accessibility)} |`,
+              `| ${emoji(r['best-practices'])} Best Practices | ${score(r['best-practices'])} |`,
+              `| ${emoji(r.seo)} SEO | ${score(r.seo)} |`,
+            ].join('\n');
+            core.setOutput('body', body);
+
+      - name: Comment on PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        if: always() && steps.format.outcome == 'success'
+        with:
+          header: lighthouse
+          message: ${{ steps.format.outputs.body }}
