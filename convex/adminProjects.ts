@@ -146,7 +146,7 @@ export const deleteProject = action({
 
     if (project) {
       // Clean up video from Stream if it's a Stream URL
-      if (project.src && project.src.includes("cloudflarestream.com")) {
+      if (project.src && isStreamUrl(project.src)) {
         const streamUid = extractStreamUid(project.src);
         if (streamUid) {
           try {
@@ -160,7 +160,7 @@ export const deleteProject = action({
         }
       }
       // Clean up video from R2 if it's an R2 URL
-      else if (project.src && project.src.includes("media.geraldbahati.dev")) {
+      else if (project.src && isR2MediaUrl(project.src)) {
         const key = extractR2Key(project.src);
         if (key) {
           try {
@@ -173,7 +173,7 @@ export const deleteProject = action({
       }
 
       // Clean up poster image from R2 if it exists
-      if (project.poster && project.poster.includes("media.geraldbahati.dev")) {
+      if (project.poster && isR2MediaUrl(project.poster)) {
         const posterKey = extractR2Key(project.poster);
         if (posterKey) {
           try {
@@ -192,6 +192,26 @@ export const deleteProject = action({
     return await ctx.runMutation(internal.projects.deleteProject, args);
   },
 });
+
+/**
+ * Safely check if a URL's hostname matches or is a subdomain of a given domain.
+ */
+function hostnameEndsWith(url: string, domain: string): boolean {
+  try {
+    const { hostname } = new URL(url);
+    return hostname === domain || hostname.endsWith(`.${domain}`);
+  } catch {
+    return false;
+  }
+}
+
+function isStreamUrl(url: string): boolean {
+  return hostnameEndsWith(url, "cloudflarestream.com");
+}
+
+function isR2MediaUrl(url: string): boolean {
+  return hostnameEndsWith(url, "media.geraldbahati.dev");
+}
 
 /**
  * Extract Stream video UID from URL

@@ -110,7 +110,7 @@ export const deleteDetails = action({
       // Clean up hero image from R2
       if (
         existing.heroImage &&
-        existing.heroImage.includes("media.geraldbahati.dev")
+        isR2MediaUrl(existing.heroImage)
       ) {
         const key = extractR2Key(existing.heroImage);
         if (key) {
@@ -125,7 +125,7 @@ export const deleteDetails = action({
 
       // Clean up video from Stream or R2
       if (existing.videoUrl) {
-        if (existing.videoUrl.includes("cloudflarestream.com")) {
+        if (isStreamUrl(existing.videoUrl)) {
           const streamUid = extractStreamUid(existing.videoUrl);
           if (streamUid) {
             try {
@@ -137,7 +137,7 @@ export const deleteDetails = action({
               console.warn(`[Delete] Failed to delete Stream video: ${error}`);
             }
           }
-        } else if (existing.videoUrl.includes("media.geraldbahati.dev")) {
+        } else if (isR2MediaUrl(existing.videoUrl)) {
           const key = extractR2Key(existing.videoUrl);
           if (key) {
             try {
@@ -153,7 +153,7 @@ export const deleteDetails = action({
       // Clean up video poster from R2 (unless it's a Stream thumbnail)
       if (
         existing.videoPoster &&
-        existing.videoPoster.includes("media.geraldbahati.dev")
+        isR2MediaUrl(existing.videoPoster)
       ) {
         const key = extractR2Key(existing.videoPoster);
         if (key) {
@@ -173,6 +173,26 @@ export const deleteDetails = action({
     );
   },
 });
+
+/**
+ * Safely check if a URL's hostname matches or is a subdomain of a given domain.
+ */
+function hostnameEndsWith(url: string, domain: string): boolean {
+  try {
+    const { hostname } = new URL(url);
+    return hostname === domain || hostname.endsWith(`.${domain}`);
+  } catch {
+    return false;
+  }
+}
+
+function isStreamUrl(url: string): boolean {
+  return hostnameEndsWith(url, "cloudflarestream.com");
+}
+
+function isR2MediaUrl(url: string): boolean {
+  return hostnameEndsWith(url, "media.geraldbahati.dev");
+}
 
 /**
  * Extract Stream video UID from URL

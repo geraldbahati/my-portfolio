@@ -11,6 +11,24 @@ const TRANSFORM_ZONE = "geraldbahati.dev";
 const STREAM_SUBDOMAIN = "customer-pdxnd9di8ybc2kur.cloudflarestream.com";
 
 // ============================================================================
+// Safe URL hostname checking
+// ============================================================================
+
+/**
+ * Safely check if a URL's hostname matches or is a subdomain of a given domain.
+ * Uses URL parsing instead of substring matching to prevent bypass attacks
+ * (e.g., "https://evil.com/?cloudflarestream.com").
+ */
+function hostnameEndsWith(url: string, domain: string): boolean {
+  try {
+    const { hostname } = new URL(url);
+    return hostname === domain || hostname.endsWith(`.${domain}`);
+  } catch {
+    return false;
+  }
+}
+
+// ============================================================================
 // URL Detection
 // ============================================================================
 
@@ -18,18 +36,18 @@ export type MediaSource = "stream" | "r2" | "cloudinary" | "external";
 
 export function detectMediaSource(url: string): MediaSource {
   if (!url) return "external";
-  if (url.includes(STREAM_DOMAIN)) return "stream";
-  if (url.includes(R2_DOMAIN)) return "r2";
-  if (url.includes("cloudinary.com")) return "cloudinary";
+  if (hostnameEndsWith(url, STREAM_DOMAIN)) return "stream";
+  if (hostnameEndsWith(url, R2_DOMAIN)) return "r2";
+  if (hostnameEndsWith(url, "cloudinary.com")) return "cloudinary";
   return "external";
 }
 
 export function isStreamUrl(url: string): boolean {
-  return url.includes(STREAM_DOMAIN);
+  return hostnameEndsWith(url, STREAM_DOMAIN);
 }
 
 export function isR2Url(url: string): boolean {
-  return url.includes(R2_DOMAIN);
+  return hostnameEndsWith(url, R2_DOMAIN);
 }
 
 // ============================================================================

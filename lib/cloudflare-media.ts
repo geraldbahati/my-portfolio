@@ -10,6 +10,18 @@ const R2_CUSTOM_DOMAIN = "media.geraldbahati.dev";
 const STREAM_SUBDOMAIN = "customer-pdxnd9di8ybc2kur.cloudflarestream.com";
 const TRANSFORM_ZONE = "geraldbahati.dev";
 
+/**
+ * Safely check if a URL's hostname matches or is a subdomain of a given domain.
+ */
+function hostnameEndsWith(url: string, domain: string): boolean {
+  try {
+    const { hostname } = new URL(url);
+    return hostname === domain || hostname.endsWith(`.${domain}`);
+  } catch {
+    return false;
+  }
+}
+
 // ============================================================================
 // IMAGE TRANSFORMATIONS
 // ============================================================================
@@ -166,14 +178,14 @@ export function getStreamThumbnailAt(
  * Check if a URL is a Cloudflare Stream video
  */
 export function isStreamUrl(url: string): boolean {
-  return url.includes("cloudflarestream.com") || url.includes("/stream/");
+  return hostnameEndsWith(url, "cloudflarestream.com");
 }
 
 /**
  * Check if a URL is an R2/media URL
  */
 export function isR2Url(url: string): boolean {
-  return url.includes(R2_CUSTOM_DOMAIN) || url.includes(".r2.cloudflarestorage.com");
+  return hostnameEndsWith(url, R2_CUSTOM_DOMAIN) || hostnameEndsWith(url, "r2.cloudflarestorage.com");
 }
 
 /**
