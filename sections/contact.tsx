@@ -110,7 +110,7 @@ const ContactSection = memo(function ContactSection({
                 Let&apos;s discuss
               </TextScramble>
             </motion.span>{" "}
-            {/* Image always in DOM - animate properties instead of mount/unmount */}
+            {/* Image deferred - only loads after first hover to save ~951KB for non-hovering users */}
             <motion.span
               className="inline-block relative rounded-xl overflow-hidden align-middle"
               initial={false}
@@ -126,15 +126,17 @@ const ContactSection = memo(function ContactSection({
                 ease: smoothEase,
               }}
             >
-              <Image
-                src="/cta-gif.gif"
-                alt=""
-                width={64}
-                height={64}
-                className="w-12 h-12 sm:w-16 sm:h-16 md:w-24 md:h-24 lg:w-32 lg:h-32 xl:w-40 xl:h-40 short:w-20 short:h-20 object-contain rounded-xl"
-                priority={false}
-                unoptimized
-              />
+              {hasTriggered && (
+                <Image
+                  src="/cta-gif.gif"
+                  alt=""
+                  width={64}
+                  height={64}
+                  className="w-12 h-12 sm:w-16 sm:h-16 md:w-24 md:h-24 lg:w-32 lg:h-32 xl:w-40 xl:h-40 short:w-20 short:h-20 object-contain rounded-xl"
+                  priority={false}
+                  unoptimized
+                />
+              )}
             </motion.span>
             <motion.span
               className={`inline border-b transition-colors duration-300 ${

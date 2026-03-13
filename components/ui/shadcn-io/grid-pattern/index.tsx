@@ -393,31 +393,58 @@ export default function GridPattern({
     scheduleAnimation();
   }, [scheduleAnimation]);
 
-  // Handle mouse events
+  // Handle mouse events — only attach when SVG is in viewport
   useEffect(() => {
     if (disableInteraction) return;
 
-    window.addEventListener("mousemove", handleMouseMove, { passive: true });
     const svg = svgRef.current;
-    if (svg) {
+    if (!svg) return;
+
+    let mouseMoveAttached = false;
+
+    const attachListeners = () => {
+      if (mouseMoveAttached) return;
+      mouseMoveAttached = true;
+      window.addEventListener("mousemove", handleMouseMove, { passive: true });
       svg.addEventListener("mouseleave", handleMouseLeave);
-    }
+    };
+
+    const detachListeners = () => {
+      if (!mouseMoveAttached) return;
+      mouseMoveAttached = false;
+      window.removeEventListener("mousemove", handleMouseMove);
+      svg.removeEventListener("mouseleave", handleMouseLeave);
+      // Clear active state when leaving viewport
+      currentCellRef.current = null;
+      currentSurroundingRef.current = [];
+      isMovingRef.current = false;
+      if (mouseMoveTimeoutRef.current) clearTimeout(mouseMoveTimeoutRef.current);
+      scheduleAnimation(); // one last tick to clear visuals
+    };
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          attachListeners();
+        } else {
+          detachListeners();
+        }
+      },
+      { threshold: 0 },
+    );
+
+    observer.observe(svg);
 
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      if (svg) {
-        svg.removeEventListener("mouseleave", handleMouseLeave);
-      }
+      observer.disconnect();
+      detachListeners();
       if (rafIdRef.current) {
         cancelAnimationFrame(rafIdRef.current);
         rafIdRef.current = null;
       }
-      if (mouseMoveTimeoutRef.current) {
-        clearTimeout(mouseMoveTimeoutRef.current);
-      }
       isAnimatingRef.current = false;
     };
-  }, [handleMouseMove, handleMouseLeave, disableInteraction]);
+  }, [handleMouseMove, handleMouseLeave, disableInteraction, scheduleAnimation]);
 
   return (
     <svg

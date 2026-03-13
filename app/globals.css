@@ -491,6 +491,22 @@ html.lenis body {
   animation: nav-image-exit 0.4s cubic-bezier(0.76, 0, 0.24, 1) both;
 }
 
+/* Footer reveal animations - CSS replacement for motion/react whileInView */
+.footer-reveal {
+  opacity: 0;
+  transform: translateY(20px);
+}
+.footer-visible .footer-reveal,
+.footer-reveal.footer-visible {
+  animation: footer-fade-in 0.6s ease forwards;
+}
+@keyframes footer-fade-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Bio CTA button hover/active - CSS replacement for m.button whileHover/whileTap */
 .bio-cta-button {
   transition: transform 0.2s ease;
