@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback, memo } from "react";
-import { m, useInView } from "motion/react";
 import { TextScramble } from "@/components/ui/text-scramble";
 
 export type SectionDividerProps = {
@@ -31,9 +30,28 @@ export const SectionDivider = memo(function SectionDivider({
   once = true,
   dividerColor = "bg-foreground",
 }: SectionDividerProps) {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once, amount: 0.5 });
+  const ref = useRef<HTMLDivElement>(null);
+  const [isInView, setIsInView] = useState(false);
   const [animationDone, setAnimationDone] = useState(false);
+
+  // IntersectionObserver replaces motion/react useInView
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          if (once) observer.unobserve(el);
+        }
+      },
+      { threshold: 0.5 },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [once]);
 
   const isAnimating = isInView && !animationDone;
   const shouldTriggerScramble = isAnimating;
@@ -56,13 +74,10 @@ export const SectionDivider = memo(function SectionDivider({
     <div ref={ref} className={`w-full ${className}`}>
       {/* Text Container */}
       <div className="flex items-center justify-between mb-4">
-        <m.div
-          animate={{
+        <div
+          style={{
             filter: `blur(${blurAmount}px)`,
-          }}
-          transition={{
-            duration: 0.5,
-            ease: "easeOut",
+            transition: "filter 0.5s ease-out",
           }}
         >
           <TextScramble
@@ -73,15 +88,12 @@ export const SectionDivider = memo(function SectionDivider({
           >
             {label}
           </TextScramble>
-        </m.div>
+        </div>
 
-        <m.div
-          animate={{
+        <div
+          style={{
             filter: `blur(${blurAmount}px)`,
-          }}
-          transition={{
-            duration: 0.5,
-            ease: "easeOut",
+            transition: "filter 0.5s ease-out",
           }}
         >
           <TextScramble
@@ -91,18 +103,16 @@ export const SectionDivider = memo(function SectionDivider({
           >
             {counter}
           </TextScramble>
-        </m.div>
+        </div>
       </div>
 
       {/* Animated Divider */}
       <div className="relative h-[1px] w-full overflow-hidden">
-        <m.div
+        <div
           className={`absolute inset-y-0 left-0 ${dividerColor}`}
-          initial={{ width: "0%" }}
-          animate={{ width: isInView ? "100%" : "0%" }}
-          transition={{
-            duration,
-            ease: "easeOut",
+          style={{
+            width: isInView ? "100%" : "0%",
+            transition: `width ${duration}s ease-out`,
           }}
         />
       </div>

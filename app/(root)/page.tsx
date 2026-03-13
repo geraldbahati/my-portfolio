@@ -8,12 +8,20 @@ import BioContent from "@/sections/bio-content";
 // Thin client shell (small JS - vanilla scroll, no motion/react)
 import HeroBioOverlayShell from "@/sections/hero-bio-overlay-shell";
 
+import dynamic from "next/dynamic";
+
 // Component imports
 import { SectionDivider } from "@/components/section-divider";
-import InfoSection from "@/sections/info";
 import CombinedProjectsFaqWrapper from "@/sections/combined-projects-faq-wrapper";
-import ContactSection from "@/sections/contact";
 import { PageAnalytics } from "@/components/PageAnalytics";
+
+// Below-fold: lazy-loaded client components for code-splitting
+const InfoSection = dynamic(() => import("@/sections/info"), {
+  loading: () => <div className="min-h-screen bg-white" />,
+});
+const ContactSection = dynamic(() => import("@/sections/contact"), {
+  loading: () => <div className="h-[60vh] bg-black" />,
+});
 
 // SEO Metadata
 export const metadata: Metadata = {

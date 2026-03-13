@@ -1,7 +1,6 @@
 "use client";
 
-import { m } from "motion/react";
-import { useCallback, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { TextScramble } from "@/components/ui/text-scramble";
 import { Separator } from "@/components/ui/separator";
 import Analytics from "@/lib/analytics";
@@ -66,15 +65,14 @@ function AnimatedLink({
   }, [children, href]);
 
   return (
-    <m.a
+    <a
       href={href}
-      className={`inline-block relative border-b transition-colors duration-300 ${
+      className={`inline-block relative border-b transition-all duration-300 hover:translate-x-[2px] ${
         isHovered ? "border-primary" : "border-transparent"
       } ${className}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={handleClick}
-      whileHover={{ x: 2 }}
     >
       <TextScramble
         trigger={shouldTriggerScramble}
@@ -85,7 +83,7 @@ function AnimatedLink({
       >
         {String(children)}
       </TextScramble>
-    </m.a>
+    </a>
   );
 }
 
@@ -120,6 +118,27 @@ export function Footer({
     copyright ||
     `©${currentYear} Gerald Bahati | All rights reserved.`;
 
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const el = gridRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.unobserve(el);
+        }
+      },
+      { threshold: 0.1 },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <footer className="bg-black text-white">
       {/* Separator line */}
@@ -129,33 +148,20 @@ export function Footer({
 
       {/* Main content */}
       <div className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
-        <m.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4"
+        <div
+          ref={gridRef}
+          className={`grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4${isVisible ? " footer-visible" : ""}`}
         >
           {/* Brand */}
-          <m.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            viewport={{ once: true }}
-          >
+          <div className="footer-reveal" style={{ animationDelay: "0.1s" }}>
             <h2 className="text-3xl font-semibold mb-3">{brand.name}</h2>
             {brand.tagline && (
               <p className="text-base text-gray-400">{brand.tagline}</p>
             )}
-          </m.div>
+          </div>
 
           {/* Contact */}
-          <m.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            viewport={{ once: true }}
-          >
+          <div className="footer-reveal" style={{ animationDelay: "0.2s" }}>
             <h3 className="text-lg font-medium mb-4">contact</h3>
             <div className="space-y-2">
               {contact.location && (
@@ -170,15 +176,10 @@ export function Footer({
                 </AnimatedLink>
               )}
             </div>
-          </m.div>
+          </div>
 
           {/* Accessibility */}
-          <m.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            viewport={{ once: true }}
-          >
+          <div className="footer-reveal" style={{ animationDelay: "0.3s" }}>
             <h3 className="text-lg font-medium mb-4">Accessibility</h3>
             <div className="space-y-2">
               {accessibility.hours && (
@@ -190,15 +191,10 @@ export function Footer({
                 </p>
               )}
             </div>
-          </m.div>
+          </div>
 
           {/* Legal */}
-          <m.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            viewport={{ once: true }}
-          >
+          <div className="footer-reveal" style={{ animationDelay: "0.4s" }}>
             <h3 className="text-lg font-medium mb-4">Legal</h3>
             <div className="space-y-2">
               {legal.map((link) => (
@@ -212,19 +208,16 @@ export function Footer({
                 </div>
               ))}
             </div>
-          </m.div>
-        </m.div>
+          </div>
+        </div>
 
         {/* Copyright */}
-        <m.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
-          viewport={{ once: true }}
-          className="mt-16 pt-8"
+        <div
+          className={`mt-16 pt-8 footer-reveal${isVisible ? " footer-visible" : ""}`}
+          style={{ animationDelay: "0.5s" }}
         >
           <p className="text-base text-gray-500">{copyrightText}</p>
-        </m.div>
+        </div>
       </div>
     </footer>
   );
