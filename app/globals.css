@@ -491,6 +491,24 @@ html.lenis body {
   animation: nav-image-exit 0.4s cubic-bezier(0.76, 0, 0.24, 1) both;
 }
 
+/* Bio CTA button hover/active - CSS replacement for m.button whileHover/whileTap */
+.bio-cta-button {
+  transition: transform 0.2s ease;
+}
+.bio-cta-button:hover {
+  transform: translateX(5px);
+}
+.bio-cta-button:active {
+  transform: scale(0.98);
+}
+
+/* Hide GridPattern for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  [data-grid-pattern-slot] {
+    display: none;
+  }
+}
+
 /* Scroll-driven animations - compositor thread, zero JS overhead */
 @supports (animation-timeline: scroll()) {
   @keyframes hero-scale-on-scroll {

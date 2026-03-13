@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
 import { Syne, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-// import { ClerkProvider } from "@clerk/nextjs";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { MotionProvider } from "@/components/MotionProvider";
-import { AnalyticsProvider } from "@/components/analytics-provider";
-import { ConsoleFilter } from "@/components/console-filter";
-import { IntersectObserver } from "@/components/IntersectObserver";
 import { LenisProvider } from "@/components/LenisProvider";
+import { AnalyticsProvider } from "@/components/analytics-provider";
+import DeferredProviders from "@/components/DeferredProviders";
 
 const syne = Syne({
   subsets: ["latin"],
@@ -110,14 +108,13 @@ export default function RootLayout({
         <ConvexClientProvider>
           <LenisProvider>
             <MotionProvider>
-              <ConsoleFilter />
-              <IntersectObserver />
               {children}
-              <AnalyticsProvider />
             </MotionProvider>
           </LenisProvider>
         </ConvexClientProvider>
         {/*</ClerkProvider>*/}
+        <DeferredProviders />
+        <AnalyticsProvider />
       </body>
     </html>
   );
