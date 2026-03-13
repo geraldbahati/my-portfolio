@@ -34,7 +34,7 @@ const nextConfig: NextConfig = {
 
   // Experimental optimizations
   experimental: {
-    optimizePackageImports: ["framer-motion", "lucide-react"],
+    optimizePackageImports: ["framer-motion", "motion", "lenis", "convex", "lucide-react"],
     turbopackFileSystemCacheForDev: true,
   },
 

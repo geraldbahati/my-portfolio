@@ -1,8 +1,14 @@
 import type { Metadata } from "next";
 import { cacheLife } from "next/cache";
 
+// Server components (zero JS cost)
+import HeroContent from "@/sections/hero-content";
+import BioContent from "@/sections/bio-content";
+
+// Thin client shell (small JS - vanilla scroll, no motion/react)
+import HeroBioOverlayShell from "@/sections/hero-bio-overlay-shell";
+
 // Component imports
-import HeroBioOverlay from "@/sections/hero-bio-overlay";
 import { SectionDivider } from "@/components/section-divider";
 import InfoSection from "@/sections/info";
 import CombinedProjectsFaqWrapper from "@/sections/combined-projects-faq-wrapper";
@@ -98,7 +104,10 @@ export default async function Home() {
       <PageAnalytics trackPageView trackScroll trackTime />
 
       {/* Hero and Bio with scroll-triggered overlay effect */}
-      <HeroBioOverlay />
+      <HeroBioOverlayShell
+        heroSlot={<HeroContent />}
+        bioSlot={<BioContent />}
+      />
 
       {/* Section Divider */}
       <section className="relative bg-white py-16 sm:py-20 lg:py-24">
