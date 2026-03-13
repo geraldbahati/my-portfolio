@@ -76,8 +76,7 @@ const InfoSection = memo(function InfoSection() {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            el.style.transition =
-              "opacity 600ms ease, transform 600ms ease";
+            el.style.transition = "opacity 600ms ease, transform 600ms ease";
             el.style.opacity = "1";
             el.style.transform = "translateY(0)";
           } else {
