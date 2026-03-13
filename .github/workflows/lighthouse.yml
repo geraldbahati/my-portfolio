@@ -1,0 +1,73 @@
+name: Lighthouse
+
+on:
+  deployment_status:
+
+jobs:
+  lighthouse:
+    if: github.event.deployment_status.state == 'success' && github.event.deployment_status.environment == 'Preview'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Run Lighthouse
+        id: lighthouse
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          urls: ${{ github.event.deployment_status.target_url }}
+          uploadArtifacts: true
+
+      - name: Format results
+        id: format
+        uses: actions/github-script@v7
+        if: always() && steps.lighthouse.outcome == 'success'
+        with:
+          script: |
+            const results = ${{ steps.lighthouse.outputs.manifest }};
+            const r = results[0].summary;
+            const score = (v) => Math.round(v * 100);
+            const emoji = (v) => v >= 0.9 ? '🟢' : v >= 0.5 ? '🟠' : '🔴';
+            const body = [
+              '### Lighthouse Results',
+              '',
+              `> Tested: ${results[0].url}`,
+              '',
+              '| Category | Score |',
+              '|----------|-------|',
+              `| ${emoji(r.performance)} Performance | ${score(r.performance)} |`,
+              `| ${emoji(r.accessibility)} Accessibility | ${score(r.accessibility)} |`,
+              `| ${emoji(r['best-practices'])} Best Practices | ${score(r['best-practices'])} |`,
+              `| ${emoji(r.seo)} SEO | ${score(r.seo)} |`,
+            ].join('\n');
+            core.setOutput('body', body);
+
+      - name: Find PR number
+        id: find-pr
+        uses: actions/github-script@v7
+        if: always() && steps.format.outcome == 'success'
+        with:
+          script: |
+            const deploys = await github.rest.repos.listDeployments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.payload.deployment.sha,
+              per_page: 1,
+            });
+            if (deploys.data.length === 0) return;
+            const prs = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              head: `${context.repo.owner}:${deploys.data[0].ref}`,
+            });
+            if (prs.data.length > 0) {
+              core.setOutput('number', prs.data[0].number);
+            }
+
+      - name: Comment on PR
+        uses: marocchino/sticky-pull-request-comment@v2
+        if: always() && steps.find-pr.outputs.number
+        with:
+          header: lighthouse
+          number: ${{ steps.find-pr.outputs.number }}
+          message: ${{ steps.format.outputs.body }}
