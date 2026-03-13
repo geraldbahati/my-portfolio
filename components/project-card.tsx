@@ -200,7 +200,7 @@ function ProjectCardComponent({
   poster,
   alt = "",
   title,
-  url,
+  url: _url,
   badges = EMPTY_BADGES,
   aspectRatio = "16/9",
   className = "",
