@@ -65,7 +65,7 @@ export const submitContactForm = mutation({
         const emailId = await resend.sendEmail(ctx, {
           from:
             process.env.SENDER_EMAIL ||
-            "Portfolio Contact <contact@yourdomain.com>",
+            "Gerald Bahati <contact@yourdomain.com>",
           to: process.env.RECIPIENT_EMAIL || "your-email@example.com",
           subject: `Portfolio Contact: ${args.name}`,
           html: `
@@ -152,9 +152,9 @@ export const submitContactForm = mutation({
         await resend.sendEmail(ctx, {
           from:
             process.env.SENDER_EMAIL ||
-            "Portfolio Contact <contact@yourdomain.com>",
+            "Gerald Bahati <contact@yourdomain.com>",
           to: args.email,
-          subject: "We received your message",
+          subject: "Got your message — I'll be in touch soon",
           html: `
             <!DOCTYPE html>
             <html>
@@ -176,17 +176,9 @@ export const submitContactForm = mutation({
                       <h1 style="margin: 0 0 8px; font-size: 24px; font-weight: 700; color: #ffffff; line-height: 1.3;">Thanks for reaching out!</h1>
                       <p style="margin: 0 0 24px; font-size: 15px; color: #a3a3a3;">Hi ${args.name},</p>
 
-                      <p style="margin: 0 0 24px; font-size: 15px; line-height: 1.7; color: #d4d4d4;">
-                        I've received your message and will get back to you as soon as possible. In the meantime, here's a copy of what you sent:
+                      <p style="margin: 0 0 32px; font-size: 15px; line-height: 1.7; color: #d4d4d4;">
+                        Thanks for getting in touch. I've received your message and will get back to you shortly.
                       </p>
-
-                      <!-- Message Copy -->
-                      <div style="background-color: #1a1a1a; border-radius: 8px; border: 1px solid #262626; border-left: 3px solid #d97706; padding: 20px; margin-bottom: 32px;">
-                        <p style="margin: 0 0 10px; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #737373; font-weight: 600;">Your Message</p>
-                        <p style="margin: 0; font-size: 15px; line-height: 1.7; color: #d4d4d4;">
-                          ${sanitizedMessage.replace(/\n/g, "<br>")}
-                        </p>
-                      </div>
 
                       <!-- Divider -->
                       <hr style="border: none; border-top: 1px solid #262626; margin: 0 0 24px;">
@@ -196,7 +188,7 @@ export const submitContactForm = mutation({
                         Talk soon,<br>
                         <strong style="color: #ffffff;">Gerald Bahati</strong>
                       </p>
-                      <p style="margin: 8px 0 0; font-size: 13px; color: #737373;">Product Software Engineer</p>
+                      <p style="margin: 8px 0 0; font-size: 13px; color: #737373;">Software Engineer</p>
 
                     </td></tr>
 
