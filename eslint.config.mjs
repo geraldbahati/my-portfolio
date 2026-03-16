@@ -7,6 +7,9 @@ const eslintConfig = defineConfig([
   ...nextTs,
   globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts", "convex/_generated/**"]),
   {
+    settings: {
+      react: { version: "19" },
+    },
     rules: {
       // Downgrade to warnings until pre-existing issues are resolved
       "react-hooks/refs": "warn",
