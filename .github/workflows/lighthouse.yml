@@ -19,7 +19,7 @@ jobs:
 
       - name: Format results
         id: format
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         if: always() && steps.lighthouse.outcome == 'success'
         with:
           script: |
@@ -43,7 +43,7 @@ jobs:
 
       - name: Find PR number
         id: find-pr
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         if: always() && steps.format.outcome == 'success'
         with:
           script: |
