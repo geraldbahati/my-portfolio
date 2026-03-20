@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 import { TextScramble } from "@/components/ui/text-scramble";
 import { Separator } from "@/components/ui/separator";
 import Analytics from "@/lib/analytics";
+import { cn } from "@/lib/utils";
 
 interface FooterProps {
   brand?: {
@@ -150,7 +151,10 @@ export function Footer({
       <div className="mx-auto max-w-7xl px-6 py-16 lg:px-8">
         <div
           ref={gridRef}
-          className={`grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4${isVisible ? " footer-visible" : ""}`}
+          className={cn(
+            "grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4",
+            isVisible && "footer-visible",
+          )}
         >
           {/* Brand */}
           <div className="footer-reveal" style={{ animationDelay: "0.1s" }}>
@@ -213,7 +217,7 @@ export function Footer({
 
         {/* Copyright */}
         <div
-          className={`mt-16 pt-8 footer-reveal${isVisible ? " footer-visible" : ""}`}
+          className={cn("mt-16 pt-8 footer-reveal", isVisible && "footer-visible")}
           style={{ animationDelay: "0.5s" }}
         >
           <p className="text-base text-gray-500">{copyrightText}</p>
