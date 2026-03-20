@@ -112,14 +112,17 @@ export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
       })
       .catch(() => undefined);
 
-    const submission = await submitContactForm({
+    const submission: {
+      error: unknown | null;
+      result: Awaited<ReturnType<typeof submitContactForm>> | null;
+    } = await submitContactForm({
       name: data.name,
       email: data.email,
       message: data.message,
       privacyConsent: data.privacyConsent,
       clientIP,
     })
-      .then((result) => ({ error: null as const, result }))
+      .then((result) => ({ error: null, result }))
       .catch((error: unknown) => ({ error, result: null }));
 
     if (submission.error || !submission.result) {
