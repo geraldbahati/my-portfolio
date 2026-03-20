@@ -65,7 +65,7 @@ jobs:
             }
 
       - name: Comment on PR
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@v3
         if: always() && steps.find-pr.outputs.number
         with:
           header: lighthouse
