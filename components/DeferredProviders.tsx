@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
+import { Observer } from "tailwindcss-intersect";
 import { initConsoleFilter } from "@/lib/console-filter";
+
+let hasInitializedDeferredProviders = false;
 
 /**
  * DeferredProviders - Initializes non-critical providers after hydration.
@@ -16,19 +19,15 @@ import { initConsoleFilter } from "@/lib/console-filter";
  * block SSR paint.
  */
 export default function DeferredProviders() {
-  const initialized = useRef(false);
-
   useEffect(() => {
-    if (initialized.current) return;
-    initialized.current = true;
+    if (hasInitializedDeferredProviders) return;
+    hasInitializedDeferredProviders = true;
 
     // Console filter
     initConsoleFilter();
 
     // IntersectObserver
-    import("tailwindcss-intersect").then(({ Observer }) => {
-      Observer.start();
-    });
+    Observer.start();
   }, []);
 
   return null;

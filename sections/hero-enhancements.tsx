@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -25,6 +25,12 @@ const ANIMATION_DURATIONS = {
   HOVER_SCRAMBLE: 500,
   HOVER_SCRAMBLE_SPEED: 0.04,
 } as const;
+
+type PortalTargets = {
+  gridSlot: Element | null;
+  namePortal: Element | null;
+  ctaPortal: Element | null;
+};
 
 const TextScrambleHoverTrigger = memo(() => {
   const [isHovered, setIsHovered] = useState(false);
@@ -73,15 +79,12 @@ const TextScrambleHoverTrigger = memo(() => {
       }
       className="inline-block pointer-events-auto"
     >
-      <div
+      <span
         className={`shrink-0 cursor-pointer relative inline-block border-b transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ${
           isHovered ? "border-primary" : "border-muted-foreground/50"
         }`}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        role="button"
-        tabIndex={0}
-        aria-label="Request a project"
       >
         <TextScramble
           className="text-white font-light text-sm sm:text-base uppercase tracking-[0.2em]"
@@ -93,7 +96,7 @@ const TextScrambleHoverTrigger = memo(() => {
         >
           Request a project
         </TextScramble>
-      </div>
+      </span>
     </Link>
   );
 });
@@ -109,46 +112,84 @@ TextScrambleHoverTrigger.displayName = "TextScrambleHoverTrigger";
  */
 export default function HeroEnhancements() {
   const [nameScrambling, setNameScrambling] = useState(true);
-  const [mounted, setMounted] = useState(false);
-  const gridSlotRef = useRef<Element | null>(null);
-  const namePortalRef = useRef<Element | null>(null);
-  const ctaPortalRef = useRef<Element | null>(null);
 
   const prefersReducedMotion = useMediaQuery(
     "(prefers-reduced-motion: reduce)",
   );
 
-  useEffect(() => {
-    // Find portal targets
-    gridSlotRef.current = document.querySelector("[data-grid-pattern-slot]");
-    namePortalRef.current = document.querySelector("[data-hero-name-portal]");
-    ctaPortalRef.current = document.querySelector("[data-hero-cta-portal]");
+  const portalTargets = useMemo<PortalTargets>(
+    () => ({
+      gridSlot: document.querySelector("[data-grid-pattern-slot]"),
+      namePortal: document.querySelector("[data-hero-name-portal]"),
+      ctaPortal: document.querySelector("[data-hero-cta-portal]"),
+    }),
+    [],
+  );
 
-    // Hide static content, show portal containers
+  useEffect(() => {
     const nameStatic = document.querySelector("[data-hero-name-static]");
     const ctaStatic = document.querySelector("[data-hero-cta-static]");
 
-    if (nameStatic) (nameStatic as HTMLElement).style.display = "none";
-    if (namePortalRef.current) (namePortalRef.current as HTMLElement).classList.remove("hidden");
+    if (nameStatic instanceof HTMLElement) {
+      nameStatic.style.display = "none";
+    }
+    if (portalTargets.namePortal instanceof HTMLElement) {
+      portalTargets.namePortal.classList.remove("hidden");
+    }
 
-    if (ctaStatic) (ctaStatic as HTMLElement).style.display = "none";
-    if (ctaPortalRef.current) (ctaPortalRef.current as HTMLElement).classList.remove("hidden");
+    if (ctaStatic instanceof HTMLElement) {
+      ctaStatic.style.display = "none";
+    }
+    if (portalTargets.ctaPortal instanceof HTMLElement) {
+      portalTargets.ctaPortal.classList.remove("hidden");
+    }
 
-    setMounted(true);
+    if (prefersReducedMotion) {
+      return () => {
+        if (nameStatic instanceof HTMLElement) {
+          nameStatic.style.removeProperty("display");
+        }
+        if (portalTargets.namePortal instanceof HTMLElement) {
+          portalTargets.namePortal.classList.add("hidden");
+        }
+        if (ctaStatic instanceof HTMLElement) {
+          ctaStatic.style.removeProperty("display");
+        }
+        if (portalTargets.ctaPortal instanceof HTMLElement) {
+          portalTargets.ctaPortal.classList.add("hidden");
+        }
+      };
+    }
 
-    if (prefersReducedMotion) return;
-    const timer = setTimeout(() => {
+    const timer = window.setTimeout(() => {
       setNameScrambling(false);
     }, 800);
-    return () => clearTimeout(timer);
-  }, [prefersReducedMotion]);
 
-  if (!mounted) return null;
+    return () => {
+      window.clearTimeout(timer);
+
+      if (nameStatic instanceof HTMLElement) {
+        nameStatic.style.removeProperty("display");
+      }
+      if (portalTargets.namePortal instanceof HTMLElement) {
+        portalTargets.namePortal.classList.add("hidden");
+      }
+      if (ctaStatic instanceof HTMLElement) {
+        ctaStatic.style.removeProperty("display");
+      }
+      if (portalTargets.ctaPortal instanceof HTMLElement) {
+        portalTargets.ctaPortal.classList.add("hidden");
+      }
+    };
+  }, [portalTargets, prefersReducedMotion]);
+
+  const { ctaPortal, gridSlot, namePortal } = portalTargets;
+  const shouldScrambleName = nameScrambling && !prefersReducedMotion;
 
   return (
     <>
       {/* GridPattern → portaled into empty [data-grid-pattern-slot] */}
-      {!prefersReducedMotion && gridSlotRef.current &&
+      {!prefersReducedMotion && gridSlot &&
         createPortal(
           <GridPattern
             className="absolute inset-0"
@@ -158,27 +199,21 @@ export default function HeroEnhancements() {
             surroundingCells={4}
             surroundingRadius={1}
           />,
-          gridSlotRef.current,
+          gridSlot,
         )}
 
       {/* TextScramble name → portaled into [data-hero-name-portal] */}
-      {namePortalRef.current &&
+      {namePortal &&
         createPortal(
           <span
             className={`transition-[filter] duration-700 ease-out ${
-              nameScrambling && !prefersReducedMotion
-                ? "blur-[1px]"
-                : "blur-0"
+              shouldScrambleName ? "blur-[1px]" : "blur-0"
             }`}
           >
             <TextScramble
-              key={
-                nameScrambling && !prefersReducedMotion
-                  ? "scrambling"
-                  : "stopped"
-              }
+              key={shouldScrambleName ? "scrambling" : "stopped"}
               className="text-xs sm:text-sm lg:text-base font-light text-primary tracking-[0.2em] sm:tracking-[0.3em] uppercase"
-              trigger={nameScrambling && !prefersReducedMotion}
+              trigger={shouldScrambleName}
               duration={ANIMATION_DURATIONS.NAME_SCRAMBLE}
               speed={ANIMATION_DURATIONS.NAME_SCRAMBLE_SPEED}
               as="span"
@@ -186,14 +221,14 @@ export default function HeroEnhancements() {
               Gerald Bahati
             </TextScramble>
           </span>,
-          namePortalRef.current,
+          namePortal,
         )}
 
       {/* TextScramble CTA → portaled into [data-hero-cta-portal] */}
-      {ctaPortalRef.current &&
+      {ctaPortal &&
         createPortal(
           <TextScrambleHoverTrigger />,
-          ctaPortalRef.current,
+          ctaPortal,
         )}
     </>
   );

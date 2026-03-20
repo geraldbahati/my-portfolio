@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useEffect, useRef, useCallback, useMemo, useId } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+} from "react";
 import { cn } from "@/lib/utils";
 
 interface HighlightSquare {
@@ -166,94 +172,104 @@ export default function GridPattern({
   // Demand-driven animation — only runs when there's work to do
   // =========================================================================
   const isAnimatingRef = useRef(false);
+  const animationTickRef = useRef<() => void>(() => {});
 
-  // Animation tick ref — called via ref to avoid stale closures
-  const animationTickRef = useRef<(() => void) | null>(null);
+  useEffect(() => {
+    animationTickRef.current = () => {
+      if (disableInteraction || !interactiveGroupRef.current) {
+        isAnimatingRef.current = false;
+        return;
+      }
+
+      const now = Date.now();
+
+      // Remove expired highlights
+      highlightSquaresRef.current = highlightSquaresRef.current.filter(
+        (sq) => now - sq.timestamp < TRAIL_DURATION,
+      );
+
+      // Build array of squares to render
+      type RenderSquare = {
+        x: number;
+        y: number;
+        opacity: number;
+        scale: number;
+        isCenter: boolean;
+      };
+      const squaresToRender: RenderSquare[] = [];
+
+      // Add current active cells if moving
+      if (currentCellRef.current && isMovingRef.current) {
+        const { x: cx, y: cy } = currentCellRef.current;
+        squaresToRender.push({ x: cx, y: cy, opacity: 1, scale: 1, isCenter: true });
+        currentSurroundingRef.current.forEach((cell) => {
+          squaresToRender.push({ ...cell, opacity: 0.8, scale: 1, isCenter: false });
+        });
+      }
+
+      // Add trail highlights
+      highlightSquaresRef.current.forEach((square) => {
+        if (squaresToRender.some((s) => s.x === square.x && s.y === square.y)) return;
+
+        const age = Math.min(1, (now - square.timestamp) / TRAIL_DURATION);
+        const opacity = Math.max(0, (square.isCenter ? 0.7 : 0.5) * (1 - age));
+        if (opacity > 0) {
+          squaresToRender.push({
+            x: square.x,
+            y: square.y,
+            opacity,
+            scale: 1 + age * 0.2,
+            isCenter: square.isCenter,
+          });
+        }
+      });
+
+      const primaryColor = getPrimaryColor();
+
+      // Update pooled rects (no create/destroy churn)
+      squaresToRender.forEach((square, i) => {
+        const rect = getPooledRect(i);
+        rect.setAttribute("x", String(square.x * width + 0.5));
+        rect.setAttribute("y", String(square.y * height + 0.5));
+        rect.setAttribute("width", String(width - 1));
+        rect.setAttribute("height", String(height - 1));
+        rect.setAttribute("stroke", primaryColor);
+        rect.setAttribute("stroke-width", square.isCenter ? "2" : "1.5");
+        rect.setAttribute("opacity", String(square.opacity));
+        rect.style.transform = `scale(${square.scale})`;
+        rect.style.transformOrigin = `${square.x * width + width / 2}px ${square.y * height + height / 2}px`;
+      });
+      hideUnusedRects(squaresToRender.length);
+      activeRectCountRef.current = squaresToRender.length;
+
+      // Decide whether to keep the loop running
+      const hasWork =
+        squaresToRender.length > 0 || highlightSquaresRef.current.length > 0;
+
+      if (hasWork) {
+        rafIdRef.current = requestAnimationFrame(() => {
+          animationTickRef.current();
+        });
+      } else {
+        isAnimatingRef.current = false;
+      }
+    };
+  }, [
+    disableInteraction,
+    getPrimaryColor,
+    getPooledRect,
+    hideUnusedRects,
+    height,
+    width,
+  ]);
 
   const scheduleAnimation = useCallback(() => {
     if (isAnimatingRef.current || disableInteraction) return;
     isAnimatingRef.current = true;
-    rafIdRef.current = requestAnimationFrame(() => animationTickRef.current?.());
+    rafIdRef.current = requestAnimationFrame(() => {
+      animationTickRef.current();
+    });
   }, [disableInteraction]);
-
-  // Keep tick in sync on every render (no deps needed — always fresh)
-  animationTickRef.current = () => {
-    if (disableInteraction || !interactiveGroupRef.current) {
-      isAnimatingRef.current = false;
-      return;
-    }
-
-    const now = Date.now();
-
-    // Remove expired highlights
-    highlightSquaresRef.current = highlightSquaresRef.current.filter(
-      (sq) => now - sq.timestamp < TRAIL_DURATION,
-    );
-
-    // Build array of squares to render
-    type RenderSquare = {
-      x: number;
-      y: number;
-      opacity: number;
-      scale: number;
-      isCenter: boolean;
-    };
-    const squaresToRender: RenderSquare[] = [];
-
-    // Add current active cells if moving
-    if (currentCellRef.current && isMovingRef.current) {
-      const { x: cx, y: cy } = currentCellRef.current;
-      squaresToRender.push({ x: cx, y: cy, opacity: 1, scale: 1, isCenter: true });
-      currentSurroundingRef.current.forEach((cell) => {
-        squaresToRender.push({ ...cell, opacity: 0.8, scale: 1, isCenter: false });
-      });
-    }
-
-    // Add trail highlights
-    highlightSquaresRef.current.forEach((square) => {
-      if (squaresToRender.some((s) => s.x === square.x && s.y === square.y)) return;
-
-      const age = Math.min(1, (now - square.timestamp) / TRAIL_DURATION);
-      const opacity = Math.max(0, (square.isCenter ? 0.7 : 0.5) * (1 - age));
-      if (opacity > 0) {
-        squaresToRender.push({
-          x: square.x,
-          y: square.y,
-          opacity,
-          scale: 1 + age * 0.2,
-          isCenter: square.isCenter,
-        });
-      }
-    });
-
-    const primaryColor = getPrimaryColor();
-
-    // Update pooled rects (no create/destroy churn)
-    squaresToRender.forEach((square, i) => {
-      const rect = getPooledRect(i);
-      rect.setAttribute("x", String(square.x * width + 0.5));
-      rect.setAttribute("y", String(square.y * height + 0.5));
-      rect.setAttribute("width", String(width - 1));
-      rect.setAttribute("height", String(height - 1));
-      rect.setAttribute("stroke", primaryColor);
-      rect.setAttribute("stroke-width", square.isCenter ? "2" : "1.5");
-      rect.setAttribute("opacity", String(square.opacity));
-      rect.style.transform = `scale(${square.scale})`;
-      rect.style.transformOrigin = `${square.x * width + width / 2}px ${square.y * height + height / 2}px`;
-    });
-    hideUnusedRects(squaresToRender.length);
-    activeRectCountRef.current = squaresToRender.length;
-
-    // Decide whether to keep the loop running
-    const hasWork =
-      squaresToRender.length > 0 || highlightSquaresRef.current.length > 0;
-
-    if (hasWork) {
-      rafIdRef.current = requestAnimationFrame(() => animationTickRef.current?.());
-    } else {
-      isAnimatingRef.current = false;
-    }
-  };
 
   // =========================================================================
   // Mouse handlers
