@@ -1,17 +1,16 @@
 "use client";
-import { type JSX, useEffect, useState } from "react";
-import { motion, MotionProps } from "motion/react";
+import { useEffect, useEffectEvent, useRef, useState, type ElementType, type HTMLAttributes } from "react";
 
 export type TextScrambleProps = {
   children: string;
   duration?: number;
   speed?: number;
   characterSet?: string;
-  as?: React.ElementType;
+  as?: ElementType;
   className?: string;
   trigger?: boolean;
   onScrambleComplete?: () => void;
-} & MotionProps;
+} & HTMLAttributes<HTMLElement>;
 
 const defaultChars =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -25,96 +24,86 @@ export function TextScramble({
   as: Component = "p",
   trigger = true,
   onScrambleComplete,
+  style,
   ...props
 }: TextScrambleProps) {
-  const MotionComponent = motion.create(
-    Component as keyof JSX.IntrinsicElements,
-  );
-  const [displayText, setDisplayText] = useState(children);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [intervalRef, setIntervalRef] = useState<NodeJS.Timeout | null>(null);
+  const [displayText, setDisplayText] = useState<string | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const text = children;
+  const intervalMs = Math.max(speed * 1000, 16);
+  const stepCount = Math.max(Math.ceil(duration / speed), 1);
+
+  const handleScrambleComplete = useEffectEvent(() => {
+    onScrambleComplete?.();
+  });
 
   useEffect(() => {
-    const scramble = async () => {
-      if (isAnimating) return;
-      setIsAnimating(true);
-
-      const steps = duration / speed;
-      let step = 0;
-
-      const interval = setInterval(() => {
-        let scrambled = "";
-        const progress = step / steps;
-
-        for (let i = 0; i < text.length; i++) {
-          if (text[i] === " ") {
-            scrambled += " ";
-            continue;
-          }
-
-          if (progress * text.length > i) {
-            scrambled += text[i];
-          } else {
-            scrambled +=
-              characterSet[Math.floor(Math.random() * characterSet.length)];
-          }
-        }
-
-        setDisplayText(scrambled);
-        step++;
-
-        if (step > steps) {
-          clearInterval(interval);
-          setDisplayText(text);
-          setIsAnimating(false);
-          setIntervalRef(null);
-          onScrambleComplete?.();
-        }
-      }, speed * 1000);
-
-      setIntervalRef(interval);
+    const clearActiveInterval = () => {
+      if (!intervalRef.current) return;
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
     };
 
-    const stopScramble = () => {
-      if (intervalRef) {
-        clearInterval(intervalRef);
-        setIntervalRef(null);
-      }
-      setDisplayText(text);
-      setIsAnimating(false);
-      onScrambleComplete?.();
-    };
+    clearActiveInterval();
 
-    if (trigger) {
-      scramble();
-    } else {
-      stopScramble();
+    if (!trigger) {
+      handleScrambleComplete();
+      return clearActiveInterval;
     }
 
-    return () => {
-      if (intervalRef) {
-        clearInterval(intervalRef);
+    const startedAt = performance.now();
+    intervalRef.current = setInterval(() => {
+      const elapsed = performance.now() - startedAt;
+      const currentStep = Math.min(
+        stepCount + 1,
+        Math.floor(elapsed / intervalMs),
+      );
+      const progress = currentStep / stepCount;
+
+      let scrambled = "";
+      for (let i = 0; i < text.length; i++) {
+        if (text[i] === " ") {
+          scrambled += " ";
+          continue;
+        }
+
+        if (progress * text.length > i) {
+          scrambled += text[i];
+        } else {
+          scrambled +=
+            characterSet[Math.floor(Math.random() * characterSet.length)];
+        }
       }
-    };
+
+      setDisplayText(scrambled);
+
+      if (currentStep > stepCount) {
+        clearActiveInterval();
+        setDisplayText(text);
+        handleScrambleComplete();
+      }
+    }, intervalMs);
+
+    return clearActiveInterval;
   }, [
     trigger,
     duration,
     speed,
     characterSet,
     text,
-    isAnimating,
-    intervalRef,
-    onScrambleComplete,
+    intervalMs,
+    stepCount,
   ]);
 
+  const ComponentTag = Component as ElementType;
+
   return (
-    <MotionComponent
+    <ComponentTag
       className={className}
-      style={{ pointerEvents: "none" }}
+      style={{ pointerEvents: "none", ...style }}
       {...props}
     >
-      {displayText}
-    </MotionComponent>
+      {trigger ? displayText ?? text : text}
+    </ComponentTag>
   );
 }

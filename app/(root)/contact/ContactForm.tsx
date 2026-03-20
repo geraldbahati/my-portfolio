@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
+import { useState, type ChangeEvent, type FormEvent } from "react";
 import { useMutation } from "convex/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,36 +17,83 @@ interface ContactFormProps {
   onSubmitSuccess?: () => void;
 }
 
+type FieldErrors = Partial<Record<keyof ContactFormData, string>>;
+
+const EMPTY_SUBMIT_STATUS = { type: null, message: "" } as const;
+
+const INITIAL_FORM_DATA: ContactFormData = {
+  name: "",
+  email: "",
+  message: "",
+  privacyConsent: false,
+  _honeypot: "",
+};
+
 export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
+  const [formData, setFormData] = useState<ContactFormData>(INITIAL_FORM_DATA);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<{
     type: "success" | "error" | null;
     message: string;
-  }>({ type: null, message: "" });
+  }>(EMPTY_SUBMIT_STATUS);
 
   const submitContactForm = useMutation(api.contactForm.submitContactForm);
   const trackForm = useTrackForm();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    reset,
-    setValue,
-    watch,
-  } = useForm<ContactFormData>({
-    resolver: zodResolver(contactSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      message: "",
-      privacyConsent: false,
-      _honeypot: "",
-    },
-  });
+  const clearSubmitStatus = () => {
+    setSubmitStatus((current) =>
+      current.type ? EMPTY_SUBMIT_STATUS : current,
+    );
+  };
 
-  const privacyConsent = watch("privacyConsent");
+  const clearFieldError = (field: keyof ContactFormData) => {
+    setFieldErrors((current) =>
+      current[field] ? { ...current, [field]: undefined } : current,
+    );
+  };
 
-  const onSubmit = async (data: ContactFormData) => {
+  const handleInputChange = (
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const { name, value } = event.target;
+    const field = name as keyof ContactFormData;
+
+    setFormData((current) => ({ ...current, [field]: value }));
+    clearFieldError(field);
+    clearSubmitStatus();
+  };
+
+  const handlePrivacyConsentChange = (checked: boolean | "indeterminate") => {
+    setFormData((current) => ({
+      ...current,
+      privacyConsent: checked === true,
+    }));
+    clearFieldError("privacyConsent");
+    clearSubmitStatus();
+  };
+
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    clearSubmitStatus();
+
+    const validationResult = contactSchema.safeParse(formData);
+    if (!validationResult.success) {
+      const { fieldErrors: zodFieldErrors } = validationResult.error.flatten();
+      setFieldErrors({
+        name: zodFieldErrors.name?.[0],
+        email: zodFieldErrors.email?.[0],
+        message: zodFieldErrors.message?.[0],
+        privacyConsent: zodFieldErrors.privacyConsent?.[0],
+        _honeypot: zodFieldErrors._honeypot?.[0],
+      });
+      return;
+    }
+
+    setFieldErrors({});
+
+    const data = validationResult.data;
+
     // Honeypot check
     if (data._honeypot) {
       setSubmitStatus({
@@ -57,59 +103,69 @@ export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
       return;
     }
 
-    setSubmitStatus({ type: null, message: "" });
+    setIsSubmitting(true);
+    const clientIP = await fetch("/api/get-ip")
+      .then(async (response) => {
+        if (!response.ok) return undefined;
+        const ipData = (await response.json()) as { ip?: string };
+        return ipData.ip;
+      })
+      .catch(() => undefined);
 
-    try {
-      // Get client IP (simplified approach)
-      let clientIP: string | undefined;
-      try {
-        const response = await fetch("/api/get-ip");
-        if (response.ok) {
-          const ipData = await response.json();
-          clientIP = ipData.ip;
-        }
-      } catch {
-        // Fallback if IP detection fails
-        clientIP = undefined;
-      }
+    const submission: {
+      error: unknown | null;
+      result: Awaited<ReturnType<typeof submitContactForm>> | null;
+    } = await submitContactForm({
+      name: data.name,
+      email: data.email,
+      message: data.message,
+      privacyConsent: data.privacyConsent,
+      clientIP,
+    })
+      .then((result) => ({ error: null, result }))
+      .catch((error: unknown) => ({ error, result: null }));
 
-      const result = await submitContactForm({
-        name: data.name,
-        email: data.email,
-        message: data.message,
-        privacyConsent: data.privacyConsent,
-        clientIP,
-      });
-
-      if (result.success) {
-        setSubmitStatus({
-          type: "success",
-          message: result.message || "Message sent successfully!",
-        });
-        trackForm("Contact Form", true, "contact-page-form");
-        reset();
-        onSubmitSuccess?.();
-      } else {
-        setSubmitStatus({
-          type: "error",
-          message: result.error || "Failed to send message. Please try again.",
-        });
-        trackForm("Contact Form", false, "contact-page-form", result.error);
-      }
-    } catch (error) {
-      console.error("Form submission error:", error);
+    if (submission.error || !submission.result) {
+      console.error("Form submission error:", submission.error);
       const errorMessage = "An unexpected error occurred. Please try again.";
       setSubmitStatus({
         type: "error",
         message: errorMessage,
       });
       trackForm("Contact Form", false, "contact-page-form", errorMessage);
+      setIsSubmitting(false);
+      return;
     }
+
+    if (submission.result.success) {
+      setSubmitStatus({
+        type: "success",
+        message: submission.result.message || "Message sent successfully!",
+      });
+      trackForm("Contact Form", true, "contact-page-form");
+      setFormData(INITIAL_FORM_DATA);
+      setFieldErrors({});
+      onSubmitSuccess?.();
+    } else {
+      setSubmitStatus({
+        type: "error",
+        message:
+          submission.result.error || "Failed to send message. Please try again.",
+      });
+      trackForm(
+        "Contact Form",
+        false,
+        "contact-page-form",
+        submission.result.error,
+      );
+    }
+
+    setIsSubmitting(false);
   };
 
   return (
     <form
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={onSubmit}
       className="space-y-6"
       noValidate
       itemScope
@@ -133,8 +189,10 @@ export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
 
       {/* Honeypot field (hidden from users) */}
       <input
-        {...register("_honeypot")}
+        name="_honeypot"
         type="text"
+        value={formData._honeypot}
+        onChange={handleInputChange}
         tabIndex={-1}
         autoComplete="off"
         className="sr-only"
@@ -149,17 +207,19 @@ export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
           </FieldLabel>
           <Input
             id="name"
+            name="name"
             type="text"
             placeholder="name"
             autoComplete="name"
-            aria-invalid={errors.name ? "true" : "false"}
-            aria-describedby={errors.name ? "name-error" : undefined}
-            className={`w-full border-black focus:border-black ${errors.name ? "border-red-500 focus:border-red-500" : ""}`}
+            value={formData.name}
+            onChange={handleInputChange}
+            aria-invalid={fieldErrors.name ? "true" : "false"}
+            aria-describedby={fieldErrors.name ? "name-error" : undefined}
+            className={`w-full border-black focus:border-black ${fieldErrors.name ? "border-red-500 focus:border-red-500" : ""}`}
             itemProp="name"
-            {...register("name")}
           />
-          {errors.name && (
-            <FieldError id="name-error">{errors.name.message}</FieldError>
+          {fieldErrors.name && (
+            <FieldError id="name-error">{fieldErrors.name}</FieldError>
           )}
         </Field>
 
@@ -170,17 +230,19 @@ export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
           </FieldLabel>
           <Input
             id="email"
+            name="email"
             type="email"
             placeholder="e-mail"
             autoComplete="email"
-            aria-invalid={errors.email ? "true" : "false"}
-            aria-describedby={errors.email ? "email-error" : undefined}
-            className={`w-full border-black focus:border-black ${errors.email ? "border-red-500 focus:border-red-500" : ""}`}
+            value={formData.email}
+            onChange={handleInputChange}
+            aria-invalid={fieldErrors.email ? "true" : "false"}
+            aria-describedby={fieldErrors.email ? "email-error" : undefined}
+            className={`w-full border-black focus:border-black ${fieldErrors.email ? "border-red-500 focus:border-red-500" : ""}`}
             itemProp="email"
-            {...register("email")}
           />
-          {errors.email && (
-            <FieldError id="email-error">{errors.email.message}</FieldError>
+          {fieldErrors.email && (
+            <FieldError id="email-error">{fieldErrors.email}</FieldError>
           )}
         </Field>
 
@@ -191,16 +253,18 @@ export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
           </FieldLabel>
           <Textarea
             id="message"
+            name="message"
             placeholder="News"
             rows={5}
-            aria-invalid={errors.message ? "true" : "false"}
-            aria-describedby={errors.message ? "message-error" : undefined}
-            className={`w-full resize-none border-black focus:border-black ${errors.message ? "border-red-500 focus:border-red-500" : ""}`}
+            value={formData.message}
+            onChange={handleInputChange}
+            aria-invalid={fieldErrors.message ? "true" : "false"}
+            aria-describedby={fieldErrors.message ? "message-error" : undefined}
+            className={`w-full resize-none border-black focus:border-black ${fieldErrors.message ? "border-red-500 focus:border-red-500" : ""}`}
             itemProp="text"
-            {...register("message")}
           />
-          {errors.message && (
-            <FieldError id="message-error">{errors.message.message}</FieldError>
+          {fieldErrors.message && (
+            <FieldError id="message-error">{fieldErrors.message}</FieldError>
           )}
         </Field>
 
@@ -208,16 +272,14 @@ export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
         <Field orientation="horizontal">
           <Checkbox
             id="privacy-consent"
-            checked={privacyConsent}
-            onCheckedChange={(checked) =>
-              setValue("privacyConsent", checked as boolean)
-            }
-            aria-invalid={errors.privacyConsent ? "true" : "false"}
+            checked={formData.privacyConsent}
+            onCheckedChange={handlePrivacyConsentChange}
+            aria-invalid={fieldErrors.privacyConsent ? "true" : "false"}
             aria-describedby={
-              errors.privacyConsent ? "privacy-error" : "privacy-description"
+              fieldErrors.privacyConsent ? "privacy-error" : "privacy-description"
             }
             className={
-              errors.privacyConsent ? "border-red-500" : "border-black"
+              fieldErrors.privacyConsent ? "border-red-500" : "border-black"
             }
           />
           <FieldContent>
@@ -226,21 +288,21 @@ export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
               className="inline font-normal"
             >
               I agree to the{" "}
-              <a
-                href="/privacy-policy"
+              <Link
+                href="/privacy"
                 className="text-blue-600 hover:text-blue-800 underline"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Read privacy policy (opens in new tab)"
               >
                 privacy policy
-              </a>{" "}
+              </Link>{" "}
               and consent to my data being temporarily stored for the purpose of
               processing this request.
             </FieldLabel>
-            {errors.privacyConsent && (
+            {fieldErrors.privacyConsent && (
               <FieldError id="privacy-error">
-                {errors.privacyConsent.message}
+                {fieldErrors.privacyConsent}
               </FieldError>
             )}
           </FieldContent>
@@ -250,7 +312,7 @@ export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
         <Field orientation="horizontal">
           <Button
             type="submit"
-            disabled={isSubmitting || !privacyConsent}
+            disabled={isSubmitting || !formData.privacyConsent}
             className="w-auto px-8 py-2 bg-black text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
             aria-describedby="submit-help"
           >
@@ -258,7 +320,7 @@ export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
             {isSubmitting ? "SUBMITTING..." : "SUBMIT"}
           </Button>
           <FieldDescription id="submit-help" className="sr-only">
-            {!privacyConsent
+            {!formData.privacyConsent
               ? "You must agree to the privacy policy before submitting"
               : "Submit your contact form"}
           </FieldDescription>

@@ -11,8 +11,13 @@ export default function GlobalError({
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const [displayText, setDisplayText] = useState("Try Again");
-  const scrambleTimeoutRef = useRef<NodeJS.Timeout>(null);
   const intervalRef = useRef<NodeJS.Timeout>(null);
+
+  const clearScrambleInterval = useCallback(() => {
+    if (!intervalRef.current) return;
+    clearInterval(intervalRef.current);
+    intervalRef.current = null;
+  }, []);
 
   useEffect(() => {
     // Log the error to an error reporting service
@@ -23,14 +28,17 @@ export default function GlobalError({
   const scrambleText = useCallback(() => {
     const targetText = "Try Again";
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-    let step = 0;
     const steps = 15;
+    const intervalMs = 40;
+    const startedAt = performance.now();
 
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
+    clearScrambleInterval();
 
     intervalRef.current = setInterval(() => {
+      const step = Math.min(
+        steps + 1,
+        Math.floor((performance.now() - startedAt) / intervalMs),
+      );
       let scrambled = "";
       const progress = step / steps;
 
@@ -45,16 +53,13 @@ export default function GlobalError({
       }
 
       setDisplayText(scrambled);
-      step++;
 
       if (step > steps) {
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-        }
+        clearScrambleInterval();
         setDisplayText(targetText);
       }
-    }, 40);
-  }, []);
+    }, intervalMs);
+  }, [clearScrambleInterval]);
 
   const handleMouseEnter = useCallback(() => {
     setIsHovered(true);
@@ -63,25 +68,18 @@ export default function GlobalError({
 
   const handleMouseLeave = useCallback(() => {
     setIsHovered(false);
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
+    clearScrambleInterval();
     setDisplayText("Try Again");
-  }, []);
+  }, [clearScrambleInterval]);
 
   useEffect(() => {
     return () => {
-      if (scrambleTimeoutRef.current) {
-        clearTimeout(scrambleTimeoutRef.current);
-      }
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
+      clearScrambleInterval();
     };
-  }, []);
+  }, [clearScrambleInterval]);
 
   return (
-    <html>
+    <html lang="en">
       <head>
         <style>{`
           @keyframes fadeIn {

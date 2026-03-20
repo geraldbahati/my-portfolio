@@ -1,86 +1,124 @@
 "use client";
 
 import {
-  createContext,
-  useContext,
   useEffect,
   useRef,
-  useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import Lenis from "lenis";
 
-const LenisContext = createContext<Lenis | null>(null);
+type LenisListener = () => void;
+
+const lenisListeners = new Set<LenisListener>();
+let lenisSnapshot: Lenis | null = null;
+
+function subscribe(listener: LenisListener) {
+  lenisListeners.add(listener);
+  return () => {
+    lenisListeners.delete(listener);
+  };
+}
+
+function getSnapshot() {
+  return lenisSnapshot;
+}
+
+function getServerSnapshot() {
+  return null;
+}
+
+function publishLenis(next: Lenis | null) {
+  if (lenisSnapshot === next) return;
+  lenisSnapshot = next;
+  lenisListeners.forEach((listener) => listener());
+}
 
 export function useLenis(): Lenis | null {
-  return useContext(LenisContext);
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
 export function LenisProvider({ children }: { children: ReactNode }) {
-  const [lenis, setLenis] = useState<Lenis | null>(null);
-  const rafId = useRef<number>(0);
+  const lenisRef = useRef<Lenis | null>(null);
+  const unsubscribeScrollRef = useRef<(() => void) | null>(null);
+  const rafIdRef = useRef<number | null>(null);
 
   useEffect(() => {
-    // Skip smooth scroll if user prefers reduced motion
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (mq.matches) return;
-
-    const instance = new Lenis({
-      lerp: 0.1,
-      smoothWheel: true,
-      autoResize: true,
-    });
-
-    setLenis(instance);
-
-    // Demand-driven rAF: only loop while Lenis is actively animating.
-    // Lenis emits "scroll" on every interpolated frame and stops when
-    // the lerp settles, so we use it to start the loop and let it
-    // self-terminate when isScrolling becomes false.
     let running = false;
 
+    const stopLoop = () => {
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
+      running = false;
+    };
+
     function raf(time: number) {
+      const instance = lenisRef.current;
+      if (!instance) {
+        stopLoop();
+        return;
+      }
+
       instance.raf(time);
       if (instance.isScrolling) {
-        rafId.current = requestAnimationFrame(raf);
+        rafIdRef.current = requestAnimationFrame(raf);
       } else {
-        running = false;
+        stopLoop();
       }
     }
 
     function startLoop() {
-      if (!running) {
-        running = true;
-        rafId.current = requestAnimationFrame(raf);
+      if (running || !lenisRef.current) return;
+      running = true;
+      rafIdRef.current = requestAnimationFrame(raf);
+    }
+
+    const destroyInstance = () => {
+      stopLoop();
+      unsubscribeScrollRef.current?.();
+      unsubscribeScrollRef.current = null;
+      lenisRef.current?.destroy();
+      lenisRef.current = null;
+      publishLenis(null);
+    };
+
+    const ensureInstance = () => {
+      if (mq.matches || lenisRef.current) return;
+
+      const instance = new Lenis({
+        lerp: 0.1,
+        smoothWheel: true,
+        autoResize: true,
+      });
+
+      lenisRef.current = instance;
+      publishLenis(instance);
+      unsubscribeScrollRef.current = instance.on("scroll", startLoop);
+    };
+
+    function onChange(event: MediaQueryListEvent) {
+      if (event.matches) {
+        destroyInstance();
+      } else {
+        ensureInstance();
       }
     }
 
-    // Kick the loop on every new scroll input
-    instance.on("scroll", startLoop);
-    // Also start on wheel/touch so the first frame isn't missed
+    ensureInstance();
     window.addEventListener("wheel", startLoop, { passive: true });
     window.addEventListener("touchstart", startLoop, { passive: true });
-
-    // Listen for changes to prefers-reduced-motion
-    function onChange(e: MediaQueryListEvent) {
-      if (e.matches) {
-        instance.destroy();
-        cancelAnimationFrame(rafId.current);
-        setLenis(null);
-      }
-    }
     mq.addEventListener("change", onChange);
 
     return () => {
       mq.removeEventListener("change", onChange);
       window.removeEventListener("wheel", startLoop);
       window.removeEventListener("touchstart", startLoop);
-      cancelAnimationFrame(rafId.current);
-      instance.destroy();
+      destroyInstance();
     };
   }, []);
 
-  return (
-    <LenisContext.Provider value={lenis}>{children}</LenisContext.Provider>
-  );
+  return children;
 }
