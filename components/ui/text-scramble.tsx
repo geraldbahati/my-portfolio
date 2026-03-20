@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useEffectEvent, useRef, useState, type ElementType, type HTMLAttributes } from "react";
-import { motion } from "motion/react";
 
 export type TextScrambleProps = {
   children: string;
@@ -15,12 +14,6 @@ export type TextScrambleProps = {
 
 const defaultChars =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-const motionComponentMap = {
-  div: motion.div,
-  p: motion.p,
-  span: motion.span,
-} as const;
 
 export function TextScramble({
   children,
@@ -103,22 +96,6 @@ export function TextScramble({
   ]);
 
   const ComponentTag = Component as ElementType;
-  const MotionComponent =
-    typeof Component === "string" && Component in motionComponentMap
-      ? motionComponentMap[Component as keyof typeof motionComponentMap]
-      : null;
-
-  if (MotionComponent) {
-    return (
-      <MotionComponent
-        className={className}
-        style={{ pointerEvents: "none", ...style }}
-        {...props}
-      >
-        {trigger ? displayText ?? text : text}
-      </MotionComponent>
-    );
-  }
 
   return (
     <ComponentTag
