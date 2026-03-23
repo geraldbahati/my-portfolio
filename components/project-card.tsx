@@ -1,9 +1,9 @@
 "use client";
 
 import { memo, useRef, useState, useCallback, useEffect } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { m, AnimatePresence } from "motion/react";
-import { EyeIcon } from "lucide-react";
+import { EyeIcon, ExternalLinkIcon } from "lucide-react";
 import { Cursor } from "@/components/ui/cursor";
 import { MediaRenderer } from "@/components/media";
 import { parseAspectRatio } from "@/lib/media-utils";
@@ -189,6 +189,40 @@ const TitleOverlay = memo(function TitleOverlay({
   );
 });
 
+interface LiveLinkProps {
+  url: string;
+  isHovered: boolean;
+}
+
+const LiveLink = memo(function LiveLink({ url, isHovered }: LiveLinkProps) {
+  return (
+    <m.div
+      className="absolute top-4 right-4 z-20"
+      initial={{ y: -10, opacity: 0 }}
+      animate={{
+        y: isHovered ? 0 : -10,
+        opacity: isHovered ? 1 : 0,
+      }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+    >
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        className="inline-flex items-center gap-1.5 bg-primary/90 backdrop-blur-sm text-primary-foreground text-sm font-medium px-3.5 py-1.5 rounded-full hover:bg-primary transition-colors shadow-lg shadow-primary/25"
+      >
+        <span className="relative flex h-2 w-2">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+        </span>
+        Live
+        <ExternalLinkIcon className="h-3.5 w-3.5" />
+      </a>
+    </m.div>
+  );
+});
+
 // ============================================================================
 // Main Component
 // ============================================================================
@@ -200,7 +234,7 @@ function ProjectCardComponent({
   poster,
   alt = "",
   title,
-  url: _url,
+  url,
   badges = EMPTY_BADGES,
   aspectRatio = "16/9",
   className = "",
@@ -253,11 +287,14 @@ function ProjectCardComponent({
     }
   }, []);
 
-  // Handle card click - track analytics
+  const router = useRouter();
+
+  // Handle card click - track analytics and navigate
   const handleClick = useCallback(() => {
     Analytics.trackButtonClick(title || `Project ${id}`, "Project Card");
     onClick?.();
-  }, [id, title, onClick]);
+    router.push(`/projects/${id}`);
+  }, [id, title, onClick, router]);
 
   // Animation variants
   const mediaVariants = {
@@ -270,7 +307,7 @@ function ProjectCardComponent({
   };
 
   return (
-    <Link href={`/projects/${id}`} className="block relative" prefetch={true}>
+    <div className="block relative cursor-pointer" role="link">
       {/* Custom cursor */}
       <Cursor
         attachToParent
@@ -340,6 +377,9 @@ function ProjectCardComponent({
         {/* Title */}
         {title && <TitleOverlay title={title} isHovered={isHovered} />}
 
+        {/* Live link */}
+        {url && <LiveLink url={url} isHovered={isHovered} />}
+
         {/* Badges */}
         {badges.map((badge, index) => (
           <Badge
@@ -351,7 +391,7 @@ function ProjectCardComponent({
           />
         ))}
       </m.div>
-    </Link>
+    </div>
   );
 }
 
