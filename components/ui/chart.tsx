@@ -1,9 +1,13 @@
 "use client"
 
 import * as React from "react"
-import * as RechartsPrimitive from "recharts"
+import type { Payload } from "recharts/types/component/DefaultTooltipContent"
 
 import { cn } from "@/lib/utils"
+
+const ResponsiveContainer = React.lazy(() =>
+  import("recharts").then((mod) => ({ default: mod.ResponsiveContainer }))
+)
 
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const
@@ -42,9 +46,7 @@ function ChartContainer({
   ...props
 }: React.ComponentProps<"div"> & {
   config: ChartConfig
-  children: React.ComponentProps<
-    typeof RechartsPrimitive.ResponsiveContainer
-  >["children"]
+  children: React.ReactElement
 }) {
   const uniqueId = React.useId()
   const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`
@@ -61,9 +63,9 @@ function ChartContainer({
         {...props}
       >
         <ChartStyle id={chartId} config={config} />
-        <RechartsPrimitive.ResponsiveContainer>
+        <ResponsiveContainer>
           {children}
-        </RechartsPrimitive.ResponsiveContainer>
+        </ResponsiveContainer>
       </div>
     </ChartContext.Provider>
   )
@@ -78,12 +80,9 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     return null
   }
 
-  return (
-    <style
-      dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
-          .map(
-            ([theme, prefix]) => `
+  const cssText = Object.entries(THEMES)
+    .map(
+      ([theme, prefix]) => `
 ${prefix} [data-chart=${id}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
@@ -95,14 +94,15 @@ ${colorConfig
   .join("\n")}
 }
 `
-          )
-          .join("\n"),
-      }}
-    />
-  )
+    )
+    .join("\n")
+
+  return <style>{cssText}</style>
 }
 
-const ChartTooltip = RechartsPrimitive.Tooltip
+const ChartTooltip = React.lazy(() =>
+  import("recharts").then((mod) => ({ default: mod.Tooltip }))
+)
 
 function ChartTooltipContent({
   active,
@@ -118,15 +118,20 @@ function ChartTooltipContent({
   color,
   nameKey,
   labelKey,
-}: RechartsPrimitive.TooltipContentProps &
-  React.ComponentProps<"div"> & {
+}: {
+    active?: boolean
+    payload?: Payload<string, string>[]
+    className?: string
+    indicator?: "line" | "dot" | "dashed"
     hideLabel?: boolean
     hideIndicator?: boolean
-    indicator?: "line" | "dot" | "dashed"
+    label?: string
+    labelFormatter?: (label: React.ReactNode, payload: Payload<string, string>[]) => React.ReactNode
+    labelClassName?: string
+    formatter?: (value: string, name: string, item: Payload<string, string>, index: number, payload: Payload<string, string>[]) => React.ReactNode
+    color?: string
     nameKey?: string
     labelKey?: string
-    labelClassName?: string
-    color?: string
   }) {
   const { config } = useChart()
 
@@ -252,7 +257,9 @@ function ChartTooltipContent({
   )
 }
 
-const ChartLegend = RechartsPrimitive.Legend
+const ChartLegend = React.lazy(() =>
+  import("recharts").then((mod) => ({ default: mod.Legend }))
+)
 
 function ChartLegendContent({
   className,
@@ -260,8 +267,14 @@ function ChartLegendContent({
   payload,
   verticalAlign = "bottom",
   nameKey,
-}: React.ComponentProps<"div"> &
-  Pick<RechartsPrimitive.DefaultLegendContentProps, "payload" | "verticalAlign"> & {
+}: React.ComponentProps<"div"> & {
+    payload?: Array<{
+      value: string
+      type?: string
+      color?: string
+      dataKey?: string | number
+    }>
+    verticalAlign?: "top" | "bottom" | "middle"
     hideIcon?: boolean
     nameKey?: string
   }) {

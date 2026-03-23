@@ -316,7 +316,7 @@ function ProjectCardComponent({
           animate: { scale: 1, opacity: 1 },
           exit: { scale: 0.3, opacity: 0 },
         }}
-        springConfig={{ bounce: 0.001 }}
+        springConfig={{ stiffness: 500, damping: 30, mass: 0.5 }}
         transition={{ ease: "easeInOut", duration: 0.15 }}
         onPositionChange={handlePositionChange}
       >
