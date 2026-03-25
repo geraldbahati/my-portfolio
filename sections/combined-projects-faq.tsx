@@ -470,7 +470,7 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
                     height={350}
                     className="w-full h-auto object-cover grayscale hover:grayscale-0 transition-all duration-300"
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 540px"
-                    priority
+                    loading="lazy"
                     quality={75}
                   />
                 </div>

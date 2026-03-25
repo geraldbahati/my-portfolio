@@ -13,6 +13,7 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 export interface StreamVideoProps {
   src: string;
   poster?: string;
+  alt?: string;
   aspectRatio?: string | number;
   autoPlay?: boolean;
   muted?: boolean;
@@ -92,6 +93,7 @@ async function initHlsPlayer(
 function StreamVideoComponent({
   src,
   poster,
+  alt = "Video preview",
   aspectRatio = "16/9",
   autoPlay = true,
   muted = true,
@@ -196,7 +198,7 @@ function StreamVideoComponent({
       {(!isLoaded || !autoPlay) && posterUrl && (
         <Image
           src={posterUrl}
-          alt=""
+          alt={alt}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
           className="object-cover z-[1]"
