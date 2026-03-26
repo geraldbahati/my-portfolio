@@ -59,6 +59,7 @@ function MediaRendererComponent({
       <StreamVideo
         src={src}
         poster={poster}
+        alt={alt}
         aspectRatio={aspectRatio}
         autoPlay={autoPlay}
         muted={muted}

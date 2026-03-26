@@ -34,10 +34,13 @@ function useImagePreloader(
   images: (string | undefined)[],
   currentIndex: number,
   preloadAhead = 2,
+  enabled = true,
 ) {
   const preloadedRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
+    if (!enabled) return;
+
     const indicesToPreload = Array.from(
       { length: preloadAhead + 1 },
       (_, i) => currentIndex + i,
@@ -51,7 +54,7 @@ function useImagePreloader(
         preloadedRef.current.add(src);
       }
     });
-  }, [currentIndex, images, preloadAhead]);
+  }, [currentIndex, enabled, images, preloadAhead]);
 }
 
 // Hook to track which section is currently active based on scroll position
@@ -146,13 +149,7 @@ function interpolateOpacity(progress: number): number {
 // ============================================================================
 
 interface TextSectionProps {
-  section: {
-    label?: string;
-    title: string;
-    description?: string;
-    bullets?: string[];
-  };
-  index: number;
+  section: StickySection;
   sectionRef: React.RefObject<HTMLDivElement | null>;
 }
 
@@ -281,7 +278,7 @@ const TextSection = memo(({ section, sectionRef }: TextSectionProps) => {
           <ul className="space-y-4 grid-interaction-blocked">
             {section.bullets.map((bullet: string, bulletIndex: number) => (
               <li
-                key={`bullet-${bulletIndex}`}
+                key={`bullet-${section.title}-${bullet}`}
                 ref={(el) => {
                   if (el) bulletRefs.current.set(bulletIndex, el);
                   else bulletRefs.current.delete(bulletIndex);
@@ -327,25 +324,14 @@ TextSection.displayName = "TextSection";
 // ============================================================================
 
 interface ImagePanelProps {
-  section: {
-    title: string;
-    content?: React.ReactNode;
-    image?: string;
-  };
+  section: StickySection;
   index: number;
   contentClassName?: string;
-  shouldLoad: boolean;
   registerRef: (index: number, el: HTMLDivElement | null) => void;
 }
 
 const ImagePanel = memo(
-  ({
-    section,
-    index,
-    contentClassName,
-    shouldLoad,
-    registerRef,
-  }: ImagePanelProps) => {
+  ({ section, index, contentClassName, registerRef }: ImagePanelProps) => {
     return (
       <div
         ref={(el) => registerRef(index, el)}
@@ -366,8 +352,7 @@ const ImagePanel = memo(
               alt={`${section.title} background`}
               fill
               className="object-cover"
-              priority={index === 0}
-              loading={shouldLoad ? "eager" : "lazy"}
+              loading="lazy"
               quality={80}
               sizes="(max-width: 1024px) 500px, 600px"
             />
@@ -392,8 +377,7 @@ const ImagePanel = memo(
                   alt={section.title}
                   fill
                   className="object-cover"
-                  priority={index === 0}
-                  loading={shouldLoad ? "eager" : "lazy"}
+                  loading="lazy"
                   quality={90}
                   sizes="(max-width: 1024px) 320px, 450px"
                 />
@@ -414,27 +398,278 @@ const ImagePanel = memo(
 
 ImagePanel.displayName = "ImagePanel";
 
-// ============================================================================
-// MAIN COMPONENT
-// ============================================================================
+type StickySection = {
+  label?: string;
+  title: string;
+  description?: string;
+  bullets?: string[];
+  content?: React.ReactNode;
+  image?: string;
+};
+
+interface StickyScrollRevealProps {
+  sections: StickySection[];
+  contentClassName?: string;
+  containerClassName?: string;
+}
+
+function MobileSectionCard({
+  section,
+  contentClassName,
+}: {
+  section: StickySection;
+  contentClassName?: string;
+}) {
+  return (
+    <div className="min-h-screen flex flex-col justify-center py-16">
+      <m.div
+        className="mb-12"
+        variants={mobileRevealUp}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.5 }}
+        transition={{ duration: 0.6 }}
+      >
+        <div
+          className={`relative w-full rounded-2xl overflow-hidden shadow-xl ${contentClassName || ""}`}
+          style={{
+            aspectRatio: "1/1",
+            maxWidth: "500px",
+            margin: "0 auto",
+          }}
+        >
+          {section.content ? (
+            section.content
+          ) : section.image ? (
+            <div className="relative w-full h-full overflow-hidden">
+              <Image
+                src={section.image}
+                alt={`${section.title} background`}
+                fill
+                className="object-cover"
+                loading="lazy"
+                quality={80}
+                sizes="(max-width: 640px) 90vw, 500px"
+              />
+              <div
+                className="absolute inset-0"
+                style={{
+                  zIndex: 1,
+                  backdropFilter: "blur(10px) brightness(0.95)",
+                  WebkitBackdropFilter: "blur(10px) brightness(0.95)",
+                }}
+              />
+
+              <div
+                className="absolute inset-0 flex items-center justify-center p-8"
+                style={{ zIndex: 2 }}
+              >
+                <div className="relative w-full max-w-[320px] aspect-square rounded-lg overflow-hidden shadow-2xl bg-white">
+                  <Image
+                    src={section.image}
+                    alt={section.title}
+                    fill
+                    className="object-cover"
+                    loading="lazy"
+                    quality={90}
+                    sizes="(max-width: 640px) 70vw, 320px"
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="w-full h-full bg-linear-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+              <span className="text-text-tertiary text-lg font-medium text-center px-4">
+                {section.title}
+              </span>
+            </div>
+          )}
+        </div>
+      </m.div>
+
+      <m.div
+        className="w-full"
+        variants={mobileRevealUpLarge}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.5 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+      >
+        {section.label && (
+          <m.div
+            className="mb-6 grid-interaction-blocked"
+            variants={mobileRevealLeft}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.5 }}
+            transition={{ duration: 0.5 }}
+          >
+            <span className="inline-block text-sm font-medium uppercase tracking-[0.2em] text-accent-orange">
+              {section.label}
+            </span>
+            <m.div
+              className="mt-3 h-px bg-accent-orange-muted"
+              style={{
+                transformOrigin: "left",
+                width: "120px",
+              }}
+              variants={mobileScaleX}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.5 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            />
+          </m.div>
+        )}
+
+        <h2
+          className="text-4xl sm:text-5xl font-bold mb-8 tracking-tight text-text-primary grid-interaction-blocked"
+          style={{ lineHeight: "1" }}
+        >
+          {section.title}
+        </h2>
+
+        {section.description && (
+          <p className="text-base mb-8 max-w-lg leading-relaxed text-gray-700 grid-interaction-blocked">
+            {section.description}
+          </p>
+        )}
+
+        {section.bullets && (
+          <ul className="space-y-3 grid-interaction-blocked">
+            {section.bullets.map((bullet, bulletIndex) => (
+              <m.li
+                key={`bullet-mobile-${section.title}-${bullet}`}
+                className="flex items-start"
+                variants={mobileRevealLeft}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.5 }}
+                transition={{
+                  duration: 0.5,
+                  delay: 0.3 + bulletIndex * 0.05,
+                }}
+              >
+                <svg
+                  className="w-4 h-4 mt-1.5 mr-3 shrink-0 text-text-primary"
+                  fill="currentColor"
+                  viewBox="0 0 16 16"
+                >
+                  <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
+                </svg>
+                <span className="text-base text-gray-700">{bullet}</span>
+              </m.li>
+            ))}
+          </ul>
+        )}
+      </m.div>
+    </div>
+  );
+}
+
+function StickyScrollRevealMobileLayout({
+  containerRef,
+  containerClassName,
+  contentClassName,
+  sections,
+}: {
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  containerClassName?: string;
+  contentClassName?: string;
+  sections: StickySection[];
+}) {
+  return (
+    <div ref={containerRef} className={`relative ${containerClassName || ""}`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        {sections.map((section) => (
+          <MobileSectionCard
+            key={`section-mobile-${section.title}`}
+            section={section}
+            contentClassName={contentClassName}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StickyScrollRevealDesktopLayout({
+  containerRef,
+  containerClassName,
+  contentClassName,
+  registerImagePanelRef,
+  sections,
+  sectionRefs,
+  stickyContainerRef,
+}: {
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  containerClassName?: string;
+  contentClassName?: string;
+  registerImagePanelRef: (index: number, el: HTMLDivElement | null) => void;
+  sections: StickySection[];
+  sectionRefs: React.RefObject<HTMLDivElement | null>[];
+  stickyContainerRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  return (
+    <div ref={containerRef} className={`relative ${containerClassName || ""}`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative lg:flex lg:gap-16">
+          <div className="lg:w-1/2">
+            {sections.map((section, index) => (
+              <TextSection
+                key={`section-${section.title}`}
+                section={section}
+                sectionRef={sectionRefs[index]}
+              />
+            ))}
+          </div>
+
+          <div className="hidden lg:block lg:w-1/2">
+            <div
+              className="relative"
+              style={{
+                height: `${(sections.length - 0.25) * 100}vh`,
+              }}
+            >
+              <div className="h-[calc(50vh-300px)] short:h-[calc(50vh-210px)]" />
+
+              <div
+                ref={stickyContainerRef}
+                className="w-full mx-auto sticky h-[600px] short:w-[420px] short:h-[420px] top-[calc(50vh-300px)] short:top-[calc(50vh-210px)]"
+                style={{
+                  opacity: 0,
+                  transform: "translateY(350px) translateZ(0)",
+                  transition: "none",
+                }}
+              >
+                <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl">
+                  {sections.map((section, index) => (
+                    <ImagePanel
+                      key={`image-${section.title}`}
+                      section={section}
+                      index={index}
+                      contentClassName={contentClassName}
+                      registerRef={registerImagePanelRef}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export const StickyScrollReveal = ({
   sections,
   contentClassName,
   containerClassName,
-}: {
-  sections: {
-    label?: string;
-    title: string;
-    description?: string;
-    bullets?: string[];
-    content?: React.ReactNode;
-    image?: string;
-  }[];
-  contentClassName?: string;
-  containerClassName?: string;
-}) => {
+}: StickyScrollRevealProps) => {
   const [isMobile, setIsMobile] = useState(false);
+  const [shouldStartPreloading, setShouldStartPreloading] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Ref registry for image panels - for direct DOM updates
   const imagePanelRefs = useRef<Map<number, HTMLDivElement>>(new Map());
@@ -454,8 +689,8 @@ export const StickyScrollReveal = ({
   // Track active section for preloading
   const activeIndex = useActiveSectionIndex(sectionRefs);
 
-  // Preload upcoming images (current + next 2)
-  useImagePreloader(imageUrls, activeIndex, 2);
+  // Delay preloading until the section approaches the viewport.
+  useImagePreloader(imageUrls, activeIndex, 2, shouldStartPreloading);
 
   // Register/unregister image panel refs
   const registerImagePanelRef = useCallback(
@@ -517,6 +752,24 @@ export const StickyScrollReveal = ({
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShouldStartPreloading(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "75% 0px" },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   // Sticky container entrance animation (once, via IntersectionObserver + CSS transition)
   useEffect(() => {
     const el = stickyContainerRef.current;
@@ -545,222 +798,24 @@ export const StickyScrollReveal = ({
   // Mobile Layout - motion/react whileInView animations
   if (isMobile) {
     return (
-      <div className={`relative ${containerClassName || ""}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          {sections.map((section, index) => (
-            <div
-              key={`section-mobile-${section.title}`}
-              className="min-h-screen flex flex-col justify-center py-16"
-            >
-              {/* Image Section for Mobile */}
-              <m.div
-                className="mb-12"
-                variants={mobileRevealUp}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, amount: 0.5 }}
-                transition={{ duration: 0.6 }}
-              >
-                <div
-                  className={`relative w-full rounded-2xl overflow-hidden shadow-xl ${contentClassName || ""}`}
-                  style={{
-                    aspectRatio: "1/1",
-                    maxWidth: "500px",
-                    margin: "0 auto",
-                  }}
-                >
-                  {section.content ? (
-                    section.content
-                  ) : section.image ? (
-                    <div className="relative w-full h-full overflow-hidden">
-                      <Image
-                        src={section.image}
-                        alt={`${section.title} background`}
-                        fill
-                        className="object-cover"
-                        priority={index === 0}
-                        quality={80}
-                        sizes="(max-width: 640px) 90vw, 500px"
-                      />
-                      <div
-                        className="absolute inset-0"
-                        style={{
-                          zIndex: 1,
-                          backdropFilter: "blur(10px) brightness(0.95)",
-                          WebkitBackdropFilter: "blur(10px) brightness(0.95)",
-                        }}
-                      />
-
-                      <div
-                        className="absolute inset-0 flex items-center justify-center p-8"
-                        style={{ zIndex: 2 }}
-                      >
-                        <div className="relative w-full max-w-[320px] aspect-square rounded-lg overflow-hidden shadow-2xl bg-white">
-                          <Image
-                            src={section.image}
-                            alt={section.title}
-                            fill
-                            className="object-cover"
-                            priority={index === 0}
-                            quality={90}
-                            sizes="(max-width: 640px) 70vw, 320px"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="w-full h-full bg-linear-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                      <span className="text-text-tertiary text-lg font-medium text-center px-4">
-                        {section.title}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </m.div>
-
-              {/* Content Section for Mobile */}
-              <m.div
-                className="w-full"
-                variants={mobileRevealUpLarge}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, amount: 0.5 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-              >
-                {section.label && (
-                  <m.div
-                    className="mb-6 grid-interaction-blocked"
-                    variants={mobileRevealLeft}
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, amount: 0.5 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <span className="inline-block text-sm font-medium uppercase tracking-[0.2em] text-accent-orange">
-                      {section.label}
-                    </span>
-                    <m.div
-                      className="mt-3 h-px bg-accent-orange-muted"
-                      style={{
-                        transformOrigin: "left",
-                        width: "120px",
-                      }}
-                      variants={mobileScaleX}
-                      initial="hidden"
-                      whileInView="visible"
-                      viewport={{ once: true, amount: 0.5 }}
-                      transition={{ duration: 0.5, delay: 0.2 }}
-                    />
-                  </m.div>
-                )}
-
-                <h2
-                  className="text-4xl sm:text-5xl font-bold mb-8 tracking-tight text-text-primary grid-interaction-blocked"
-                  style={{ lineHeight: "1" }}
-                >
-                  {section.title}
-                </h2>
-
-                {section.description && (
-                  <p className="text-base mb-8 max-w-lg leading-relaxed text-gray-700 grid-interaction-blocked">
-                    {section.description}
-                  </p>
-                )}
-
-                {section.bullets && (
-                  <ul className="space-y-3 grid-interaction-blocked">
-                    {section.bullets.map((bullet, bulletIndex) => (
-                      <m.li
-                        key={`bullet-mobile-${bulletIndex}`}
-                        className="flex items-start"
-                        variants={mobileRevealLeft}
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true, amount: 0.5 }}
-                        transition={{
-                          duration: 0.5,
-                          delay: 0.3 + bulletIndex * 0.05,
-                        }}
-                      >
-                        <svg
-                          className="w-4 h-4 mt-1.5 mr-3 shrink-0 text-text-primary"
-                          fill="currentColor"
-                          viewBox="0 0 16 16"
-                        >
-                          <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
-                        </svg>
-                        <span className="text-base text-gray-700">
-                          {bullet}
-                        </span>
-                      </m.li>
-                    ))}
-                  </ul>
-                )}
-              </m.div>
-            </div>
-          ))}
-        </div>
-      </div>
+      <StickyScrollRevealMobileLayout
+        containerRef={containerRef}
+        containerClassName={containerClassName}
+        contentClassName={contentClassName}
+        sections={sections}
+      />
     );
   }
 
-  // Desktop Layout - Optimized sticky scroll design
   return (
-    <div className={`relative ${containerClassName || ""}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="relative lg:flex lg:gap-16">
-          {/* Left content - scrolls naturally */}
-          <div className="lg:w-1/2">
-            {sections.map((section, index) => (
-              <TextSection
-                key={`section-${section.title}`}
-                section={section}
-                index={index}
-                sectionRef={sectionRefs[index]}
-              />
-            ))}
-          </div>
-
-          {/* Right sticky images with horizontal slide transition */}
-          <div className="hidden lg:block lg:w-1/2">
-            {/* Height wrapper that creates the scroll track */}
-            <div
-              className="relative"
-              style={{
-                height: `${(sections.length - 0.25) * 100}vh`,
-              }}
-            >
-              {/* Spacer to push sticky element down so it starts centered with first content */}
-              <div className="h-[calc(50vh-300px)] short:h-[calc(50vh-210px)]" />
-
-              {/* Sticky container — JS entrance animation (sticky + intersect CSS don't mix) */}
-              <div
-                ref={stickyContainerRef}
-                className="w-full mx-auto sticky h-[600px] short:w-[420px] short:h-[420px] top-[calc(50vh-300px)] short:top-[calc(50vh-210px)]"
-                style={{
-                  opacity: 0,
-                  transform: "translateY(350px) translateZ(0)",
-                  transition: "none",
-                }}
-              >
-                {/* Image container */}
-                <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl">
-                  {sections.map((section, index) => (
-                    <ImagePanel
-                      key={`image-${section.title}`}
-                      section={section}
-                      index={index}
-                      contentClassName={contentClassName}
-                      shouldLoad={index <= activeIndex + 2}
-                      registerRef={registerImagePanelRef}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <StickyScrollRevealDesktopLayout
+      containerRef={containerRef}
+      containerClassName={containerClassName}
+      contentClassName={contentClassName}
+      registerImagePanelRef={registerImagePanelRef}
+      sections={sections}
+      sectionRefs={sectionRefs}
+      stickyContainerRef={stickyContainerRef}
+    />
   );
 };

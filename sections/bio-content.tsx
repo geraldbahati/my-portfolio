@@ -22,7 +22,8 @@ export default function BioContent({
   const taglineChars = tagline.split("");
   const numberChars = numberText.split("");
   const mainChars = mainText.split("");
-  const totalChars = taglineChars.length + numberChars.length + mainChars.length;
+  const totalChars =
+    taglineChars.length + numberChars.length + mainChars.length;
 
   // Build word-level spans for tagline
   const taglineWords = tagline.split(" ");
@@ -63,7 +64,10 @@ export default function BioContent({
             data-bio-image
             style={
               cssScrollSupported === false
-                ? { transform: "translateY(100px) scale(0.6) translateZ(0)", opacity: 0 }
+                ? {
+                    transform: "translateY(100px) scale(0.6) translateZ(0)",
+                    opacity: 0,
+                  }
                 : undefined
             }
           >
@@ -73,7 +77,6 @@ export default function BioContent({
               maxWidth={282}
               className="w-full max-w-[282px]"
               alt="Profile portrait"
-              priority={true}
               quality={75}
               sizes="(max-width: 640px) 282px, (max-width: 1024px) 400px, 500px"
             />
@@ -88,16 +91,16 @@ export default function BioContent({
                   const wordOffset = taglineWordOffsets[wordIdx];
                   return (
                     <span
-                      key={`tag-word-${wordIdx}`}
+                      key={`tag-word-${wordOffset}`}
                       className="inline-block whitespace-nowrap"
                     >
                       {word.split("").map((char, charIdx) => {
-                        const idx = wordOffset + charIdx;
+                        const charIndex = wordOffset + charIdx;
                         return (
                           <span
-                            key={`tag-${idx}`}
+                            key={`tag-${charIndex}`}
                             className="inline-block"
-                            data-char-index={idx}
+                            data-char-index={charIndex}
                             style={{ opacity: 0.2 }}
                           >
                             {char}
@@ -119,12 +122,12 @@ export default function BioContent({
 
               <div className="text-xs sm:text-sm font-light text-gray-400 whitespace-nowrap">
                 {numberChars.map((char, i) => {
-                  const idx = numberOffset + i;
+                  const charIndex = numberOffset + i;
                   return (
                     <span
-                      key={`num-${idx}`}
+                      key={`num-${charIndex}`}
                       className="inline-block"
-                      data-char-index={idx}
+                      data-char-index={charIndex}
                       style={{ opacity: 0.2 }}
                     >
                       {char}
@@ -140,16 +143,16 @@ export default function BioContent({
                 const wordOffset = charOffset + mainWordOffsets[wordIdx];
                 return (
                   <span
-                    key={`main-word-${wordIdx}`}
+                    key={`main-word-${wordOffset}`}
                     className="inline-block whitespace-nowrap"
                   >
                     {word.split("").map((char, charIdx) => {
-                      const idx = wordOffset + charIdx;
+                      const charIndex = wordOffset + charIdx;
                       return (
                         <span
-                          key={`main-${idx}`}
+                          key={`main-${charIndex}`}
                           className="inline-block"
-                          data-char-index={idx}
+                          data-char-index={charIndex}
                           style={{ opacity: 0.2 }}
                         >
                           {char}
@@ -171,7 +174,9 @@ export default function BioContent({
 
             {/* CTA Button */}
             <div
-              className={cssScrollSupported !== false ? "scroll-bio-cta" : undefined}
+              className={
+                cssScrollSupported !== false ? "scroll-bio-cta" : undefined
+              }
               data-bio-cta
               style={
                 cssScrollSupported === false
@@ -179,13 +184,8 @@ export default function BioContent({
                   : undefined
               }
             >
-              <Link
-                href="/projects"
-                prefetch={true}
-              >
-                <button
-                  className="bio-cta-button group inline-flex items-center gap-3 text-sm font-medium tracking-wider uppercase text-gray-900 transition-colors hover:text-gray-600"
-                >
+              <Link href="/projects" prefetch={true}>
+                <button className="bio-cta-button group inline-flex items-center gap-3 text-sm font-medium tracking-wider uppercase text-gray-900 transition-colors hover:text-gray-600">
                   <span className="relative">
                     View Selected Work
                     <span className="absolute bottom-0 left-0 w-full h-px bg-gray-900 origin-left transition-transform duration-300 scale-x-100 group-hover:scale-x-0" />
