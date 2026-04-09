@@ -15,6 +15,15 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
   contactForm: { kind: "token bucket", rate: 5, period: HOUR, capacity: 3 },
 });
 
+function getContactRateLimitKey(args: { clientIP?: string; email: string }) {
+  const normalizedIp = args.clientIP?.trim();
+  if (normalizedIp) {
+    return `ip:${normalizedIp}`;
+  }
+
+  return `email:${args.email.trim().toLowerCase()}`;
+}
+
 export const submitContactForm = mutation({
   args: {
     name: v.string(),
@@ -30,8 +39,8 @@ export const submitContactForm = mutation({
         throw new Error("Privacy consent is required");
       }
 
-      // Rate limiting by IP or user session
-      const rateLimitKey = args.clientIP || "default";
+      // Fall back to the sender email so one missing IP lookup does not pool all visitors together.
+      const rateLimitKey = getContactRateLimitKey(args);
       const { ok, retryAfter } = await rateLimiter.limit(ctx, "contactForm", {
         key: rateLimitKey,
       });

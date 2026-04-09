@@ -12,6 +12,7 @@
 
 import React from "react";
 import { motion } from "motion/react";
+import Link from "next/link";
 import { Project } from "@/app/(root)/projects/data";
 import { BadgePill } from "./badge-pill";
 import dynamic from "next/dynamic";
@@ -54,7 +55,13 @@ export const ProjectsGrid: React.FC<ProjectsGridProps> = ({ projects }) => {
         >
           {/* Project Title */}
           <h2 className="text-xl lg:text-2xl font-semibold mb-4 text-foreground">
-            {project.title}
+            <Link
+              href={`/projects/${project.id}`}
+              className="hover:text-primary transition-colors"
+              prefetch={true}
+            >
+              {project.title}
+            </Link>
           </h2>
 
           {/* Project Card */}

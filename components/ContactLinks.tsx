@@ -13,10 +13,12 @@ interface ContactLinksProps {
 
 // Animated Contact Button Component
 function AnimatedContactButton({
+  href,
   onClick,
   children,
   className = "",
 }: {
+  href: string;
   onClick: () => void;
   children: React.ReactNode;
   className?: string;
@@ -44,7 +46,8 @@ function AnimatedContactButton({
   }, []);
 
   return (
-    <motion.button
+    <motion.a
+      href={href}
       onClick={onClick}
       className={`inline-block relative border-b transition-colors duration-300 cursor-pointer ${
         isHovered ? "border-primary" : "border-transparent"
@@ -64,7 +67,7 @@ function AnimatedContactButton({
       >
         {String(children)}
       </TextScramble>
-    </motion.button>
+    </motion.a>
   );
 }
 
@@ -73,24 +76,28 @@ export function ContactLinks({
   whatsappNumber = "254704713070", // Include country code for WhatsApp
   className = "",
 }: ContactLinksProps) {
+  const normalizedPhoneNumber = phoneNumber.replace(/\s/g, "");
+  const whatsappUrl = `https://wa.me/${whatsappNumber}`;
+
   const handleCall = () => {
     Analytics.trackPhoneClick("Contact Page");
-    window.location.href = `tel:${phoneNumber.replace(/\s/g, "")}`;
   };
 
   const handleWhatsApp = () => {
-    Analytics.trackOutboundLink(`https://wa.me/${whatsappNumber}`, "WhatsApp Chat - Contact Page");
-    window.location.href = `https://wa.me/${whatsappNumber}`;
+    Analytics.trackOutboundLink(whatsappUrl, "WhatsApp Message - Contact Page");
   };
 
   return (
     <div className={`flex flex-col items-start gap-4 ${className}`}>
-      <AnimatedContactButton onClick={handleCall}>
+      <AnimatedContactButton
+        href={`tel:${normalizedPhoneNumber}`}
+        onClick={handleCall}
+      >
         {phoneNumber}
       </AnimatedContactButton>
 
-      <AnimatedContactButton onClick={handleWhatsApp}>
-        24/7 WhatsApp Chat
+      <AnimatedContactButton href={whatsappUrl} onClick={handleWhatsApp}>
+        WhatsApp message
       </AnimatedContactButton>
     </div>
   );

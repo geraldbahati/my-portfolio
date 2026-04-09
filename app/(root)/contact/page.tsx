@@ -8,9 +8,9 @@ import { PageAnalytics } from "@/components/PageAnalytics";
 import { generateBreadcrumbSchema } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "Contact Gerald - Request a Project | Full Stack Developer",
+  title: "Contact Gerald - Request a Project | Product Software Engineer",
   description:
-    "Get in touch with Gerald Bahati for your next digital project. Contact via form, phone, or WhatsApp. Every message is 100% received and guaranteed to be answered within 24 hours.",
+    "Get in touch with Gerald Bahati about a project, consulting work, or a technical question. Reach out by form, phone, or WhatsApp.",
   keywords: [
     "contact gerald",
     "request project",
@@ -22,18 +22,18 @@ export const metadata: Metadata = {
     "kenya software engineer",
   ],
   openGraph: {
-    title: "Contact Gerald - Request a Project | Full Stack Developer",
+    title: "Contact Gerald - Request a Project | Product Software Engineer",
     description:
-      "Get in touch with Gerald Bahati for your next digital project. Contact via form, phone, or WhatsApp. Every message guaranteed answered within 24 hours.",
+      "Get in touch with Gerald Bahati about a project, consulting work, or a technical question. Reach out by form, phone, or WhatsApp.",
     type: "website",
     url: "/contact",
-    locale: "en_US",
+    locale: "en_KE",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Contact Gerald - Request a Project | Full Stack Developer",
+    title: "Contact Gerald - Request a Project | Product Software Engineer",
     description:
-      "Get in touch with Gerald Bahati for your next digital project. Contact via form, phone, or WhatsApp. Every message guaranteed answered within 24 hours.",
+      "Get in touch with Gerald Bahati about a project, consulting work, or a technical question. Reach out by form, phone, or WhatsApp.",
   },
   robots: {
     index: true,
@@ -79,7 +79,7 @@ function ContactLinksSkeleton() {
   return (
     <div className="flex flex-col items-start gap-4">
       <span className="text-gray-800 font-medium">0704713070</span>
-      <span className="text-gray-800 font-medium">24/7 WhatsApp Chat</span>
+      <span className="text-gray-800 font-medium">WhatsApp message</span>
     </div>
   );
 }
@@ -107,6 +107,24 @@ function ContactFormSkeleton() {
   );
 }
 
+function ContactFormUnavailable() {
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 text-sm text-gray-700">
+      <p className="font-medium text-black">Contact form temporarily unavailable</p>
+      <p className="mt-2">
+        You can still reach Gerald directly by phone, WhatsApp, or email at{" "}
+        <a
+          href="mailto:contact@geraldbahati.dev"
+          className="font-medium text-black underline underline-offset-4"
+        >
+          contact@geraldbahati.dev
+        </a>
+        .
+      </p>
+    </div>
+  );
+}
+
 const BASE_URL = "https://geraldbahati.dev";
 
 export default function ContactPage() {
@@ -124,7 +142,7 @@ export default function ContactPage() {
     mainEntity: {
       "@type": "Person",
       name: "Gerald Bahati",
-      jobTitle: "Full-Stack Software Engineer",
+      jobTitle: "Product Software Engineer",
       address: {
         "@type": "PostalAddress",
         addressLocality: "Nairobi",
@@ -198,9 +216,9 @@ export default function ContactPage() {
                     Request a project
                   </h1>
                   <p className="text-gray-600 text-base leading-relaxed">
-                    Every message is 100% received and guaranteed to be
-                    answered. If you can&apos;t reach me, please leave a request
-                    for a callback.
+                    Use the form for project work, consulting, or a callback
+                    request. Share a few concrete details and the best way to
+                    reach you.
                   </p>
                 </div>
 
@@ -249,9 +267,13 @@ export default function ContactPage() {
                   <h2 id="contact-form-heading" className="sr-only">
                     Contact Form
                   </h2>
-                  <Suspense fallback={<ContactFormSkeleton />}>
-                    <ContactForm />
-                  </Suspense>
+                  {process.env.NEXT_PUBLIC_CONVEX_URL ? (
+                    <Suspense fallback={<ContactFormSkeleton />}>
+                      <ContactForm />
+                    </Suspense>
+                  ) : (
+                    <ContactFormUnavailable />
+                  )}
                 </div>
               </aside>
             </div>

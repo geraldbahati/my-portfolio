@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { readFile } from "node:fs/promises";
 
 // Reuse metadata from OG image
-export const alt = "Gerald Bahati - Full Stack Developer & Digital Creative";
+export const alt = "Gerald Bahati - Product Software Engineer";
 export const size = {
   width: 1200,
   height: 630,
@@ -120,9 +120,9 @@ export default async function Image() {
                 margin: 0,
               }}
             >
-              <span>Gerald Bahati - Full Stack</span>
-              <span>Developer & Digital</span>
-              <span>Creative</span>
+              <span>Gerald Bahati</span>
+              <span>Product Software</span>
+              <span>Engineer</span>
             </h1>
 
             {/* CTA Button */}

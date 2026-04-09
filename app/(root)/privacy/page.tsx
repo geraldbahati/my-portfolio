@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     description:
       "Learn how we collect, use, and protect your personal information. Our privacy policy outlines our commitment to data security and GDPR compliance.",
     url: "/privacy",
-    locale: "en_US",
+    locale: "en_KE",
     type: "website",
   },
   twitter: {
