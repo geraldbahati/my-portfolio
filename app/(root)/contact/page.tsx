@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import ContactForm from "./ContactForm";
 import HelloMarquee from "@/components/HelloMarquee";
+import { JsonLdScript } from "@/components/JsonLdScript";
 import GridPattern from "@/components/ui/shadcn-io/grid-pattern";
 import { ContactLinks } from "@/components/ContactLinks";
 import { PageAnalytics } from "@/components/PageAnalytics";
@@ -110,7 +111,9 @@ function ContactFormSkeleton() {
 function ContactFormUnavailable() {
   return (
     <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 text-sm text-gray-700">
-      <p className="font-medium text-black">Contact form temporarily unavailable</p>
+      <p className="font-medium text-black">
+        Contact form temporarily unavailable
+      </p>
       <p className="mt-2">
         You can still reach Gerald directly by phone, WhatsApp, or email at{" "}
         <a
@@ -172,14 +175,8 @@ export default function ContactPage() {
         <PageAnalytics trackPageView trackTime />
       </Suspense>
 
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
-      />
+      <JsonLdScript data={jsonLd} />
+      <JsonLdScript data={breadcrumbLd} />
 
       <main className="bg-white pt-[96px] sm:pt-[104px] md:pt-[104px] lg:pt-[112px] xl:pt-[128px]">
         {/* Hello Marquee - with Suspense for animation */}

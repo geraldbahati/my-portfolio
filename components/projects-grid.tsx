@@ -11,7 +11,7 @@
  */
 
 import React from "react";
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import Link from "next/link";
 import { Project } from "@/app/(root)/projects/data";
 import { BadgePill } from "./badge-pill";
@@ -40,7 +40,7 @@ export const ProjectsGrid: React.FC<ProjectsGridProps> = ({ projects }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
       {projects.map((project, index) => (
-        <motion.div
+        <m.div
           key={project.id}
           className="flex flex-col"
           initial="hidden"
@@ -120,7 +120,7 @@ export const ProjectsGrid: React.FC<ProjectsGridProps> = ({ projects }) => {
               })()}
             </div>
           )}
-        </motion.div>
+        </m.div>
       ))}
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import { useCallback, useState } from "react";
 import { TextScramble } from "@/components/ui/text-scramble";
 import Analytics from "@/lib/analytics";
@@ -46,7 +46,7 @@ function AnimatedContactButton({
   }, []);
 
   return (
-    <motion.a
+    <m.a
       href={href}
       onClick={onClick}
       className={`inline-block relative border-b transition-colors duration-300 cursor-pointer ${
@@ -67,7 +67,7 @@ function AnimatedContactButton({
       >
         {String(children)}
       </TextScramble>
-    </motion.a>
+    </m.a>
   );
 }
 

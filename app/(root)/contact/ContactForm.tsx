@@ -8,7 +8,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   Field,
   FieldContent,
-  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -28,11 +27,15 @@ interface ContactFormProps {
 }
 
 type FieldErrors = Partial<Record<keyof ContactFormData, string>>;
+type SubmitStatus = {
+  type: "success" | "error" | null;
+  message: string;
+};
 
 const CONTACT_EMAIL = "contact@geraldbahati.dev";
 const CONTACT_EMAIL_HREF = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Project inquiry")}`;
 const IS_CONVEX_CONFIGURED = Boolean(process.env.NEXT_PUBLIC_CONVEX_URL);
-const EMPTY_SUBMIT_STATUS = { type: null, message: "" } as const;
+const EMPTY_SUBMIT_STATUS: SubmitStatus = { type: null, message: "" };
 
 const INITIAL_FORM_DATA: ContactFormData = {
   name: "",
@@ -88,14 +91,184 @@ function ContactFormUnavailable() {
   );
 }
 
+function SubmitStatusNotice({ submitStatus }: { submitStatus: SubmitStatus }) {
+  if (!submitStatus.type) {
+    return null;
+  }
+
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className={`rounded-md border p-4 ${
+        submitStatus.type === "success"
+          ? "border-green-200 bg-green-50 text-green-800"
+          : "border-red-200 bg-red-50 text-red-800"
+      }`}
+    >
+      {submitStatus.message}
+    </div>
+  );
+}
+
+function ContactFormIntro() {
+  return (
+    <div className="space-y-2">
+      <h3 className="text-2xl font-semibold text-black">Get in touch</h3>
+    </div>
+  );
+}
+
+interface ContactFormFieldsProps {
+  fieldErrors: FieldErrors;
+  formData: ContactFormData;
+  isSubmitting: boolean;
+  onInputChange: (
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => void;
+  onPrivacyConsentChange: (checked: boolean | "indeterminate") => void;
+}
+
+function ContactFormFields({
+  fieldErrors,
+  formData,
+  isSubmitting,
+  onInputChange,
+  onPrivacyConsentChange,
+}: ContactFormFieldsProps) {
+  return (
+    <FieldGroup>
+      <Field>
+        <FieldLabel htmlFor="name" className="text-sm font-medium text-black">
+          Name
+        </FieldLabel>
+        <Input
+          id="name"
+          name="name"
+          type="text"
+          placeholder="Your name"
+          autoComplete="name"
+          value={formData.name}
+          onChange={onInputChange}
+          aria-invalid={fieldErrors.name ? "true" : "false"}
+          aria-describedby={fieldErrors.name ? "name-error" : undefined}
+          className={`w-full border-black focus:border-black ${
+            fieldErrors.name ? "border-red-500 focus:border-red-500" : ""
+          }`}
+          itemProp="name"
+        />
+        {fieldErrors.name && (
+          <FieldError id="name-error">{fieldErrors.name}</FieldError>
+        )}
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor="email" className="text-sm font-medium text-black">
+          Email
+        </FieldLabel>
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          placeholder="you@company.com"
+          autoComplete="email"
+          value={formData.email}
+          onChange={onInputChange}
+          aria-invalid={fieldErrors.email ? "true" : "false"}
+          aria-describedby={fieldErrors.email ? "email-error" : undefined}
+          className={`w-full border-black focus:border-black ${
+            fieldErrors.email ? "border-red-500 focus:border-red-500" : ""
+          }`}
+          itemProp="email"
+        />
+        {fieldErrors.email && (
+          <FieldError id="email-error">{fieldErrors.email}</FieldError>
+        )}
+      </Field>
+
+      <Field>
+        <FieldLabel
+          htmlFor="message"
+          className="text-sm font-medium text-black"
+        >
+          Message
+        </FieldLabel>
+        <Textarea
+          id="message"
+          name="message"
+          placeholder="Tell me about the role, project, or support you need."
+          rows={6}
+          value={formData.message}
+          onChange={onInputChange}
+          aria-invalid={fieldErrors.message ? "true" : "false"}
+          aria-describedby={fieldErrors.message ? "message-error" : undefined}
+          className={`w-full resize-none border-black focus:border-black ${
+            fieldErrors.message ? "border-red-500 focus:border-red-500" : ""
+          }`}
+          itemProp="text"
+        />
+        {fieldErrors.message && (
+          <FieldError id="message-error">{fieldErrors.message}</FieldError>
+        )}
+      </Field>
+
+      <Field orientation="horizontal">
+        <Checkbox
+          id="privacy-consent"
+          checked={formData.privacyConsent}
+          onCheckedChange={onPrivacyConsentChange}
+          aria-invalid={fieldErrors.privacyConsent ? "true" : "false"}
+          aria-describedby={fieldErrors.privacyConsent ? "privacy-error" : undefined}
+          className={
+            fieldErrors.privacyConsent ? "border-red-500" : "border-black"
+          }
+        />
+        <FieldContent>
+          <FieldLabel
+            htmlFor="privacy-consent"
+            className="inline font-normal text-gray-800"
+          >
+            I agree to the{" "}
+            <Link
+              href="/privacy"
+              className="text-blue-600 hover:text-blue-800 underline"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Read privacy policy (opens in new tab)"
+            >
+              privacy policy
+            </Link>{" "}
+            and consent to my details being used to review and reply to this
+            message.
+          </FieldLabel>
+          {fieldErrors.privacyConsent && (
+            <FieldError id="privacy-error">
+              {fieldErrors.privacyConsent}
+            </FieldError>
+          )}
+        </FieldContent>
+      </Field>
+
+      <Field>
+        <Button
+          type="submit"
+          disabled={isSubmitting || !formData.privacyConsent}
+          className="w-auto bg-black px-8 py-2 text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {isSubmitting && <Spinner />}
+          {isSubmitting ? "SENDING..." : "SEND MESSAGE"}
+        </Button>
+      </Field>
+    </FieldGroup>
+  );
+}
+
 function ContactFormWithSubmission({ onSubmitSuccess }: ContactFormProps) {
   const [formData, setFormData] = useState<ContactFormData>(INITIAL_FORM_DATA);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState<{
-    type: "success" | "error" | null;
-    message: string;
-  }>(EMPTY_SUBMIT_STATUS);
+  const [submitStatus, setSubmitStatus] =
+    useState<SubmitStatus>(EMPTY_SUBMIT_STATUS);
 
   const submitContactForm = useMutation(api.contactForm.submitContactForm);
   const trackForm = useTrackForm();
@@ -229,19 +402,7 @@ function ContactFormWithSubmission({ onSubmitSuccess }: ContactFormProps) {
       itemType="https://schema.org/ContactForm"
       aria-label="Project inquiry contact form"
     >
-      {submitStatus.type && (
-        <div
-          role="status"
-          aria-live="polite"
-          className={`rounded-md border p-4 ${
-            submitStatus.type === "success"
-              ? "border-green-200 bg-green-50 text-green-800"
-              : "border-red-200 bg-red-50 text-red-800"
-          }`}
-        >
-          {submitStatus.message}
-        </div>
-      )}
+      <SubmitStatusNotice submitStatus={submitStatus} />
 
       <input
         name="_honeypot"
@@ -254,154 +415,14 @@ function ContactFormWithSubmission({ onSubmitSuccess }: ContactFormProps) {
         aria-hidden="true"
       />
 
-      <div className="space-y-2">
-        <h3 className="text-2xl font-semibold text-black">
-          Start the conversation
-        </h3>
-        <p className="max-w-xl text-sm leading-6 text-gray-600">
-          Tell me what you are building, where you are stuck, and any timing
-          that matters. A few concrete details help me reply usefully.
-        </p>
-      </div>
-
-      <FieldGroup>
-        <Field>
-          <FieldLabel htmlFor="name" className="text-sm font-medium text-black">
-            Name
-          </FieldLabel>
-          <Input
-            id="name"
-            name="name"
-            type="text"
-            placeholder="Your name"
-            autoComplete="name"
-            value={formData.name}
-            onChange={handleInputChange}
-            aria-invalid={fieldErrors.name ? "true" : "false"}
-            aria-describedby={fieldErrors.name ? "name-error" : undefined}
-            className={`w-full border-black focus:border-black ${
-              fieldErrors.name ? "border-red-500 focus:border-red-500" : ""
-            }`}
-            itemProp="name"
-          />
-          {fieldErrors.name && (
-            <FieldError id="name-error">{fieldErrors.name}</FieldError>
-          )}
-        </Field>
-
-        <Field>
-          <FieldLabel
-            htmlFor="email"
-            className="text-sm font-medium text-black"
-          >
-            Email
-          </FieldLabel>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            placeholder="you@company.com"
-            autoComplete="email"
-            value={formData.email}
-            onChange={handleInputChange}
-            aria-invalid={fieldErrors.email ? "true" : "false"}
-            aria-describedby={fieldErrors.email ? "email-error" : undefined}
-            className={`w-full border-black focus:border-black ${
-              fieldErrors.email ? "border-red-500 focus:border-red-500" : ""
-            }`}
-            itemProp="email"
-          />
-          {fieldErrors.email && (
-            <FieldError id="email-error">{fieldErrors.email}</FieldError>
-          )}
-        </Field>
-
-        <Field>
-          <FieldLabel
-            htmlFor="message"
-            className="text-sm font-medium text-black"
-          >
-            Project details
-          </FieldLabel>
-          <Textarea
-            id="message"
-            name="message"
-            placeholder="What do you need help with, what does the timeline look like, and are there any useful links or constraints?"
-            rows={6}
-            value={formData.message}
-            onChange={handleInputChange}
-            aria-invalid={fieldErrors.message ? "true" : "false"}
-            aria-describedby={`message-help${fieldErrors.message ? " message-error" : ""}`}
-            className={`w-full resize-none border-black focus:border-black ${
-              fieldErrors.message ? "border-red-500 focus:border-red-500" : ""
-            }`}
-            itemProp="text"
-          />
-          <FieldDescription id="message-help">
-            Scope, timing, budget context, and links are all useful if you have
-            them.
-          </FieldDescription>
-          {fieldErrors.message && (
-            <FieldError id="message-error">{fieldErrors.message}</FieldError>
-          )}
-        </Field>
-
-        <Field orientation="horizontal">
-          <Checkbox
-            id="privacy-consent"
-            checked={formData.privacyConsent}
-            onCheckedChange={handlePrivacyConsentChange}
-            aria-invalid={fieldErrors.privacyConsent ? "true" : "false"}
-            aria-describedby={`privacy-description${fieldErrors.privacyConsent ? " privacy-error" : ""}`}
-            className={
-              fieldErrors.privacyConsent ? "border-red-500" : "border-black"
-            }
-          />
-          <FieldContent>
-            <FieldLabel
-              htmlFor="privacy-consent"
-              className="inline font-normal text-gray-800"
-            >
-              I agree to the{" "}
-              <Link
-                href="/privacy"
-                className="text-blue-600 hover:text-blue-800 underline"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Read privacy policy (opens in new tab)"
-              >
-                privacy policy
-              </Link>{" "}
-              and understand these details will be stored long enough to review
-              and reply to this inquiry.
-            </FieldLabel>
-            <FieldDescription id="privacy-description">
-              I only use this information to assess the request and respond.
-            </FieldDescription>
-            {fieldErrors.privacyConsent && (
-              <FieldError id="privacy-error">
-                {fieldErrors.privacyConsent}
-              </FieldError>
-            )}
-          </FieldContent>
-        </Field>
-
-        <Field>
-          <Button
-            type="submit"
-            disabled={isSubmitting || !formData.privacyConsent}
-            className="w-auto bg-black px-8 py-2 text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            aria-describedby="submit-help"
-          >
-            {isSubmitting && <Spinner />}
-            {isSubmitting ? "SENDING..." : "SEND INQUIRY"}
-          </Button>
-          <FieldDescription id="submit-help">
-            If the request is time-sensitive, phone or WhatsApp will reach me
-            faster.
-          </FieldDescription>
-        </Field>
-      </FieldGroup>
+      <ContactFormIntro />
+      <ContactFormFields
+        fieldErrors={fieldErrors}
+        formData={formData}
+        isSubmitting={isSubmitting}
+        onInputChange={handleInputChange}
+        onPrivacyConsentChange={handlePrivacyConsentChange}
+      />
     </form>
   );
 }

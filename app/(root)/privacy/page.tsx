@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { PageAnalytics } from "@/components/PageAnalytics";
+import { JsonLdScript } from "@/components/JsonLdScript";
 
 export const metadata: Metadata = {
   title: "Privacy Policy - Data Protection & Security",
@@ -107,14 +108,8 @@ export default function PrivacyPolicyPage() {
         <PageAnalytics trackPageView trackScroll trackTime />
       </Suspense>
 
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
-      />
+      <JsonLdScript data={structuredData} />
+      <JsonLdScript data={breadcrumbLd} />
 
       <Suspense fallback={<PrivacyContentSkeleton />}>
         <PrivacyContent />
