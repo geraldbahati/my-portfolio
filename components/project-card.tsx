@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useRef, useState, useCallback, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { m, AnimatePresence } from "motion/react";
 import { EyeIcon, ExternalLinkIcon } from "lucide-react";
 import { Cursor } from "@/components/ui/cursor";
@@ -287,14 +287,12 @@ function ProjectCardComponent({
     }
   }, []);
 
-  const router = useRouter();
+  const projectPath = `/projects/${id}`;
 
-  // Handle card click - track analytics and navigate
-  const handleClick = useCallback(() => {
-    Analytics.trackButtonClick(title || `Project ${id}`, "Project Card");
+  const handleCardClick = useCallback(() => {
+    Analytics.trackLinkClick(title || `Project ${id}`, projectPath, "internal");
     onClick?.();
-    router.push(`/projects/${id}`);
-  }, [id, title, onClick, router]);
+  }, [id, onClick, projectPath, title]);
 
   // Animation variants
   const mediaVariants = {
@@ -307,7 +305,11 @@ function ProjectCardComponent({
   };
 
   return (
-    <div className="block relative cursor-pointer" role="link">
+    <div
+      className="block relative"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       {/* Custom cursor */}
       <Cursor
         attachToParent
@@ -323,6 +325,16 @@ function ProjectCardComponent({
         <HoverCursor isHovering={isHovering} />
       </Cursor>
 
+      <Link
+        href={projectPath}
+        prefetch={true}
+        aria-label={title || `View project ${id}`}
+        className="absolute inset-0 z-10 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        onClick={handleCardClick}
+      >
+        <span className="sr-only">{title || `View project ${id}`}</span>
+      </Link>
+
       {/* Card container */}
       <m.div
         ref={containerRef}
@@ -334,10 +346,6 @@ function ProjectCardComponent({
         }}
         role="article"
         aria-label={title || `Project ${id}`}
-        onClick={handleClick}
-        onHoverStart={() => setIsHovered(true)}
-        onHoverEnd={() => setIsHovered(false)}
-        whileTap={{ scale: 0.98 }}
       >
         {/* Media content with grayscale animation */}
         <m.div

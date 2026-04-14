@@ -25,35 +25,39 @@ const ContactSection = dynamic(() => import("@/sections/contact"), {
 
 // SEO Metadata
 export const metadata: Metadata = {
+  title: {
+    absolute: "Gerald Bahati - Product Software Engineer | 2+ Years Experience",
+  },
   description:
-    "Experienced full stack developer specializing in modern web technologies, digital solutions, and creative design. Explore my portfolio of websites, applications, and client projects.",
+    "Product Software Engineer with 2+ years shipping production e-commerce and fintech experiences. Specializing in React, Next.js, Spring Boot, Go, and real-time systems with measurable business impact.",
   keywords: [
-    "full stack developer",
-    "web developer",
-    "digital creative",
+    "product software engineer",
+    "software engineer",
     "portfolio",
-    "web design",
     "Next.js",
     "React",
     "TypeScript",
-    "modern web technologies",
+    "Spring Boot",
+    "Go",
+    "e-commerce",
+    "fintech",
   ],
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "Gerald Bahati - Full Stack Developer & Digital Creative",
+    title: "Gerald Bahati - Product Software Engineer | 2+ Years Experience",
     description:
-      "Experienced full stack developer specializing in modern web technologies, digital solutions, and creative design.",
+      "Product Software Engineer with 2+ years shipping production e-commerce and fintech experiences. Specializing in React, Next.js, Spring Boot, Go, and real-time systems with measurable business impact.",
     type: "website",
     locale: "en_KE",
     url: "/",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Gerald Bahati - Full Stack Developer & Digital Creative",
+    title: "Gerald Bahati - Product Software Engineer | 2+ Years Experience",
     description:
-      "Experienced full stack developer specializing in modern web technologies, digital solutions, and creative design.",
+      "Product Software Engineer with 2+ years shipping production e-commerce and fintech experiences. Specializing in React, Next.js, Spring Boot, Go, and real-time systems.",
   },
   robots: {
     index: true,

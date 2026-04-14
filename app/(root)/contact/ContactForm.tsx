@@ -4,22 +4,38 @@ import Link from "next/link";
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { useMutation } from "convex/react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { Field, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { type ContactFormData, contactSchema } from "@/lib/validators/contactSchema";
+import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/convex/_generated/api";
 import { useTrackForm } from "@/lib/hooks/useAnalytics";
+import {
+  type ContactFormData,
+  contactSchema,
+} from "@/lib/validators/contactSchema";
 
 interface ContactFormProps {
   onSubmitSuccess?: () => void;
 }
 
 type FieldErrors = Partial<Record<keyof ContactFormData, string>>;
+type SubmitStatus = {
+  type: "success" | "error" | null;
+  message: string;
+};
 
-const EMPTY_SUBMIT_STATUS = { type: null, message: "" } as const;
+const CONTACT_EMAIL = "contact@geraldbahati.dev";
+const CONTACT_EMAIL_HREF = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Project inquiry")}`;
+const IS_CONVEX_CONFIGURED = Boolean(process.env.NEXT_PUBLIC_CONVEX_URL);
+const EMPTY_SUBMIT_STATUS: SubmitStatus = { type: null, message: "" };
 
 const INITIAL_FORM_DATA: ContactFormData = {
   name: "",
@@ -29,14 +45,230 @@ const INITIAL_FORM_DATA: ContactFormData = {
   _honeypot: "",
 };
 
-export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
+async function fetchClientIp() {
+  try {
+    const response = await fetch("/api/get-ip", {
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      return undefined;
+    }
+
+    const ipData = (await response.json()) as { ip?: string | null };
+    return ipData.ip ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function ContactFormUnavailable() {
+  return (
+    <div className="rounded-lg border border-black/10 bg-stone-50 p-6">
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+        Form unavailable
+      </p>
+      <h2 className="mt-3 text-2xl font-semibold text-black">
+        This environment cannot send inquiries
+      </h2>
+      <p className="mt-3 max-w-xl text-sm leading-6 text-gray-600">
+        The contact backend is not configured in this environment. Email{" "}
+        <a
+          className="font-medium text-black underline underline-offset-4"
+          href={`mailto:${CONTACT_EMAIL}`}
+        >
+          {CONTACT_EMAIL}
+        </a>{" "}
+        or use the phone or WhatsApp options on this page instead.
+      </p>
+      <Button
+        asChild
+        className="mt-5 w-auto bg-black px-6 text-white hover:bg-gray-800"
+      >
+        <a href={CONTACT_EMAIL_HREF}>Email Gerald</a>
+      </Button>
+    </div>
+  );
+}
+
+function SubmitStatusNotice({ submitStatus }: { submitStatus: SubmitStatus }) {
+  if (!submitStatus.type) {
+    return null;
+  }
+
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className={`rounded-md border p-4 ${
+        submitStatus.type === "success"
+          ? "border-green-200 bg-green-50 text-green-800"
+          : "border-red-200 bg-red-50 text-red-800"
+      }`}
+    >
+      {submitStatus.message}
+    </div>
+  );
+}
+
+function ContactFormIntro() {
+  return (
+    <div className="space-y-2">
+      <h3 className="text-2xl font-semibold text-black">Get in touch</h3>
+    </div>
+  );
+}
+
+interface ContactFormFieldsProps {
+  fieldErrors: FieldErrors;
+  formData: ContactFormData;
+  isSubmitting: boolean;
+  onInputChange: (
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => void;
+  onPrivacyConsentChange: (checked: boolean | "indeterminate") => void;
+}
+
+function ContactFormFields({
+  fieldErrors,
+  formData,
+  isSubmitting,
+  onInputChange,
+  onPrivacyConsentChange,
+}: ContactFormFieldsProps) {
+  return (
+    <FieldGroup>
+      <Field>
+        <FieldLabel htmlFor="name" className="text-sm font-medium text-black">
+          Name
+        </FieldLabel>
+        <Input
+          id="name"
+          name="name"
+          type="text"
+          placeholder="Your name"
+          autoComplete="name"
+          value={formData.name}
+          onChange={onInputChange}
+          aria-invalid={fieldErrors.name ? "true" : "false"}
+          aria-describedby={fieldErrors.name ? "name-error" : undefined}
+          className={`w-full border-black focus:border-black ${
+            fieldErrors.name ? "border-red-500 focus:border-red-500" : ""
+          }`}
+          itemProp="name"
+        />
+        {fieldErrors.name && (
+          <FieldError id="name-error">{fieldErrors.name}</FieldError>
+        )}
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor="email" className="text-sm font-medium text-black">
+          Email
+        </FieldLabel>
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          placeholder="you@company.com"
+          autoComplete="email"
+          value={formData.email}
+          onChange={onInputChange}
+          aria-invalid={fieldErrors.email ? "true" : "false"}
+          aria-describedby={fieldErrors.email ? "email-error" : undefined}
+          className={`w-full border-black focus:border-black ${
+            fieldErrors.email ? "border-red-500 focus:border-red-500" : ""
+          }`}
+          itemProp="email"
+        />
+        {fieldErrors.email && (
+          <FieldError id="email-error">{fieldErrors.email}</FieldError>
+        )}
+      </Field>
+
+      <Field>
+        <FieldLabel
+          htmlFor="message"
+          className="text-sm font-medium text-black"
+        >
+          Message
+        </FieldLabel>
+        <Textarea
+          id="message"
+          name="message"
+          placeholder="Tell me about the role, project, or support you need."
+          rows={6}
+          value={formData.message}
+          onChange={onInputChange}
+          aria-invalid={fieldErrors.message ? "true" : "false"}
+          aria-describedby={fieldErrors.message ? "message-error" : undefined}
+          className={`w-full resize-none border-black focus:border-black ${
+            fieldErrors.message ? "border-red-500 focus:border-red-500" : ""
+          }`}
+          itemProp="text"
+        />
+        {fieldErrors.message && (
+          <FieldError id="message-error">{fieldErrors.message}</FieldError>
+        )}
+      </Field>
+
+      <Field orientation="horizontal">
+        <Checkbox
+          id="privacy-consent"
+          checked={formData.privacyConsent}
+          onCheckedChange={onPrivacyConsentChange}
+          aria-invalid={fieldErrors.privacyConsent ? "true" : "false"}
+          aria-describedby={fieldErrors.privacyConsent ? "privacy-error" : undefined}
+          className={
+            fieldErrors.privacyConsent ? "border-red-500" : "border-black"
+          }
+        />
+        <FieldContent>
+          <FieldLabel
+            htmlFor="privacy-consent"
+            className="inline font-normal text-gray-800"
+          >
+            I agree to the{" "}
+            <Link
+              href="/privacy"
+              className="text-blue-600 hover:text-blue-800 underline"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Read privacy policy (opens in new tab)"
+            >
+              privacy policy
+            </Link>{" "}
+            and consent to my details being used to review and reply to this
+            message.
+          </FieldLabel>
+          {fieldErrors.privacyConsent && (
+            <FieldError id="privacy-error">
+              {fieldErrors.privacyConsent}
+            </FieldError>
+          )}
+        </FieldContent>
+      </Field>
+
+      <Field>
+        <Button
+          type="submit"
+          disabled={isSubmitting || !formData.privacyConsent}
+          className="w-auto bg-black px-8 py-2 text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {isSubmitting && <Spinner />}
+          {isSubmitting ? "SENDING..." : "SEND MESSAGE"}
+        </Button>
+      </Field>
+    </FieldGroup>
+  );
+}
+
+function ContactFormWithSubmission({ onSubmitSuccess }: ContactFormProps) {
   const [formData, setFormData] = useState<ContactFormData>(INITIAL_FORM_DATA);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState<{
-    type: "success" | "error" | null;
-    message: string;
-  }>(EMPTY_SUBMIT_STATUS);
+  const [submitStatus, setSubmitStatus] =
+    useState<SubmitStatus>(EMPTY_SUBMIT_STATUS);
 
   const submitContactForm = useMutation(api.contactForm.submitContactForm);
   const trackForm = useTrackForm();
@@ -94,7 +326,6 @@ export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
 
     const data = validationResult.data;
 
-    // Honeypot check
     if (data._honeypot) {
       setSubmitStatus({
         type: "error",
@@ -104,14 +335,8 @@ export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
     }
 
     setIsSubmitting(true);
-    const clientIP = await fetch("/api/get-ip")
-      .then(async (response) => {
-        if (!response.ok) return undefined;
-        const ipData = (await response.json()) as { ip?: string };
-        return ipData.ip;
-      })
-      .catch(() => undefined);
 
+    const clientIP = await fetchClientIp();
     const submission: {
       error: unknown | null;
       result: Awaited<ReturnType<typeof submitContactForm>> | null;
@@ -127,7 +352,8 @@ export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
 
     if (submission.error || !submission.result) {
       console.error("Form submission error:", submission.error);
-      const errorMessage = "An unexpected error occurred. Please try again.";
+      const errorMessage = `The form could not be sent. Please try again or email ${CONTACT_EMAIL}.`;
+
       setSubmitStatus({
         type: "error",
         message: errorMessage,
@@ -140,26 +366,30 @@ export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
     if (submission.result.success) {
       setSubmitStatus({
         type: "success",
-        message: submission.result.message || "Message sent successfully!",
+        message:
+          submission.result.message ||
+          "Thanks. Your inquiry is in and I will review it soon.",
       });
       trackForm("Contact Form", true, "contact-page-form");
       setFormData(INITIAL_FORM_DATA);
       setFieldErrors({});
       onSubmitSuccess?.();
-    } else {
-      setSubmitStatus({
-        type: "error",
-        message:
-          submission.result.error || "Failed to send message. Please try again.",
-      });
-      trackForm(
-        "Contact Form",
-        false,
-        "contact-page-form",
-        submission.result.error,
-      );
+      setIsSubmitting(false);
+      return;
     }
 
+    setSubmitStatus({
+      type: "error",
+      message:
+        submission.result.error ||
+        `The form could not be sent. Please try again or email ${CONTACT_EMAIL}.`,
+    });
+    trackForm(
+      "Contact Form",
+      false,
+      "contact-page-form",
+      submission.result.error,
+    );
     setIsSubmitting(false);
   };
 
@@ -172,22 +402,8 @@ export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
       itemType="https://schema.org/ContactForm"
       aria-label="Project inquiry contact form"
     >
-      {/* Status message with aria-live region */}
-      {submitStatus.type && (
-        <div
-          role="status"
-          aria-live="polite"
-          className={`p-4 rounded-md ${
-            submitStatus.type === "success"
-              ? "bg-green-50 text-green-800 border border-green-200"
-              : "bg-red-50 text-red-800 border border-red-200"
-          }`}
-        >
-          {submitStatus.message}
-        </div>
-      )}
+      <SubmitStatusNotice submitStatus={submitStatus} />
 
-      {/* Honeypot field (hidden from users) */}
       <input
         name="_honeypot"
         type="text"
@@ -199,133 +415,22 @@ export default function ContactForm({ onSubmitSuccess }: ContactFormProps) {
         aria-hidden="true"
       />
 
-      <FieldGroup>
-        {/* Name field */}
-        <Field>
-          <FieldLabel htmlFor="name" className="sr-only">
-            Name
-          </FieldLabel>
-          <Input
-            id="name"
-            name="name"
-            type="text"
-            placeholder="name"
-            autoComplete="name"
-            value={formData.name}
-            onChange={handleInputChange}
-            aria-invalid={fieldErrors.name ? "true" : "false"}
-            aria-describedby={fieldErrors.name ? "name-error" : undefined}
-            className={`w-full border-black focus:border-black ${fieldErrors.name ? "border-red-500 focus:border-red-500" : ""}`}
-            itemProp="name"
-          />
-          {fieldErrors.name && (
-            <FieldError id="name-error">{fieldErrors.name}</FieldError>
-          )}
-        </Field>
-
-        {/* Email field */}
-        <Field>
-          <FieldLabel htmlFor="email" className="sr-only">
-            Email
-          </FieldLabel>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            placeholder="e-mail"
-            autoComplete="email"
-            value={formData.email}
-            onChange={handleInputChange}
-            aria-invalid={fieldErrors.email ? "true" : "false"}
-            aria-describedby={fieldErrors.email ? "email-error" : undefined}
-            className={`w-full border-black focus:border-black ${fieldErrors.email ? "border-red-500 focus:border-red-500" : ""}`}
-            itemProp="email"
-          />
-          {fieldErrors.email && (
-            <FieldError id="email-error">{fieldErrors.email}</FieldError>
-          )}
-        </Field>
-
-        {/* Message field */}
-        <Field>
-          <FieldLabel htmlFor="message" className="sr-only">
-            Message
-          </FieldLabel>
-          <Textarea
-            id="message"
-            name="message"
-            placeholder="News"
-            rows={5}
-            value={formData.message}
-            onChange={handleInputChange}
-            aria-invalid={fieldErrors.message ? "true" : "false"}
-            aria-describedby={fieldErrors.message ? "message-error" : undefined}
-            className={`w-full resize-none border-black focus:border-black ${fieldErrors.message ? "border-red-500 focus:border-red-500" : ""}`}
-            itemProp="text"
-          />
-          {fieldErrors.message && (
-            <FieldError id="message-error">{fieldErrors.message}</FieldError>
-          )}
-        </Field>
-
-        {/* Privacy consent checkbox */}
-        <Field orientation="horizontal">
-          <Checkbox
-            id="privacy-consent"
-            checked={formData.privacyConsent}
-            onCheckedChange={handlePrivacyConsentChange}
-            aria-invalid={fieldErrors.privacyConsent ? "true" : "false"}
-            aria-describedby={
-              fieldErrors.privacyConsent ? "privacy-error" : "privacy-description"
-            }
-            className={
-              fieldErrors.privacyConsent ? "border-red-500" : "border-black"
-            }
-          />
-          <FieldContent>
-            <FieldLabel
-              htmlFor="privacy-consent"
-              className="inline font-normal"
-            >
-              I agree to the{" "}
-              <Link
-                href="/privacy"
-                className="text-blue-600 hover:text-blue-800 underline"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Read privacy policy (opens in new tab)"
-              >
-                privacy policy
-              </Link>{" "}
-              and consent to my data being temporarily stored for the purpose of
-              processing this request.
-            </FieldLabel>
-            {fieldErrors.privacyConsent && (
-              <FieldError id="privacy-error">
-                {fieldErrors.privacyConsent}
-              </FieldError>
-            )}
-          </FieldContent>
-        </Field>
-
-        {/* Submit button */}
-        <Field orientation="horizontal">
-          <Button
-            type="submit"
-            disabled={isSubmitting || !formData.privacyConsent}
-            className="w-auto px-8 py-2 bg-black text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
-            aria-describedby="submit-help"
-          >
-            {isSubmitting && <Spinner />}
-            {isSubmitting ? "SUBMITTING..." : "SUBMIT"}
-          </Button>
-          <FieldDescription id="submit-help" className="sr-only">
-            {!formData.privacyConsent
-              ? "You must agree to the privacy policy before submitting"
-              : "Submit your contact form"}
-          </FieldDescription>
-        </Field>
-      </FieldGroup>
+      <ContactFormIntro />
+      <ContactFormFields
+        fieldErrors={fieldErrors}
+        formData={formData}
+        isSubmitting={isSubmitting}
+        onInputChange={handleInputChange}
+        onPrivacyConsentChange={handlePrivacyConsentChange}
+      />
     </form>
   );
+}
+
+export default function ContactForm(props: ContactFormProps) {
+  if (!IS_CONVEX_CONFIGURED) {
+    return <ContactFormUnavailable />;
+  }
+
+  return <ContactFormWithSubmission {...props} />;
 }

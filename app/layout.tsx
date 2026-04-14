@@ -58,7 +58,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    locale: "en_US",
+    locale: "en_KE",
     url: "https://geraldbahati.dev",
     siteName: "Gerald Bahati Portfolio",
     title: "Gerald Bahati - Product Software Engineer | 2+ Years Experience",

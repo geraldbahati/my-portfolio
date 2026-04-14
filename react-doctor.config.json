@@ -1,0 +1,5 @@
+{
+  "ignore": {
+    "files": ["app/(root)/opengraph-image.tsx", "app/(root)/twitter-image.tsx"]
+  }
+}
