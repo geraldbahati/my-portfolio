@@ -20,7 +20,7 @@ const InfoSection = dynamic(() => import("@/sections/info"), {
   loading: () => <div className="min-h-screen bg-white" />,
 });
 const ContactSection = dynamic(() => import("@/sections/contact"), {
-  loading: () => <div className="h-[60vh] bg-black" />,
+  loading: () => <div className="h-[60vh] bg-gray-950" />,
 });
 
 // SEO Metadata
@@ -152,7 +152,7 @@ export default async function Home() {
       </div>
 
       {/* Contact Section */}
-      <div className="bg-black">
+      <div className="bg-gray-950">
         <div id="ContactSection">
           <ContactSection />
         </div>

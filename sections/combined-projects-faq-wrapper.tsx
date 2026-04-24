@@ -11,7 +11,7 @@
 
 import { Suspense } from "react";
 import { cacheLife, cacheTag } from "next/cache";
-import CombinedProjectsFaqSection from "./combined-projects-faq";
+import DeferredCombinedProjectsFaq from "./deferred-combined-projects-faq";
 import { getCachedProjects } from "@/lib/data/projects";
 
 /**
@@ -26,7 +26,7 @@ async function ProjectsFaqContent() {
   cacheTag("projects");
 
   const projects = await getCachedProjects();
-  return <CombinedProjectsFaqSection projects={projects} />;
+  return <DeferredCombinedProjectsFaq projects={projects} />;
 }
 
 /**

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Syne, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { MotionProvider } from "@/components/MotionProvider";
 import { LenisProvider } from "@/components/LenisProvider";
 import { AnalyticsProvider } from "@/components/analytics-provider";
@@ -101,17 +100,32 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link
+          rel="preconnect"
+          href="https://customer-pdxnd9di8ybc2kur.cloudflarestream.com"
+          crossOrigin=""
+        />
+        <link
+          rel="dns-prefetch"
+          href="//customer-pdxnd9di8ybc2kur.cloudflarestream.com"
+        />
+        <link
+          rel="preconnect"
+          href="https://media.geraldbahati.dev"
+          crossOrigin=""
+        />
+        <link rel="dns-prefetch" href="//media.geraldbahati.dev" />
+      </head>
       <body
         className={`${syne.variable} ${jetbrainsMono.variable} antialiased bg-background`}
       >
         {/*<ClerkProvider>*/}
-        <ConvexClientProvider>
-          <LenisProvider>
-            <MotionProvider>
-              {children}
-            </MotionProvider>
-          </LenisProvider>
-        </ConvexClientProvider>
+        <LenisProvider>
+          <MotionProvider>
+            {children}
+          </MotionProvider>
+        </LenisProvider>
         {/*</ClerkProvider>*/}
         <DeferredProviders />
         <AnalyticsProvider />

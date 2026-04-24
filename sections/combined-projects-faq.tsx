@@ -441,7 +441,7 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
       {/* marginTop only pulls it up by the space below projects, not overlapping */}
       <section
         ref={faqSectionRef}
-        className="bg-black text-white relative z-10"
+        className="bg-gray-950 text-white relative z-10"
         style={{
           marginTop: `-${spaceBelow}vh`,
           transform: `translateY(${spaceBelow}vh)`,

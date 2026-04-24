@@ -1,7 +1,6 @@
 "use client";
 
 import { memo, useRef, useState, useCallback, useEffect } from "react";
-import Link from "next/link";
 import { m, AnimatePresence } from "motion/react";
 import { EyeIcon, ExternalLinkIcon } from "lucide-react";
 import { Cursor } from "@/components/ui/cursor";
@@ -9,6 +8,8 @@ import { MediaRenderer } from "@/components/media";
 import { parseAspectRatio } from "@/lib/media-utils";
 import Analytics from "@/lib/analytics";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { AdaptiveLink } from "@/components/AdaptiveLink";
+import { warmImages } from "@/lib/resource-warmup";
 
 // ============================================================================
 // Types
@@ -62,6 +63,7 @@ function useVisibility(
   } = {},
 ) {
   const [isVisible, setIsVisible] = useState(false);
+  const { onVisible, rootMargin, threshold } = options;
 
   useEffect(() => {
     const element = ref.current;
@@ -72,18 +74,18 @@ function useVisibility(
         entries.forEach((entry) => {
           const visible = entry.isIntersecting;
           setIsVisible(visible);
-          options.onVisible?.(visible);
+          onVisible?.(visible);
         });
       },
       {
-        threshold: options.threshold ?? 0.2,
-        rootMargin: options.rootMargin ?? "50px",
+        threshold: threshold ?? 0.2,
+        rootMargin: rootMargin ?? "50px",
       },
     );
 
     observer.observe(element);
     return () => observer.disconnect();
-  }, [ref, options.threshold, options.rootMargin, options.onVisible]);
+  }, [onVisible, ref, rootMargin, threshold]);
 
   return isVisible;
 }
@@ -288,11 +290,20 @@ function ProjectCardComponent({
   }, []);
 
   const projectPath = `/projects/${id}`;
+  const previewImage = poster || (type === "gif" ? src : undefined);
 
   const handleCardClick = useCallback(() => {
     Analytics.trackLinkClick(title || `Project ${id}`, projectPath, "internal");
     onClick?.();
   }, [id, onClick, projectPath, title]);
+
+  useEffect(() => {
+    if (!isVisible) {
+      return;
+    }
+
+    warmImages([previewImage], 1);
+  }, [isVisible, previewImage]);
 
   // Animation variants
   const mediaVariants = {
@@ -307,7 +318,10 @@ function ProjectCardComponent({
   return (
     <div
       className="block relative"
-      onMouseEnter={() => setIsHovered(true)}
+      onMouseEnter={() => {
+        setIsHovered(true);
+        warmImages([previewImage], 1);
+      }}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Custom cursor */}
@@ -325,15 +339,16 @@ function ProjectCardComponent({
         <HoverCursor isHovering={isHovering} />
       </Cursor>
 
-      <Link
+      <AdaptiveLink
         href={projectPath}
-        prefetch={true}
         aria-label={title || `View project ${id}`}
         className="absolute inset-0 z-10 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        prefetchOnViewport
+        prefetchRootMargin="250px"
         onClick={handleCardClick}
       >
         <span className="sr-only">{title || `View project ${id}`}</span>
-      </Link>
+      </AdaptiveLink>
 
       {/* Card container */}
       <m.div
