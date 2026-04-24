@@ -19,6 +19,7 @@ export interface StreamVideoProps {
   muted?: boolean;
   loop?: boolean;
   className?: string;
+  showPosterWhenPaused?: boolean;
   onError?: () => void;
   onLoad?: () => void;
 }
@@ -99,6 +100,7 @@ function StreamVideoComponent({
   muted = true,
   loop = true,
   className = "",
+  showPosterWhenPaused = true,
   onError,
   onLoad,
 }: StreamVideoProps) {
@@ -194,8 +196,8 @@ function StreamVideoComponent({
       className={`relative overflow-hidden ${className}`}
       style={{ aspectRatio: `${ratio}` }}
     >
-      {/* Poster: shown while loading OR when video is paused (not in view) */}
-      {(!isLoaded || !autoPlay) && posterUrl && (
+      {/* Poster: shown while loading and optionally while paused. */}
+      {(!isLoaded || (showPosterWhenPaused && !autoPlay)) && posterUrl && (
         <Image
           src={posterUrl}
           alt={alt}

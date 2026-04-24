@@ -16,6 +16,7 @@ export interface MediaRendererProps {
   loop?: boolean;
   priority?: boolean;
   className?: string;
+  showPosterWhenPaused?: boolean;
   onError?: () => void;
   onLoad?: () => void;
 }
@@ -39,6 +40,7 @@ function MediaRendererComponent({
   loop = true,
   priority = false,
   className = "",
+  showPosterWhenPaused = true,
   onError,
   onLoad,
 }: MediaRendererProps) {
@@ -65,6 +67,7 @@ function MediaRendererComponent({
         muted={muted}
         loop={loop}
         className={className}
+        showPosterWhenPaused={showPosterWhenPaused}
         onError={handleError}
         onLoad={handleLoad}
       />

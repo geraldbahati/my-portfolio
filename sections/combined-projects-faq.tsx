@@ -172,6 +172,7 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
 
   // Dynamic: how much space is below projects in the sticky container (as vh)
   const [spaceBelow, setSpaceBelow] = useState(30);
+  const [isPlaybackActive, setIsPlaybackActive] = useState(true);
 
   // Cached DOM measurements - updated on mount/resize, not every frame
   const cachedMeasurementsRef = useRef({
@@ -182,6 +183,7 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
 
   // Track last FAQ-showing state to avoid redundant className toggles
   const lastFaqShowingRef = useRef(false);
+  const lastPlaybackActiveRef = useRef(true);
 
   // Measure the space below projects (responsive)
   useEffect(() => {
@@ -244,6 +246,12 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
     );
 
     const horizontalScrollPhase = 0.6;
+    const nextPlaybackActive = totalProgress <= horizontalScrollPhase;
+
+    if (lastPlaybackActiveRef.current !== nextPlaybackActive) {
+      lastPlaybackActiveRef.current = nextPlaybackActive;
+      setIsPlaybackActive(nextPlaybackActive);
+    }
 
     if (totalProgress <= horizontalScrollPhase) {
       // Phase 1: Horizontal scroll
@@ -425,6 +433,8 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
                       badges={project.badges}
                       aspectRatio="4/3"
                       poster={project.poster}
+                      playbackEnabled={isPlaybackActive}
+                      freezeFrameOnPause
                       className="w-full transition-all duration-500"
                     />
                   </div>
@@ -441,7 +451,7 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
       {/* marginTop only pulls it up by the space below projects, not overlapping */}
       <section
         ref={faqSectionRef}
-        className="bg-gray-950 text-white relative z-10"
+        className="bg-black text-white relative z-10"
         style={{
           marginTop: `-${spaceBelow}vh`,
           transform: `translateY(${spaceBelow}vh)`,
