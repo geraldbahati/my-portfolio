@@ -30,6 +30,8 @@ export interface ProjectCardProps {
   aspectRatio?: string | number;
   className?: string;
   style?: React.CSSProperties;
+  playbackEnabled?: boolean;
+  freezeFrameOnPause?: boolean;
   onVisible?: (visible: boolean) => void;
   onClick?: () => void;
 }
@@ -241,6 +243,8 @@ function ProjectCardComponent({
   aspectRatio = "16/9",
   className = "",
   style,
+  playbackEnabled = true,
+  freezeFrameOnPause = false,
   onVisible,
   onClick,
 }: ProjectCardProps) {
@@ -304,6 +308,9 @@ function ProjectCardComponent({
 
     warmImages([previewImage], 1);
   }, [isVisible, previewImage]);
+
+  const shouldAutoPlay = isVisible && playbackEnabled && !prefersReducedMotion;
+  const shouldShowPosterWhenPaused = !freezeFrameOnPause || !playbackEnabled;
 
   // Animation variants
   const mediaVariants = {
@@ -380,10 +387,11 @@ function ProjectCardComponent({
               poster={poster}
               alt={alt || title || `Project ${id}`}
               aspectRatio={aspectRatio}
-              autoPlay={isVisible && !prefersReducedMotion}
+              autoPlay={shouldAutoPlay}
               muted
               loop
               className="absolute inset-0"
+              showPosterWhenPaused={shouldShowPosterWhenPaused}
               onError={() => setHasError(true)}
             />
           )}

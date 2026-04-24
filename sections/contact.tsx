@@ -74,7 +74,7 @@ const ContactSection = memo(function ContactSection({
   return (
     <section
       data-section-id="ContactSection"
-      className={`h-[60vh] short:h-[50vh] relative flex items-center justify-center p-8 short:p-4 ${className}`}
+      className={`h-[60vh] short:h-[50vh] relative flex items-center justify-center bg-black p-8 short:p-4 ${className}`}
       aria-label="Contact call-to-action section"
     >
       <div className="absolute inset-0 w-full h-full z-0">
