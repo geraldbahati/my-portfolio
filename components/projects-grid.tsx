@@ -12,10 +12,10 @@
 
 import React from "react";
 import { m } from "motion/react";
-import Link from "next/link";
 import { Project } from "@/app/(root)/projects/data";
 import { BadgePill } from "./badge-pill";
 import dynamic from "next/dynamic";
+import { AdaptiveLink } from "@/components/AdaptiveLink";
 
 // Dynamically import ProjectMediaController to avoid SSR issues
 const ProjectMediaController = dynamic(
@@ -55,13 +55,14 @@ export const ProjectsGrid: React.FC<ProjectsGridProps> = ({ projects }) => {
         >
           {/* Project Title */}
           <h2 className="text-xl lg:text-2xl font-semibold mb-4 text-foreground">
-            <Link
+            <AdaptiveLink
               href={`/projects/${project.id}`}
               className="hover:text-primary transition-colors"
-              prefetch={true}
+              prefetchOnViewport
+              prefetchRootMargin="250px"
             >
               {project.title}
-            </Link>
+            </AdaptiveLink>
           </h2>
 
           {/* Project Card */}

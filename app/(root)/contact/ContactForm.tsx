@@ -83,7 +83,7 @@ function ContactFormUnavailable() {
       </p>
       <Button
         asChild
-        className="mt-5 w-auto bg-black px-6 text-white hover:bg-gray-800"
+        className="mt-5 w-auto bg-gray-950 px-6 text-white hover:bg-gray-900"
       >
         <a href={CONTACT_EMAIL_HREF}>Email Gerald</a>
       </Button>
@@ -231,6 +231,7 @@ function ContactFormFields({
             I agree to the{" "}
             <Link
               href="/privacy"
+              prefetch={false}
               className="text-blue-600 hover:text-blue-800 underline"
               target="_blank"
               rel="noopener noreferrer"
@@ -253,7 +254,7 @@ function ContactFormFields({
         <Button
           type="submit"
           disabled={isSubmitting || !formData.privacyConsent}
-          className="w-auto bg-black px-8 py-2 text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-auto bg-gray-950 px-8 py-2 text-white hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isSubmitting && <Spinner />}
           {isSubmitting ? "SENDING..." : "SEND MESSAGE"}

@@ -7,6 +7,7 @@ import Image from "next/image";
 import { MediaRenderer } from "@/components/media";
 import { Cursor } from "@/components/ui/cursor";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { warmImages } from "@/lib/resource-warmup";
 
 interface ProjectVideoProps {
   videoUrl?: string | null;
@@ -193,6 +194,29 @@ export function ProjectVideo({
 
   const prefersReducedMotion = useReducedMotion();
   const isVisible = useVisibility(containerRef, 0.3);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !posterUrl) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) {
+          return;
+        }
+
+        warmImages([posterUrl], 1);
+        observer.disconnect();
+      },
+      { rootMargin: "300px 0px" },
+    );
+
+    observer.observe(container);
+
+    return () => observer.disconnect();
+  }, [posterUrl]);
 
   // Memoized floating animation config
   const floatingAnimation = useMemo(

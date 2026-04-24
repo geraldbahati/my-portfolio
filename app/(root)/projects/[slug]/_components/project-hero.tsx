@@ -1,7 +1,7 @@
 import { Doc } from "@/convex/_generated/dataModel";
 import Image from "next/image";
-import Link from "next/link";
 import { ChevronRight } from "lucide-react";
+import { AdaptiveLink } from "@/components/AdaptiveLink";
 
 interface ProjectHeroProps {
   project: Doc<"projects">;
@@ -24,12 +24,13 @@ export function ProjectHero({ project, details }: ProjectHeroProps) {
 
           {/* Breadcrumbs - Delayed animation */}
           <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground animate-in fade-in slide-in-from-left-2 duration-700 delay-200 ease-out">
-            <Link
+            <AdaptiveLink
               href="/projects"
               className="hover:text-foreground transition-colors"
+              prefetchOnViewport={false}
             >
               Projects
-            </Link>
+            </AdaptiveLink>
             <ChevronRight className="w-3 h-3 text-muted-foreground/60" />
             <span className="text-foreground font-semibold">{title}</span>
           </div>

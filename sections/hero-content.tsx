@@ -124,7 +124,7 @@ export default function HeroContent({
                   <Link
                     href="/contact"
                     className="inline-block pointer-events-auto"
-                    prefetch={true}
+                    prefetch={false}
                   >
                     <span className="shrink-0 cursor-pointer relative inline-block border-b border-muted-foreground/50 hover:border-primary transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]">
                       <span className="text-white font-light text-sm sm:text-base uppercase tracking-[0.2em]">

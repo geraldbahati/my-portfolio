@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import { AdaptiveLink } from "@/components/AdaptiveLink";
 
 interface ProjectNavigationProps {
   previousProject: {
@@ -28,10 +28,12 @@ export function ProjectNavigation({
           {/* Previous Project Link */}
           <div className="flex-1">
             {previousProject ? (
-              <Link
+              <AdaptiveLink
                 href={`/projects/${previousProject.id}`}
-                prefetch={true}
                 className="group flex flex-col items-start gap-2 text-muted-foreground hover:text-foreground transition-colors h-full animate-in fade-in slide-in-from-left-4 duration-500"
+                prefetchOnViewport
+                prefetchRootMargin="150px"
+                prefetchDelayMs={1200}
               >
                 <span className="flex items-center gap-2 text-sm font-medium uppercase tracking-wider">
                   <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
@@ -40,12 +42,14 @@ export function ProjectNavigation({
                 <span className="text-xl font-semibold text-foreground line-clamp-2">
                   {previousProject.title}
                 </span>
-              </Link>
+              </AdaptiveLink>
             ) : (
-              <Link
+              <AdaptiveLink
                 href="/projects"
-                prefetch={true}
                 className="group flex flex-col items-start gap-2 text-muted-foreground hover:text-foreground transition-colors h-full animate-in fade-in slide-in-from-left-4 duration-500"
+                prefetchOnViewport
+                prefetchRootMargin="150px"
+                prefetchDelayMs={1200}
               >
                 <span className="flex items-center gap-2 text-sm font-medium uppercase tracking-wider">
                   <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
@@ -54,17 +58,19 @@ export function ProjectNavigation({
                 <span className="text-xl font-semibold text-foreground">
                   Back to Overview
                 </span>
-              </Link>
+              </AdaptiveLink>
             )}
           </div>
 
           {/* Next Project Link */}
           <div className="flex-1 flex justify-end">
             {nextProject ? (
-              <Link
+              <AdaptiveLink
                 href={`/projects/${nextProject.id}`}
-                prefetch={true}
                 className="group flex flex-col items-end gap-2 text-muted-foreground hover:text-foreground transition-colors text-right h-full animate-in fade-in slide-in-from-right-4 duration-500"
+                prefetchOnViewport
+                prefetchRootMargin="150px"
+                prefetchDelayMs={1200}
               >
                 <span className="flex items-center gap-2 text-sm font-medium uppercase tracking-wider">
                   Next Project
@@ -73,12 +79,14 @@ export function ProjectNavigation({
                 <span className="text-xl font-semibold text-foreground line-clamp-2">
                   {nextProject.title}
                 </span>
-              </Link>
+              </AdaptiveLink>
             ) : (
-              <Link
+              <AdaptiveLink
                 href="/projects"
-                prefetch={true}
                 className="group flex flex-col items-end gap-2 text-muted-foreground hover:text-foreground transition-colors text-right h-full animate-in fade-in slide-in-from-right-4 duration-500"
+                prefetchOnViewport
+                prefetchRootMargin="150px"
+                prefetchDelayMs={1200}
               >
                 <span className="flex items-center gap-2 text-sm font-medium uppercase tracking-wider">
                   All Projects
@@ -87,7 +95,7 @@ export function ProjectNavigation({
                 <span className="text-xl font-semibold text-foreground">
                   Back to Overview
                 </span>
-              </Link>
+              </AdaptiveLink>
             )}
           </div>
         </div>

@@ -3,7 +3,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
-import Link from "next/link";
+import { AdaptiveLink } from "@/components/AdaptiveLink";
 import Analytics from "@/lib/analytics";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
@@ -71,9 +71,10 @@ const TextScrambleHoverTrigger = memo(() => {
   }, []);
 
   return (
-    <Link
+    <AdaptiveLink
       href="/contact"
-      prefetch={true}
+      prefetchOnViewport
+      prefetchRootMargin="150px"
       onClick={() =>
         Analytics.trackButtonClick("Request a project", "Hero CTA")
       }
@@ -97,7 +98,7 @@ const TextScrambleHoverTrigger = memo(() => {
           Request a project
         </TextScramble>
       </span>
-    </Link>
+    </AdaptiveLink>
   );
 });
 

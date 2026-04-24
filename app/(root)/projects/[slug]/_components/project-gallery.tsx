@@ -1,5 +1,6 @@
 import { Doc } from "@/convex/_generated/dataModel";
 import Image from "next/image";
+import { ImageWarmupSentinel } from "@/components/ImageWarmupSentinel";
 
 interface ProjectGalleryProps {
   gallery: Doc<"projectGallery">[];
@@ -15,9 +16,11 @@ export function ProjectGallery({ gallery }: ProjectGalleryProps) {
   const stackImages = gallery
     .filter((item) => item.galleryType === "stack")
     .sort((a, b) => a.order - b.order);
+  const galleryImages = gallery.map((item) => item.src);
 
   return (
-    <section className="bg-muted py-24 ">
+    <section className="relative bg-muted py-24 ">
+      <ImageWarmupSentinel images={galleryImages} limit={2} />
       <div className="container overflow-hidden max-w-6xl mx-auto px-4 md:px-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           {/* Left Column: Long Scrolling Screenshot */}

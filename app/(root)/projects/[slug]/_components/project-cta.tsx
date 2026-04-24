@@ -2,7 +2,7 @@
 
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import Link from "next/link";
+import { AdaptiveLink } from "@/components/AdaptiveLink";
 import Analytics from "@/lib/analytics";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
@@ -72,22 +72,22 @@ const CTAButton = memo(() => {
   }, []);
 
   return (
-    <Link
+    <AdaptiveLink
       href="/contact"
+      prefetchOnViewport
+      prefetchRootMargin="150px"
       onClick={() =>
         Analytics.trackButtonClick("Projekt anfragen", "Project CTA")
       }
       className="inline-block"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      aria-label="Projekt anfragen"
     >
-      <div
+      <span
         className={`flex-shrink-0 cursor-pointer relative inline-block border-b transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ${
           isHovered ? "border-primary" : "border-white/50"
         }`}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        role="button"
-        tabIndex={0}
-        aria-label="Projekt anfragen"
       >
         <TextScramble
           className="text-white font-light text-sm sm:text-base uppercase tracking-[0.2em]"
@@ -99,8 +99,8 @@ const CTAButton = memo(() => {
         >
           Request a Project
         </TextScramble>
-      </div>
-    </Link>
+      </span>
+    </AdaptiveLink>
   );
 });
 
@@ -110,7 +110,7 @@ export function ProjectCTA() {
   const prefersReducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
 
   return (
-    <section className="relative bg-black text-white py-24 md:py-32 overflow-hidden">
+    <section className="relative bg-gray-950 text-white py-24 md:py-32 overflow-hidden">
       {/* Grid Pattern Background */}
       {!prefersReducedMotion && (
         <GridPattern

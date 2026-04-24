@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { AdaptiveLink } from "@/components/AdaptiveLink";
 import { CutoutMaskImage } from "@/components/ui/cutout-image-mask";
 
 const tagline = "Shipping Production Impact";
@@ -184,27 +184,30 @@ export default function BioContent({
                   : undefined
               }
             >
-              <Link href="/projects" prefetch={true}>
-                <button className="bio-cta-button group inline-flex items-center gap-3 text-sm font-medium tracking-wider uppercase text-gray-900 transition-colors hover:text-gray-600">
-                  <span className="relative">
-                    View Selected Work
-                    <span className="absolute bottom-0 left-0 w-full h-px bg-gray-900 origin-left transition-transform duration-300 scale-x-100 group-hover:scale-x-0" />
-                  </span>
-                  <svg
-                    className="w-4 h-4 transition-transform group-hover:translate-x-1"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </button>
-              </Link>
+              <AdaptiveLink
+                href="/projects"
+                prefetchOnViewport
+                prefetchRootMargin="200px"
+                className="bio-cta-button group inline-flex items-center gap-3 text-sm font-medium tracking-wider uppercase text-gray-900 transition-colors hover:text-gray-600"
+              >
+                <span className="relative">
+                  View Selected Work
+                  <span className="absolute bottom-0 left-0 w-full h-px bg-gray-900 origin-left transition-transform duration-300 scale-x-100 group-hover:scale-x-0" />
+                </span>
+                <svg
+                  className="w-4 h-4 transition-transform group-hover:translate-x-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </AdaptiveLink>
             </div>
           </div>
         </div>

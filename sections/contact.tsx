@@ -1,10 +1,10 @@
 "use client";
 
 import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { motion } from "motion/react";
+import { m } from "motion/react";
 import Image from "next/image";
-import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
+import { AdaptiveLink } from "@/components/AdaptiveLink";
 import GridPattern from "@/components/ui/shadcn-io/grid-pattern";
 import { TextScramble } from "@/components/ui/text-scramble";
 
@@ -88,14 +88,16 @@ const ContactSection = memo(function ContactSection({
       </div>
       <div className="relative z-10 text-center max-w-7xl mx-auto grid-interaction-blocked">
         <h2 className="text-4xl sm:text-6xl md:text-7xl lg:text-7xl short:text-5xl font-light text-white tracking-wide drop-shadow-2xl">
-          <Link
+          <AdaptiveLink
             href="/contact"
             className="group inline transition-opacity duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded-lg"
             aria-label="Navigate to contact page to discuss your project"
+            prefetchOnViewport
+            prefetchRootMargin="150px"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
           >
-            <motion.span
+            <m.span
               className={`inline border-b transition-colors duration-300 ${
                 isHovered ? "border-primary" : "border-transparent"
               }`}
@@ -109,9 +111,9 @@ const ContactSection = memo(function ContactSection({
               >
                 Let&apos;s discuss
               </TextScramble>
-            </motion.span>{" "}
+            </m.span>{" "}
             {/* Image deferred - only loads after first hover to save ~951KB for non-hovering users */}
-            <motion.span
+            <m.span
               className="inline-block relative rounded-xl overflow-hidden align-middle"
               initial={false}
               animate={{
@@ -137,8 +139,8 @@ const ContactSection = memo(function ContactSection({
                   unoptimized
                 />
               )}
-            </motion.span>
-            <motion.span
+            </m.span>
+            <m.span
               className={`inline border-b transition-colors duration-300 ${
                 isHovered ? "border-primary" : "border-transparent"
               }`}
@@ -152,16 +154,16 @@ const ContactSection = memo(function ContactSection({
               >
                 your project
               </TextScramble>
-            </motion.span>
-            <motion.span
+            </m.span>
+            <m.span
               variants={arrowVariants}
               initial="idle"
               animate={isHovered ? "hover" : "idle"}
               className="inline-block ml-2 sm:ml-4"
             >
               <ArrowUpRight className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10" />
-            </motion.span>
-          </Link>
+            </m.span>
+          </AdaptiveLink>
         </h2>
       </div>
     </section>

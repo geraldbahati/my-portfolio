@@ -10,6 +10,7 @@ import React, {
 } from "react";
 import Image from "next/image";
 import { m } from "motion/react";
+import { warmImages } from "@/lib/resource-warmup";
 
 // Animation variants for mobile layout (whileInView replaces tailwindcss-intersect)
 const mobileRevealUp = {
@@ -46,13 +47,14 @@ function useImagePreloader(
       (_, i) => currentIndex + i,
     ).filter((i) => i < images.length);
 
-    indicesToPreload.forEach((index) => {
-      const src = images[index];
-      if (src && !preloadedRef.current.has(src)) {
-        const img = new window.Image();
-        img.src = src;
-        preloadedRef.current.add(src);
-      }
+    const nextImages = indicesToPreload
+      .map((index) => images[index])
+      .filter((src): src is string => Boolean(src))
+      .filter((src) => !preloadedRef.current.has(src));
+
+    warmImages(nextImages, preloadAhead + 1);
+    nextImages.forEach((src) => {
+      preloadedRef.current.add(src);
     });
   }, [currentIndex, enabled, images, preloadAhead]);
 }
