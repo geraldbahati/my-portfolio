@@ -358,7 +358,7 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
           {/* Header - entrance via useIntersectOnce + CSS transitions */}
           <div
             ref={headerRef}
-            className="absolute top-0 left-0 right-0 z-40 pt-16 short:pt-6 transition-all duration-500 ease-out"
+            className="absolute top-0 left-0 right-0 z-40 pt-16 short:pt-20 transition-all duration-500 ease-out"
             style={{
               opacity: headerVisible ? 1 : 0,
               transform: headerVisible ? "translateY(0)" : "translateY(32px)",
@@ -377,10 +377,7 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
                 >
                   <h1
                     data-projects-title
-                    className="text-4xl lg:text-5xl short:text-3xl font-medium leading-tight tracking-tight transition-colors duration-500 text-text-primary"
-                    style={{
-                      fontSize: "2.25rem",
-                    }}
+                    className="text-4xl lg:text-5xl short:text-2xl font-medium leading-tight tracking-tight transition-colors duration-500 text-text-primary"
                   >
                     Website Creations and Client Projects
                   </h1>
@@ -408,7 +405,7 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
           </div>
 
           {/* Horizontal scroll projects */}
-          <div className="h-full flex items-start pb-20 short:pb-4 pt-80 lg:pt-64 short:pt-28">
+          <div className="h-full flex items-start pb-20 short:pb-4 pt-80 lg:pt-64 short:pt-40">
             <div
               ref={scrollContainerRef}
               data-projects-area
@@ -472,7 +469,7 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 short:gap-12 items-center mb-32 short:mb-16">
               <div className="flex items-end gap-6">
                 <SocialSidebar />
-                <div className="relative w-full max-w-[540px] overflow-hidden rounded-lg">
+                <div className="relative w-full max-w-[540px] short:max-w-[420px] overflow-hidden rounded-lg">
                   <Image
                     src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=540&h=350&fit=crop&crop=faces&auto=format&q=75"
                     alt="Professional consultation meeting"

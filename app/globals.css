@@ -275,9 +275,16 @@ html.lenis body {
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    /* Guard against stray horizontal scroll (e.g. carousel transforms,
+       sub-pixel rounding, OS scrollbar width) without breaking sticky
+       positioning. `clip` does not create a scroll container. */
+    overflow-x: clip;
+  }
   body {
     @apply bg-background text-foreground;
     letter-spacing: var(--tracking-normal);
+    overflow-x: clip;
   }
 }
 
