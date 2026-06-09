@@ -182,7 +182,7 @@ export const NavbarMenuOverlay = memo(function NavbarMenuOverlay({
 
           <div className="flex-1 flex flex-col items-center justify-center mt-8 lg:mt-0 relative">
             <div
-              className={`relative w-64 h-80 sm:w-72 sm:h-88 md:w-80 md:h-96 lg:w-[500px] lg:h-[600px] xl:w-[600px] xl:h-[700px] short:w-[340px] short:h-[420px] ${
+              className={`relative w-64 h-80 sm:w-72 sm:h-88 md:w-80 md:h-96 lg:w-auto lg:aspect-[5/6] lg:h-[min(600px,calc(100vh_-_18rem))] xl:aspect-[6/7] xl:h-[min(700px,calc(100vh_-_18rem))] ${
                 isEntering
                   ? "animate-nav-image-enter"
                   : "animate-nav-image-exit"

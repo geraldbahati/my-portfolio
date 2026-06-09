@@ -6,7 +6,10 @@
 @plugin "tailwindcss-intersect";
 
 @custom-variant dark (&:is(.dark *));
-@custom-variant short (@media (max-height: 800px) and (min-width: 1024px));
+/* Compact layout for small laptops: short AND narrow (e.g. 1366×768).
+   Capped at max-width:1440px so 125%-scaled 1080p displays (≈1536px wide)
+   keep the full high-res layout instead of the compact one. */
+@custom-variant short (@media (max-height: 800px) and (min-width: 1024px) and (max-width: 1440px));
 
 @theme inline {
   /* Core Colors */
