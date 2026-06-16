@@ -412,13 +412,13 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
               className="flex gap-6 overflow-hidden relative"
               style={{ scrollBehavior: "auto" }}
             >
-              <div className="w-[calc(50vw-45vw)] md:w-[calc(50vw-250px)] lg:w-[calc(50vw-333px)] flex-shrink-0" />
+              <div className="w-[calc(50vw-45vw)] md:w-[calc(50vw-250px)] lg:w-[calc(50vw-333px)] laptop:w-[calc(50vw-270px)] short:w-[calc(50vw-250px)] flex-shrink-0" />
 
               <div ref={projectsAreaRef} className="flex gap-6 px-6">
                 {projects.map((project) => (
                   <div
                     key={project.id}
-                    className="w-[90vw] md:w-[500px] lg:w-[666px] short:w-[500px] flex-shrink-0"
+                    className="w-[90vw] md:w-[500px] lg:w-[666px] laptop:w-[540px] short:w-[500px] flex-shrink-0"
                   >
                     <ProjectCard
                       id={project.id}
@@ -438,7 +438,7 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
                 ))}
               </div>
 
-              <div className="w-[calc(50vw-45vw)] md:w-[calc(50vw-250px)] lg:w-[calc(50vw-333px)] flex-shrink-0" />
+              <div className="w-[calc(50vw-45vw)] md:w-[calc(50vw-250px)] lg:w-[calc(50vw-333px)] laptop:w-[calc(50vw-270px)] short:w-[calc(50vw-250px)] flex-shrink-0" />
             </div>
           </div>
         </div>
