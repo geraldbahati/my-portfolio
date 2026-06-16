@@ -6,6 +6,11 @@
 @plugin "tailwindcss-intersect";
 
 @custom-variant dark (&:is(.dark *));
+/* Mid-size laptops (1024–1600px wide): regular laptops as well as 1366×768
+   panels and 1920×1080 displays at 125% scaling (which report a ≈1536px
+   viewport). The full-size desktop project card feels oversized here, so this
+   bounded band scales it down. The full layout is reserved for ≥1601px. */
+@custom-variant laptop (@media (min-width: 1024px) and (max-width: 1600px));
 /* Compact layout for small laptops: short AND narrow (e.g. 1366×768).
    Capped at max-width:1440px so 125%-scaled 1080p displays (≈1536px wide)
    keep the full high-res layout instead of the compact one. */
