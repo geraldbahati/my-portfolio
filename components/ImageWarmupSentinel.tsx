@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { warmImages } from "@/lib/resource-warmup";
+import { warmImages, type WarmImageOptions } from "@/lib/resource-warmup";
 
 interface ImageWarmupSentinelProps {
   images: string[];
@@ -9,6 +9,8 @@ interface ImageWarmupSentinelProps {
   rootMargin?: string;
   delayMs?: number;
   className?: string;
+  /** Match the consuming <Image>'s sizes/quality so warmed URLs are reused. */
+  warmOptions?: WarmImageOptions;
 }
 
 export function ImageWarmupSentinel({
@@ -17,6 +19,7 @@ export function ImageWarmupSentinel({
   rootMargin = "300px",
   delayMs = 0,
   className = "absolute inset-x-0 top-0 h-px pointer-events-none",
+  warmOptions,
 }: ImageWarmupSentinelProps) {
   const sentinelRef = useRef<HTMLSpanElement | null>(null);
 
@@ -37,7 +40,7 @@ export function ImageWarmupSentinel({
         observer.disconnect();
 
         const triggerWarmup = () => {
-          warmImages(images, limit);
+          warmImages(images, limit, warmOptions);
         };
 
         if (delayMs > 0) {
@@ -58,7 +61,7 @@ export function ImageWarmupSentinel({
         window.clearTimeout(timeoutId);
       }
     };
-  }, [delayMs, images, limit, rootMargin]);
+  }, [delayMs, images, limit, rootMargin, warmOptions]);
 
   return <span ref={sentinelRef} aria-hidden="true" className={className} />;
 }

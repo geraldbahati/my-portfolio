@@ -388,6 +388,7 @@ function ProjectCardComponent({
               alt={alt || title || `Project ${id}`}
               aspectRatio={aspectRatio}
               autoPlay={shouldAutoPlay}
+              active={isVisible}
               muted
               loop
               className="absolute inset-0"

@@ -194,6 +194,10 @@ export const checkAdmin = query({
 - `CLERK_JWT_ISSUER_DOMAIN` - Clerk JWT issuer domain
 - `ENABLE_ADMIN` - Set to `true` to enable admin access (DEV ONLY - never set in production)
 
+**Convex Dashboard (for on-demand cache revalidation):**
+- `SITE_REVALIDATE_URL` - Origin of the deployed site to revalidate, e.g. `https://geraldbahati.dev`. Admin write actions POST here after mutating projects.
+- `REVALIDATE_SECRET` - Shared secret sent in the `x-revalidate-secret` header; must match the value the Next.js `/api/revalidate` route checks.
+
 **Local .env.local:**
 - `CONVEX_DEPLOYMENT` - Convex deployment URL (auto-configured)
 - `NEXT_PUBLIC_CONVEX_URL` - Public Convex URL for client
@@ -201,6 +205,7 @@ export const checkAdmin = query({
 - `CLERK_SECRET_KEY` - Clerk secret key
 - `SENDER_EMAIL` - Email address for sending contact form submissions (Resend)
 - `RECIPIENT_EMAIL` - Email address to receive contact form submissions
+- `REVALIDATE_SECRET` - Shared secret the `/api/revalidate` route validates (must match the Convex value). Set on the hosting platform for production.
 
 ### Component Patterns
 

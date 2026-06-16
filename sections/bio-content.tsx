@@ -1,5 +1,6 @@
 import { AdaptiveLink } from "@/components/AdaptiveLink";
 import { CutoutMaskImage } from "@/components/ui/cutout-image-mask";
+import manSitting from "@/public/man-sitting.webp";
 
 const tagline = "Shipping Production Impact";
 const mainText =
@@ -72,7 +73,7 @@ export default function BioContent({
             }
           >
             <CutoutMaskImage
-              imageUrl="/man-sitting.webp"
+              imageUrl={manSitting}
               clickToChangeImage={false}
               maxWidth={282}
               className="w-full max-w-[282px]"

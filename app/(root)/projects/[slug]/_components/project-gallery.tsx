@@ -20,7 +20,11 @@ export function ProjectGallery({ gallery }: ProjectGalleryProps) {
 
   return (
     <section className="relative bg-muted py-24 ">
-      <ImageWarmupSentinel images={galleryImages} limit={2} />
+      <ImageWarmupSentinel
+        images={galleryImages}
+        limit={2}
+        warmOptions={{ loader: "next", sizes: "(max-width: 768px) 100vw, 50vw" }}
+      />
       <div className="container overflow-hidden max-w-6xl mx-auto px-4 md:px-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           {/* Left Column: Long Scrolling Screenshot */}
