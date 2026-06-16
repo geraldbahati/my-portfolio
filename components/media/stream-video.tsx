@@ -7,8 +7,8 @@ import {
   getStreamThumbnail,
   parseAspectRatio,
 } from "@/lib/media-utils";
+import { streamThumbnailLoader } from "@/lib/stream-thumbnail-loader";
 import Image from "next/image";
-import { useMediaQuery } from "@/hooks/use-media-query";
 
 export interface StreamVideoProps {
   src: string;
@@ -20,6 +20,13 @@ export interface StreamVideoProps {
   loop?: boolean;
   className?: string;
   showPosterWhenPaused?: boolean;
+  /**
+   * Whether the player should load. When false, only the poster renders and no
+   * HLS/manifest/segments are fetched — so off-screen cards stay idle until
+   * they scroll into view. Latches on: once activated the instance is kept for
+   * fast resume, and playback is gated by `autoPlay`.
+   */
+  active?: boolean;
   onError?: () => void;
   onLoad?: () => void;
 }
@@ -101,6 +108,7 @@ function StreamVideoComponent({
   loop = true,
   className = "",
   showPosterWhenPaused = true,
+  active = true,
   onError,
   onLoad,
 }: StreamVideoProps) {
@@ -109,12 +117,18 @@ function StreamVideoComponent({
   const autoPlayRef = useRef(autoPlay);
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const isMobile = useMediaQuery("(max-width: 768px)");
+  // Latch: once the card has been in view, keep the player initialized so
+  // scrolling back is instant. Until then, nothing is loaded.
+  const [hasActivated, setHasActivated] = useState(active);
 
   // Keep ref in sync so the init effect can read current value without re-running
   useEffect(() => {
     autoPlayRef.current = autoPlay;
   });
+
+  useEffect(() => {
+    if (active) setHasActivated(true);
+  }, [active]);
 
   const streamUid = extractStreamUid(src);
   const { ratio } = parseAspectRatio(aspectRatio);
@@ -123,19 +137,23 @@ function StreamVideoComponent({
     ? `https://customer-pdxnd9di8ybc2kur.cloudflarestream.com/${streamUid}/manifest/video.m3u8`
     : src;
 
-  // Responsive poster: smaller on mobile to reduce bandwidth
-  const posterWidth = isMobile ? 640 : 1280;
-  const posterUrl =
+  // Poster overlay (<Image>): for generated Stream thumbnails, serve straight
+  // from Cloudflare's edge via the custom loader (next/image builds the srcSet),
+  // instead of re-optimizing through /_next/image. Explicit posters keep the
+  // default optimizer path.
+  const useStreamPosterLoader = !poster && !!streamUid;
+  const overlayPosterSrc = useStreamPosterLoader
+    ? getStreamThumbnail(streamUid!, { time: "1s", fit: "crop" })
+    : poster;
+  // Native <video poster> attribute can't use a loader, so give it a concrete URL.
+  const nativePosterUrl =
     poster ||
     (streamUid
-      ? getStreamThumbnail(streamUid, {
-          width: posterWidth,
-          height: Math.round(posterWidth / ratio),
-          fit: "crop",
-        })
+      ? getStreamThumbnail(streamUid, { width: 1280, fit: "crop" })
       : undefined);
 
   useEffect(() => {
+    if (!hasActivated) return;
     const video = videoRef.current;
     if (!video || !hlsUrl) return;
 
@@ -160,20 +178,23 @@ function StreamVideoComponent({
         hlsRef.current = null;
       }
     };
-  }, [hlsUrl, onError, onLoad]);
+  }, [hasActivated, hlsUrl, onError, onLoad]);
 
-  // Play/pause control — responds to visibility changes without
-  // tearing down the HLS instance
+  // Play/pause + buffering control. Pausing out of view also stops HLS loading
+  // (frees bandwidth/decoders) without destroying the instance; resuming
+  // restarts the load. The instance is torn down only on unmount (above).
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || !hasActivated) return;
 
     if (autoPlay) {
+      hlsRef.current?.startLoad();
       video.play().catch(() => {});
     } else {
       video.pause();
+      hlsRef.current?.stopLoad();
     }
-  }, [autoPlay]);
+  }, [autoPlay, hasActivated]);
 
   const handleError = useCallback(() => {
     setHasError(true);
@@ -196,27 +217,29 @@ function StreamVideoComponent({
       className={`relative overflow-hidden ${className}`}
       style={{ aspectRatio: `${ratio}` }}
     >
-      {/* Poster: shown while loading and optionally while paused. */}
-      {(!isLoaded || (showPosterWhenPaused && !autoPlay)) && posterUrl && (
-        <Image
-          src={posterUrl}
-          alt={alt}
-          fill
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
-          className="object-cover z-[1]"
-          loading="lazy"
-        />
-      )}
+      {/* Poster: shown before activation, while loading, and optionally while paused. */}
+      {(!hasActivated || !isLoaded || (showPosterWhenPaused && !autoPlay)) &&
+        overlayPosterSrc && (
+          <Image
+            loader={useStreamPosterLoader ? streamThumbnailLoader : undefined}
+            src={overlayPosterSrc}
+            alt={alt}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+            className="object-cover z-[1]"
+            loading="lazy"
+          />
+        )}
 
       <video
         ref={videoRef}
         className="absolute inset-0 w-full h-full object-cover"
-        poster={posterUrl}
+        poster={nativePosterUrl}
         autoPlay={autoPlay}
         muted={muted}
         loop={loop}
         playsInline
-        preload="metadata"
+        preload={hasActivated ? "metadata" : "none"}
         onError={handleError}
         onLoadedData={() => {
           setIsLoaded(true);

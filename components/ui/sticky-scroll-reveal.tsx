@@ -52,7 +52,10 @@ function useImagePreloader(
       .filter((src): src is string => Boolean(src))
       .filter((src) => !preloadedRef.current.has(src));
 
-    warmImages(nextImages, preloadAhead + 1);
+    warmImages(nextImages, preloadAhead + 1, {
+      quality: 80,
+      sizes: "(max-width: 1024px) 500px, 600px",
+    });
     nextImages.forEach((src) => {
       preloadedRef.current.add(src);
     });

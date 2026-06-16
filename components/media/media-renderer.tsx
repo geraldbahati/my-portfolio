@@ -17,6 +17,8 @@ export interface MediaRendererProps {
   priority?: boolean;
   className?: string;
   showPosterWhenPaused?: boolean;
+  /** Gates HLS loading for video sources (defer until in view). */
+  active?: boolean;
   onError?: () => void;
   onLoad?: () => void;
 }
@@ -41,6 +43,7 @@ function MediaRendererComponent({
   priority = false,
   className = "",
   showPosterWhenPaused = true,
+  active = true,
   onError,
   onLoad,
 }: MediaRendererProps) {
@@ -68,6 +71,7 @@ function MediaRendererComponent({
         loop={loop}
         className={className}
         showPosterWhenPaused={showPosterWhenPaused}
+        active={active}
         onError={handleError}
         onLoad={handleLoad}
       />

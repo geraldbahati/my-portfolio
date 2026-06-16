@@ -25,7 +25,7 @@ const nextConfig: NextConfig = {
         hostname: "media.geraldbahati.dev",
       },
     ],
-    formats: ["image/webp", "image/avif"], // Use modern formats
+    formats: ["image/avif", "image/webp"], // AVIF first (smaller); WebP fallback
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 31536000, // 1 year — images rarely change

@@ -1,13 +1,15 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import Image from "next/image";
+import Image, { type StaticImageData } from "next/image";
+
+type ImageSource = string | StaticImageData;
 
 interface CutoutMaskImageProps {
-  imageUrl?: string;
+  imageUrl?: ImageSource;
   className?: string;
   clickToChangeImage?: boolean;
-  imageArray?: string[];
+  imageArray?: ImageSource[];
   maxWidth?: number;
   priority?: boolean;
   quality?: number;
@@ -104,6 +106,10 @@ export const CutoutMaskImage: React.FC<CutoutMaskImageProps> = ({
             quality={quality}
             className="object-cover transition-opacity duration-300"
             priority={priority}
+            // Static imports carry a generated blurDataURL; only then is blur valid.
+            placeholder={
+              typeof currentImage === "object" ? "blur" : undefined
+            }
           />
         </div>
 

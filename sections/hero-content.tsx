@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import heroImage from "@/public/hero-image.webp";
 
 /**
  * HeroContent - Server Component (zero JS cost)
@@ -34,11 +35,12 @@ export default function HeroContent({
           }
         >
           <Image
-            src="/hero-image.webp"
+            src={heroImage}
             alt="Gerald Bahati - Product Software Engineer"
             fill
             priority
             fetchPriority="high"
+            placeholder="blur"
             className="object-cover sm:object-contain sm:mix-blend-screen"
             sizes="(max-width: 640px) 100vw, (max-width: 1280px) 100vw, 1920px"
             quality={60}

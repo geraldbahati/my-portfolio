@@ -323,6 +323,7 @@ export function ProjectVideo({
                 alt={alt || "Project showcase video"}
                 aspectRatio="16/9"
                 autoPlay={isVisible && !prefersReducedMotion}
+                active={isVisible}
                 muted
                 loop
                 className="w-full"
