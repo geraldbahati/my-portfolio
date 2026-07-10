@@ -395,6 +395,7 @@ export function MediaUpload({
             safePreview.endsWith(".mp4") ||
             safePreview.endsWith(".webm") ||
             safePreview.includes(".m3u8") ? (
+              // codeql[js/dom-text-reinterpreted-as-html]: preview URL is allowlisted by sanitizeMediaPreviewUrl before binding to src
               <video
                 src={safePreview}
                 className="w-full h-32 object-cover rounded"
@@ -402,6 +403,7 @@ export function MediaUpload({
                 playsInline
               />
             ) : (
+              // codeql[js/dom-text-reinterpreted-as-html]: preview URL is allowlisted by sanitizeMediaPreviewUrl before binding to src
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={safePreview}
