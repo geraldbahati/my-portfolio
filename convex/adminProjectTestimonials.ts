@@ -7,6 +7,7 @@ import { action, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import { requireAdmin } from "./auth";
+import { triggerProjectRevalidate } from "./revalidate";
 
 const testimonialReturnValidator = v.object({
   _id: v.id("projectTestimonials"),
@@ -53,7 +54,12 @@ export const upsertTestimonial = action({
   returns: v.id("projectTestimonials"),
   handler: async (ctx, args): Promise<Id<"projectTestimonials">> => {
     await requireAdmin(ctx);
-    return await ctx.runMutation(internal.projectTestimonials.upsert, args);
+    const testimonialId = await ctx.runMutation(
+      internal.projectTestimonials.upsert,
+      args,
+    );
+    await triggerProjectRevalidate(ctx, args.projectId);
+    return testimonialId;
   },
 });
 
@@ -93,10 +99,9 @@ export const deleteTestimonial = action({
       }
     }
 
-    return await ctx.runMutation(
-      internal.projectTestimonials.removeByProjectId,
-      args,
-    );
+    await ctx.runMutation(internal.projectTestimonials.removeByProjectId, args);
+    await triggerProjectRevalidate(ctx, args.projectId);
+    return null;
   },
 });
 

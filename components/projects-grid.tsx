@@ -14,17 +14,8 @@ import React from "react";
 import { m } from "motion/react";
 import { Project } from "@/app/(root)/projects/data";
 import { BadgePill } from "./badge-pill";
-import dynamic from "next/dynamic";
 import { AdaptiveLink } from "@/components/AdaptiveLink";
-
-// Dynamically import ProjectMediaController to avoid SSR issues
-const ProjectMediaController = dynamic(
-  () =>
-    import("./project-media-controller").then(
-      (mod) => mod.ProjectMediaController,
-    ),
-  { ssr: false },
-);
+import { ProjectCard } from "./project-card";
 
 export interface ProjectsGridProps {
   projects: Project[];
@@ -67,7 +58,7 @@ export const ProjectsGrid: React.FC<ProjectsGridProps> = ({ projects }) => {
 
           {/* Project Card */}
           <div className="flex-1 mb-4">
-            <ProjectMediaController
+            <ProjectCard
               id={project.id}
               src={project.src}
               type={project.type}

@@ -12,6 +12,10 @@ import { ProjectGallery } from "./_components/project-gallery";
 import { ProjectChallenges } from "./_components/project-challenges";
 import { ProjectTestimonial } from "./_components/project-testimonial";
 import { ProjectDetailSkeleton } from "./_components/project-detail-skeleton";
+import {
+  getProjectCacheTag,
+  PROJECTS_CACHE_TAG,
+} from "@/lib/data/project-cache-tags";
 
 // Dynamic imports only for Client Components (have 'use client' directive)
 const ProjectMetrics = dynamic(
@@ -51,7 +55,9 @@ export async function generateStaticParams() {
       }));
     }
   } catch (error) {
-    console.warn("Could not fetch projects for static generation:", error);
+    throw new Error("Could not fetch projects for static generation.", {
+      cause: error,
+    });
   }
   // Next.js 16 with Cache Components requires at least one result;
   // return a placeholder slug that will be handled by notFound() at runtime
@@ -127,17 +133,11 @@ export async function generateMetadata({
 async function getProjectData(slug: string) {
   "use cache";
   cacheLife("hours");
-  cacheTag(`project-${slug}`);
+  cacheTag(PROJECTS_CACHE_TAG, getProjectCacheTag(slug));
 
-  try {
-    const data = await fetchQuery(api.projects.getFullProjectDetails, {
-      projectSlug: slug,
-    });
-    return data;
-  } catch (error) {
-    console.error("Failed to fetch project data:", error);
-    return null;
-  }
+  return await fetchQuery(api.projects.getFullProjectDetails, {
+    projectSlug: slug,
+  });
 }
 
 export default async function ProjectDetailPage({ params }: PageProps) {

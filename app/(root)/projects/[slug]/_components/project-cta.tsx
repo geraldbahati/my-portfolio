@@ -110,7 +110,7 @@ export function ProjectCTA() {
   const prefersReducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
 
   return (
-    <section className="relative bg-gray-950 text-white py-24 md:py-32 overflow-hidden">
+    <section className="relative bg-black text-white py-24 md:py-32 overflow-hidden">
       {/* Grid Pattern Background */}
       {!prefersReducedMotion && (
         <GridPattern

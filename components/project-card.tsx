@@ -106,10 +106,10 @@ const HoverCursor = memo(function HoverCursor({
   return (
     <m.div
       animate={{
-        width: isHovering ? 80 : 16,
-        height: isHovering ? 32 : 16,
+        scaleX: isHovering ? 1 : 0.2,
+        scaleY: isHovering ? 1 : 0.5,
       }}
-      className="flex items-center justify-center rounded-[24px] bg-black/90 backdrop-blur-md"
+      className="flex h-8 w-20 origin-center items-center justify-center rounded-[24px] bg-black/90 backdrop-blur-md"
     >
       <AnimatePresence>
         {isHovering && (
@@ -388,7 +388,7 @@ function ProjectCardComponent({
               alt={alt || title || `Project ${id}`}
               aspectRatio={aspectRatio}
               autoPlay={shouldAutoPlay}
-              active={isVisible}
+              active={isVisible && playbackEnabled}
               muted
               loop
               className="absolute inset-0"

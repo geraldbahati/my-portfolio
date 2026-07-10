@@ -1,15 +1,43 @@
-'use client';
-import React, { useEffect, useState, useRef } from 'react';
+"use client";
+import React, { useEffect, useState, useRef } from "react";
 import {
-  motion,
+  m,
   SpringOptions,
   useMotionValue,
   useSpring,
   AnimatePresence,
   Transition,
   Variant,
-} from 'motion/react';
-import { cn } from '@/lib/utils';
+} from "motion/react";
+import { cn } from "@/lib/utils";
+
+type PointerListener = (x: number, y: number) => void;
+
+const pointerListeners = new Set<PointerListener>();
+
+function dispatchPointerPosition(event: MouseEvent) {
+  pointerListeners.forEach((listener) => {
+    listener(event.clientX, event.clientY);
+  });
+}
+
+function subscribeToPointerPosition(listener: PointerListener) {
+  pointerListeners.add(listener);
+
+  if (pointerListeners.size === 1) {
+    document.addEventListener("mousemove", dispatchPointerPosition, {
+      passive: true,
+    });
+  }
+
+  return () => {
+    pointerListeners.delete(listener);
+
+    if (pointerListeners.size === 0) {
+      document.removeEventListener("mousemove", dispatchPointerPosition);
+    }
+  };
+}
 
 export type CursorProps = {
   children: React.ReactNode;
@@ -40,7 +68,7 @@ export function Cursor({
   const [isVisible, setIsVisible] = useState(!attachToParent);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       cursorX.set(window.innerWidth / 2);
       cursorY.set(window.innerHeight / 2);
     }
@@ -48,22 +76,18 @@ export function Cursor({
 
   useEffect(() => {
     if (!attachToParent) {
-      document.body.style.cursor = 'none';
+      document.body.style.cursor = "none";
     } else {
-      document.body.style.cursor = 'auto';
+      document.body.style.cursor = "auto";
     }
 
-    const updatePosition = (e: MouseEvent) => {
-      cursorX.set(e.clientX);
-      cursorY.set(e.clientY);
-      onPositionChange?.(e.clientX, e.clientY);
+    const updatePosition = (x: number, y: number) => {
+      cursorX.set(x);
+      cursorY.set(y);
+      onPositionChange?.(x, y);
     };
 
-    document.addEventListener('mousemove', updatePosition);
-
-    return () => {
-      document.removeEventListener('mousemove', updatePosition);
-    };
+    return subscribeToPointerPosition(updatePosition);
   }, [cursorX, cursorY, onPositionChange, attachToParent]);
 
   const cursorXSpring = useSpring(cursorX, springConfig || { duration: 0 });
@@ -76,14 +100,14 @@ export function Cursor({
 
     const handleMouseEnter = () => {
       if (cursorRef.current?.parentElement) {
-        cursorRef.current.parentElement.style.cursor = 'none';
+        cursorRef.current.parentElement.style.cursor = "none";
         handleVisibilityChange(true);
       }
     };
 
     const handleMouseLeave = () => {
       if (cursorRef.current?.parentElement) {
-        cursorRef.current.parentElement.style.cursor = 'auto';
+        cursorRef.current.parentElement.style.cursor = "auto";
         handleVisibilityChange(false);
       }
     };
@@ -92,8 +116,8 @@ export function Cursor({
     if (attachToParent && currentCursor) {
       const parent = currentCursor.parentElement;
       if (parent) {
-        parent.addEventListener('mouseenter', handleMouseEnter);
-        parent.addEventListener('mouseleave', handleMouseLeave);
+        parent.addEventListener("mouseenter", handleMouseEnter);
+        parent.addEventListener("mouseleave", handleMouseLeave);
       }
     }
 
@@ -101,37 +125,37 @@ export function Cursor({
       if (attachToParent && currentCursor) {
         const parent = currentCursor.parentElement;
         if (parent) {
-          parent.removeEventListener('mouseenter', handleMouseEnter);
-          parent.removeEventListener('mouseleave', handleMouseLeave);
+          parent.removeEventListener("mouseenter", handleMouseEnter);
+          parent.removeEventListener("mouseleave", handleMouseLeave);
         }
       }
     };
   }, [attachToParent]);
 
   return (
-    <motion.div
+    <m.div
       ref={cursorRef}
-      className={cn('pointer-events-none fixed left-0 top-0 z-50', className)}
+      className={cn("pointer-events-none fixed left-0 top-0 z-50", className)}
       style={{
         x: cursorXSpring,
         y: cursorYSpring,
-        translateX: '-50%',
-        translateY: '-50%',
+        translateX: "-50%",
+        translateY: "-50%",
       }}
     >
       <AnimatePresence>
         {isVisible && (
-          <motion.div
-            initial='initial'
-            animate='animate'
-            exit='exit'
+          <m.div
+            initial="initial"
+            animate="animate"
+            exit="exit"
             variants={variants}
             transition={transition}
           >
             {children}
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </m.div>
   );
 }

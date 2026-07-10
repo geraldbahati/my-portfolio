@@ -7,6 +7,7 @@ import { action, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import { requireAdmin } from "./auth";
+import { triggerProjectRevalidate } from "./revalidate";
 
 // Validators
 const colorPaletteValidator = v.array(
@@ -82,7 +83,12 @@ export const upsertDetails = action({
   returns: v.id("projectDetails"),
   handler: async (ctx, args): Promise<Id<"projectDetails">> => {
     await requireAdmin(ctx);
-    return await ctx.runMutation(internal.projectDetails.upsert, args);
+    const detailsId = await ctx.runMutation(
+      internal.projectDetails.upsert,
+      args,
+    );
+    await triggerProjectRevalidate(ctx, args.projectId);
+    return detailsId;
   },
 });
 
@@ -108,10 +114,7 @@ export const deleteDetails = action({
 
     if (existing) {
       // Clean up hero image from R2
-      if (
-        existing.heroImage &&
-        isR2MediaUrl(existing.heroImage)
-      ) {
+      if (existing.heroImage && isR2MediaUrl(existing.heroImage)) {
         const key = extractR2Key(existing.heroImage);
         if (key) {
           try {
@@ -151,10 +154,7 @@ export const deleteDetails = action({
       }
 
       // Clean up video poster from R2 (unless it's a Stream thumbnail)
-      if (
-        existing.videoPoster &&
-        isR2MediaUrl(existing.videoPoster)
-      ) {
+      if (existing.videoPoster && isR2MediaUrl(existing.videoPoster)) {
         const key = extractR2Key(existing.videoPoster);
         if (key) {
           try {
@@ -167,10 +167,9 @@ export const deleteDetails = action({
       }
     }
 
-    return await ctx.runMutation(
-      internal.projectDetails.removeByProjectId,
-      args,
-    );
+    await ctx.runMutation(internal.projectDetails.removeByProjectId, args);
+    await triggerProjectRevalidate(ctx, args.projectId);
+    return null;
   },
 });
 

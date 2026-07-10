@@ -8,6 +8,10 @@
 
 import { v } from "convex/values";
 import { query, internalQuery, internalMutation } from "./_generated/server";
+import {
+  getPublishedProjectById,
+  getPublishedProjectBySlug,
+} from "./projectAccess";
 
 // =============================================================================
 // Validators (reusable)
@@ -39,6 +43,11 @@ export const getByProjectId = query({
   },
   returns: v.union(projectTestimonialReturnValidator, v.null()),
   handler: async (ctx, args) => {
+    const project = await getPublishedProjectById(ctx, args.projectId);
+    if (!project) {
+      return null;
+    }
+
     return await ctx.db
       .query("projectTestimonials")
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
@@ -55,11 +64,7 @@ export const getByProjectSlug = query({
   },
   returns: v.union(projectTestimonialReturnValidator, v.null()),
   handler: async (ctx, args) => {
-    // Find project by slug
-    const project = await ctx.db
-      .query("projects")
-      .withIndex("by_project_id", (q) => q.eq("id", args.projectSlug))
-      .unique();
+    const project = await getPublishedProjectBySlug(ctx, args.projectSlug);
 
     if (!project) {
       return null;

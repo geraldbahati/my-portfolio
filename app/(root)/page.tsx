@@ -105,7 +105,7 @@ export default async function Home() {
   cacheLife("hours");
 
   return (
-    <>
+    <main id="main-content">
       <script type="application/ld+json">
         {JSON.stringify(websiteLd)}
       </script>
@@ -157,6 +157,6 @@ export default async function Home() {
           <ContactSection />
         </div>
       </div>
-    </>
+    </main>
   );
 }

@@ -3,7 +3,6 @@
 import { Doc } from "@/convex/_generated/dataModel";
 import {
   Label,
-  PolarGrid,
   PolarRadiusAxis,
   RadialBar,
   RadialBarChart,
@@ -44,23 +43,19 @@ function MetricRadialChart({
   return (
     <ChartContainer
       config={chartConfig}
-      className="mx-auto aspect-square max-h-[200px] w-full px-4 md:px-6"
+      className="mx-auto aspect-square size-[200px]"
+      responsiveContainerProps={{
+        initialDimension: { width: 200, height: 200 },
+      }}
     >
       <RadialBarChart
         data={chartData}
         startAngle={90}
         endAngle={90 - endAngle}
-        innerRadius={70}
-        outerRadius={95}
+        innerRadius="70%"
+        outerRadius="90%"
       >
-        <PolarGrid
-          gridType="circle"
-          radialLines={false}
-          stroke="none"
-          className="first:fill-muted last:fill-background"
-          polarRadius={[76, 64]}
-        />
-        <RadialBar dataKey="value" background cornerRadius={10} />
+        <RadialBar dataKey="value" cornerRadius={10} />
         <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
           <Label
             content={({ viewBox }) => {
@@ -105,7 +100,7 @@ export function ProjectMetrics({ metrics }: ProjectMetricsProps) {
   }
 
   return (
-    <section className="py-20 bg-muted border-t border-border/40">
+    <section className="border-t border-border/40 py-20">
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 max-w-5xl mx-auto">
           {metrics.map((metric, index) => {

@@ -7,6 +7,7 @@ import { action, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import { requireAdmin } from "./auth";
+import { triggerProjectRevalidate } from "./revalidate";
 
 const challengeReturnValidator = v.object({
   _id: v.id("projectChallenges"),
@@ -50,7 +51,12 @@ export const createChallenge = action({
   returns: v.id("projectChallenges"),
   handler: async (ctx, args): Promise<Id<"projectChallenges">> => {
     await requireAdmin(ctx);
-    return await ctx.runMutation(internal.projectChallenges.create, args);
+    const challengeId = await ctx.runMutation(
+      internal.projectChallenges.create,
+      args,
+    );
+    await triggerProjectRevalidate(ctx, args.projectId);
+    return challengeId;
   },
 });
 
@@ -67,7 +73,15 @@ export const updateChallenge = action({
   returns: v.null(),
   handler: async (ctx, args): Promise<null> => {
     await requireAdmin(ctx);
-    return await ctx.runMutation(internal.projectChallenges.update, args);
+    const challenge = await ctx.runQuery(
+      internal.projectChallenges.getByDocId,
+      { challengeId: args.challengeId },
+    );
+    await ctx.runMutation(internal.projectChallenges.update, args);
+    if (challenge) {
+      await triggerProjectRevalidate(ctx, challenge.projectId);
+    }
+    return null;
   },
 });
 
@@ -81,7 +95,15 @@ export const deleteChallenge = action({
   returns: v.null(),
   handler: async (ctx, args): Promise<null> => {
     await requireAdmin(ctx);
-    return await ctx.runMutation(internal.projectChallenges.remove, args);
+    const challenge = await ctx.runQuery(
+      internal.projectChallenges.getByDocId,
+      { challengeId: args.challengeId },
+    );
+    await ctx.runMutation(internal.projectChallenges.remove, args);
+    if (challenge) {
+      await triggerProjectRevalidate(ctx, challenge.projectId);
+    }
+    return null;
   },
 });
 
@@ -100,6 +122,15 @@ export const reorderChallenges = action({
   returns: v.null(),
   handler: async (ctx, args): Promise<null> => {
     await requireAdmin(ctx);
-    return await ctx.runMutation(internal.projectChallenges.reorder, args);
+    const firstChallenge = args.challengeOrders[0]
+      ? await ctx.runQuery(internal.projectChallenges.getByDocId, {
+          challengeId: args.challengeOrders[0].challengeId,
+        })
+      : null;
+    await ctx.runMutation(internal.projectChallenges.reorder, args);
+    if (firstChallenge) {
+      await triggerProjectRevalidate(ctx, firstChallenge.projectId);
+    }
+    return null;
   },
 });

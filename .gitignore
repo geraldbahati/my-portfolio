@@ -43,14 +43,10 @@ next-env.d.ts
 # clerk configuration (can include secrets)
 /.clerk/
 
-# admin dashboard UI (not for public repo - backend is committed but secure)
-/app/(admin)/
+# development-only admin seed data
 /convex/seedWeblineProjects.ts
 
 # codebuff
 codebuff.json
 knowledge.md
 logs/
-
-
-proxy.ts
