@@ -20,7 +20,6 @@ jobs:
       - uses: github/codeql-action/init@v4
         with:
           languages: javascript-typescript
-          packs: portfolio/ql-models
 
       - uses: github/codeql-action/autobuild@v4
 

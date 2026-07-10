@@ -1,6 +1,0 @@
-name: portfolio/ql-models
-version: 0.0.1
-dependencies:
-  codeql/javascript-all: "*"
-dataExtensions:
-  - sanitize-media-models.yml
