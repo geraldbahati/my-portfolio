@@ -6,11 +6,11 @@
  */
 
 import { v } from "convex/values";
+import { query, internalMutation, internalQuery } from "./_generated/server";
 import {
-  query,
-  internalMutation,
-  internalQuery,
-} from "./_generated/server";
+  getPublishedProjectById,
+  getPublishedProjectBySlug,
+} from "./projectAccess";
 
 /**
  * Get all published projects, ordered by display order
@@ -143,15 +143,12 @@ export const getProjectById = query({
     v.null(),
   ),
   handler: async (ctx, args) => {
-    // Use index for efficient lookup by project ID
-    const projects = await ctx.db
+    const project = await ctx.db
       .query("projects")
-      .withIndex("by_project_id")
-      .collect();
+      .withIndex("by_project_id", (q) => q.eq("id", args.projectId))
+      .unique();
 
-    const project = projects.find((p) => p.id === args.projectId);
-
-    return project ?? null;
+    return project?.isPublished ? project : null;
   },
 });
 
@@ -545,11 +542,7 @@ export const getFullProjectDetails = query({
     v.null(),
   ),
   handler: async (ctx, args) => {
-    // Find the project by slug
-    const project = await ctx.db
-      .query("projects")
-      .withIndex("by_project_id", (q) => q.eq("id", args.projectSlug))
-      .unique();
+    const project = await getPublishedProjectBySlug(ctx, args.projectSlug);
 
     if (!project) {
       return null;
@@ -720,6 +713,17 @@ export const hasProjectDetails = query({
     hasChallenges: v.boolean(),
   }),
   handler: async (ctx, args) => {
+    const project = await getPublishedProjectById(ctx, args.projectId);
+    if (!project) {
+      return {
+        hasDetails: false,
+        hasMetrics: false,
+        hasTestimonial: false,
+        hasGallery: false,
+        hasChallenges: false,
+      };
+    }
+
     const [details, metrics, testimonial, gallery, challenges] =
       await Promise.all([
         ctx.db

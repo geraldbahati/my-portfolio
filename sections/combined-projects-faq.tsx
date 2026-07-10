@@ -1,14 +1,7 @@
 "use client";
 
-import {
-  useEffect,
-  useRef,
-  useState,
-  useCallback,
-  useMemo,
-  memo,
-} from "react";
-import ProjectCard from "@/components/project-card";
+import { useEffect, useRef, useState, useCallback, useMemo, memo } from "react";
+import { ProjectCard } from "@/components/project-card";
 import Image from "next/image";
 import { Instagram, Linkedin, Github } from "lucide-react";
 import { SectionDivider } from "@/components/section-divider";
@@ -276,8 +269,12 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
         stickyContainerRef.current!.classList.remove("bg-surface-dark");
         stickyContainerRef.current!.classList.add("bg-surface-light");
         // Toggle text colors
-        const title = scrollTriggerRef.current.querySelector("[data-projects-title]");
-        const desc = scrollTriggerRef.current.querySelector("[data-projects-desc]");
+        const title = scrollTriggerRef.current.querySelector(
+          "[data-projects-title]",
+        );
+        const desc = scrollTriggerRef.current.querySelector(
+          "[data-projects-desc]",
+        );
         if (title) {
           title.classList.remove("text-text-inverted");
           title.classList.add("text-text-primary");
@@ -312,8 +309,12 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
         stickyContainerRef.current!.classList.remove("bg-surface-light");
         stickyContainerRef.current!.classList.add("bg-surface-dark");
         // Toggle text colors
-        const title = scrollTriggerRef.current.querySelector("[data-projects-title]");
-        const desc = scrollTriggerRef.current.querySelector("[data-projects-desc]");
+        const title = scrollTriggerRef.current.querySelector(
+          "[data-projects-title]",
+        );
+        const desc = scrollTriggerRef.current.querySelector(
+          "[data-projects-desc]",
+        );
         if (title) {
           title.classList.remove("text-text-primary");
           title.classList.add("text-text-inverted");
@@ -371,7 +372,9 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
                   className="transition-all duration-500 ease-out"
                   style={{
                     opacity: headerVisible ? 1 : 0,
-                    transform: headerVisible ? "translateY(0)" : "translateY(16px)",
+                    transform: headerVisible
+                      ? "translateY(0)"
+                      : "translateY(16px)",
                     transitionDelay: "100ms",
                   }}
                 >
@@ -387,7 +390,9 @@ const CombinedProjectsFaqSection = memo(function CombinedProjectsFaqSection({
                   className="lg:pl-12 transition-all duration-500 ease-out"
                   style={{
                     opacity: headerVisible ? 1 : 0,
-                    transform: headerVisible ? "translateY(0)" : "translateY(16px)",
+                    transform: headerVisible
+                      ? "translateY(0)"
+                      : "translateY(16px)",
                     transitionDelay: "200ms",
                   }}
                 >

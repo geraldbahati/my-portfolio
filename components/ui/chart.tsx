@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import * as React from "react";
+import type { Props as ResponsiveContainerProps } from "recharts/types/component/ResponsiveContainer";
 import type { Payload } from "recharts/types/component/DefaultTooltipContent";
 
 import { cn } from "@/lib/utils";
@@ -58,10 +59,12 @@ function ChartContainer({
   className,
   children,
   config,
+  responsiveContainerProps,
   ...props
 }: React.ComponentProps<"div"> & {
   config: ChartConfig;
   children: React.ReactElement;
+  responsiveContainerProps?: Omit<ResponsiveContainerProps, "children">;
 }) {
   const uniqueId = React.useId();
   const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`;
@@ -78,7 +81,9 @@ function ChartContainer({
         {...props}
       >
         <ChartStyle id={chartId} config={config} />
-        <ResponsiveContainer>{children}</ResponsiveContainer>
+        <ResponsiveContainer width="100%" height="100%" {...responsiveContainerProps}>
+          {children}
+        </ResponsiveContainer>
       </div>
     </ChartContext.Provider>
   );

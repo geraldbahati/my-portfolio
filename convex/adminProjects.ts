@@ -11,7 +11,7 @@ import { action, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import { requireAdmin } from "./auth";
-import { triggerRevalidate } from "./revalidate";
+import { getProjectRevalidationTags, triggerRevalidate } from "./revalidate";
 
 /**
  * Get all projects (including unpublished) as a query - for real-time updates
@@ -91,7 +91,7 @@ export const createProject = action({
   handler: async (ctx, args): Promise<Id<"projects">> => {
     await requireAdmin(ctx);
     const id = await ctx.runMutation(internal.projects.createProject, args);
-    await triggerRevalidate();
+    await triggerRevalidate(getProjectRevalidationTags(args.id));
     return id;
   },
 });
@@ -126,8 +126,11 @@ export const updateProject = action({
   returns: v.null(),
   handler: async (ctx, args): Promise<null> => {
     await requireAdmin(ctx);
+    const project = await ctx.runQuery(internal.projects.getProjectByDocId, {
+      projectId: args.projectId,
+    });
     await ctx.runMutation(internal.projects.updateProject, args);
-    await triggerRevalidate();
+    await triggerRevalidate(getProjectRevalidationTags(project?.id));
     return null;
   },
 });
@@ -195,7 +198,7 @@ export const deleteProject = action({
 
     // Delete the project from database
     await ctx.runMutation(internal.projects.deleteProject, args);
-    await triggerRevalidate();
+    await triggerRevalidate(getProjectRevalidationTags(project?.id));
     return null;
   },
 });
@@ -258,7 +261,7 @@ export const reorderProjects = action({
   handler: async (ctx, args): Promise<null> => {
     await requireAdmin(ctx);
     await ctx.runMutation(internal.projects.reorderProjects, args);
-    await triggerRevalidate();
+    await triggerRevalidate(getProjectRevalidationTags());
     return null;
   },
 });

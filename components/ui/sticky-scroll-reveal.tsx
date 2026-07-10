@@ -156,171 +156,171 @@ function interpolateOpacity(progress: number): number {
 interface TextSectionProps {
   section: StickySection;
   sectionRef: React.RefObject<HTMLDivElement | null>;
+  registerScrollUpdater: (updater: () => void) => () => void;
 }
 
-const TextSection = memo(({ section, sectionRef }: TextSectionProps) => {
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const labelWrapperRef = useRef<HTMLDivElement>(null);
-  const labelUnderlineRef = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<HTMLHeadingElement>(null);
-  const descriptionRef = useRef<HTMLParagraphElement>(null);
-  const bulletRefs = useRef<Map<number, HTMLLIElement>>(new Map());
-  const bulletSvgRefs = useRef<Map<number, SVGSVGElement>>(new Map());
-  const bulletSpanRefs = useRef<Map<number, HTMLSpanElement>>(new Map());
+const TextSection = memo(
+  ({ section, sectionRef, registerScrollUpdater }: TextSectionProps) => {
+    const wrapperRef = useRef<HTMLDivElement>(null);
+    const labelWrapperRef = useRef<HTMLDivElement>(null);
+    const labelUnderlineRef = useRef<HTMLDivElement>(null);
+    const titleRef = useRef<HTMLHeadingElement>(null);
+    const descriptionRef = useRef<HTMLParagraphElement>(null);
+    const bulletRefs = useRef<Map<number, HTMLLIElement>>(new Map());
+    const bulletSvgRefs = useRef<Map<number, SVGSVGElement>>(new Map());
+    const bulletSpanRefs = useRef<Map<number, HTMLSpanElement>>(new Map());
 
-  useEffect(() => {
-    const sectionEl = sectionRef.current;
-    if (!sectionEl) return;
+    useEffect(() => {
+      const sectionEl = sectionRef.current;
+      if (!sectionEl) return;
 
-    const handleScroll = () => {
-      const rect = sectionEl.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
+      const updateScrollStyles = () => {
+        const rect = sectionEl.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
 
-      // Same offset as original: ["start center", "end center"]
-      const start = rect.top + rect.height;
-      const end = rect.top;
-      const center = viewportHeight / 2;
+        // Same offset as original: ["start center", "end center"]
+        const start = rect.top + rect.height;
+        const end = rect.top;
+        const center = viewportHeight / 2;
 
-      // progress 0→1 as section scrolls through viewport center
-      const rawProgress = (center - end) / (start - end);
-      const progress = Math.min(1, Math.max(0, rawProgress));
+        // progress 0→1 as section scrolls through viewport center
+        const rawProgress = (center - end) / (start - end);
+        const progress = Math.min(1, Math.max(0, rawProgress));
 
-      // Opacity: [0, 0.1, 0.9, 1] → [0.3, 1, 1, 0.3]
-      const opacity = interpolateOpacity(progress);
+        // Opacity: [0, 0.1, 0.9, 1] → [0.3, 1, 1, 0.3]
+        const opacity = interpolateOpacity(progress);
 
-      // Label underline: scaleX 0→1
-      if (labelUnderlineRef.current) {
-        labelUnderlineRef.current.style.transform = `scaleX(${progress})`;
-      }
+        // Label underline: scaleX 0→1
+        if (labelUnderlineRef.current) {
+          labelUnderlineRef.current.style.transform = `scaleX(${progress})`;
+        }
 
-      // Label wrapper opacity
-      if (labelWrapperRef.current) {
-        labelWrapperRef.current.style.opacity = String(opacity);
-      }
+        // Label wrapper opacity
+        if (labelWrapperRef.current) {
+          labelWrapperRef.current.style.opacity = String(opacity);
+        }
 
-      // Title color
-      if (titleRef.current) {
-        titleRef.current.style.color = interpolateColor(
-          progress,
-          GRAY_400,
-          TEXT_PRIMARY,
-        );
-      }
+        // Title color
+        if (titleRef.current) {
+          titleRef.current.style.color = interpolateColor(
+            progress,
+            GRAY_400,
+            TEXT_PRIMARY,
+          );
+        }
 
-      // Description color
-      if (descriptionRef.current) {
-        descriptionRef.current.style.color = interpolateColor(
-          progress,
-          GRAY_400,
-          GRAY_700,
-        );
-      }
+        // Description color
+        if (descriptionRef.current) {
+          descriptionRef.current.style.color = interpolateColor(
+            progress,
+            GRAY_400,
+            GRAY_700,
+          );
+        }
 
-      // Bullet items: opacity + icon color + text color
-      bulletRefs.current.forEach((li) => {
-        li.style.opacity = String(opacity);
-      });
-      bulletSvgRefs.current.forEach((svg) => {
-        svg.style.color = interpolateColor(progress, GRAY_400, TEXT_PRIMARY);
-      });
-      bulletSpanRefs.current.forEach((span) => {
-        span.style.color = interpolateColor(progress, GRAY_400, GRAY_700);
-      });
-    };
+        // Bullet items: opacity + icon color + text color
+        bulletRefs.current.forEach((li) => {
+          li.style.opacity = String(opacity);
+        });
+        bulletSvgRefs.current.forEach((svg) => {
+          svg.style.color = interpolateColor(progress, GRAY_400, TEXT_PRIMARY);
+        });
+        bulletSpanRefs.current.forEach((span) => {
+          span.style.color = interpolateColor(progress, GRAY_400, GRAY_700);
+        });
+      };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
+      return registerScrollUpdater(updateScrollStyles);
+    }, [registerScrollUpdater, sectionRef]);
 
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [sectionRef]);
-
-  return (
-    <div
-      ref={sectionRef}
-      className="min-h-screen flex items-center py-16 short:py-8"
-    >
-      <div ref={wrapperRef} className="w-full">
-        {section.label && (
-          <div
-            ref={labelWrapperRef}
-            className="mb-8 grid-interaction-blocked"
-            style={{ opacity: 0.3 }}
-          >
-            <span className="inline-block text-sm font-medium uppercase tracking-[0.2em] text-accent-orange">
-              {section.label}
-            </span>
+    return (
+      <div
+        ref={sectionRef}
+        className="min-h-screen flex items-center py-16 short:py-8"
+      >
+        <div ref={wrapperRef} className="w-full">
+          {section.label && (
             <div
-              ref={labelUnderlineRef}
-              className="mt-3 h-px bg-accent-orange-muted"
-              style={{
-                transform: "scaleX(0)",
-                transformOrigin: "left",
-                width: "100%",
-              }}
-            />
-          </div>
-        )}
-
-        <h2
-          ref={titleRef}
-          className="text-6xl lg:text-7xl short:text-5xl font-bold mb-12 short:mb-8 tracking-tight grid-interaction-blocked"
-          style={{ lineHeight: "0.9", color: COLOR_GRAY_400 }}
-        >
-          {section.title}
-        </h2>
-
-        {section.description && (
-          <p
-            ref={descriptionRef}
-            className="text-base mb-12 short:mb-8 max-w-lg leading-relaxed grid-interaction-blocked"
-            style={{ color: COLOR_GRAY_400 }}
-          >
-            {section.description}
-          </p>
-        )}
-
-        {section.bullets && (
-          <ul className="space-y-4 grid-interaction-blocked">
-            {section.bullets.map((bullet: string, bulletIndex: number) => (
-              <li
-                key={`bullet-${section.title}-${bullet}`}
-                ref={(el) => {
-                  if (el) bulletRefs.current.set(bulletIndex, el);
-                  else bulletRefs.current.delete(bulletIndex);
+              ref={labelWrapperRef}
+              className="mb-8 grid-interaction-blocked"
+              style={{ opacity: 0.3 }}
+            >
+              <span className="inline-block text-sm font-medium uppercase tracking-[0.2em] text-accent-orange">
+                {section.label}
+              </span>
+              <div
+                ref={labelUnderlineRef}
+                className="mt-3 h-px bg-accent-orange-muted"
+                style={{
+                  transform: "scaleX(0)",
+                  transformOrigin: "left",
+                  width: "100%",
                 }}
-                className="flex items-start"
-                style={{ opacity: 0.3 }}
-              >
-                <svg
+              />
+            </div>
+          )}
+
+          <h2
+            ref={titleRef}
+            className="text-6xl lg:text-7xl short:text-5xl font-bold mb-12 short:mb-8 tracking-tight grid-interaction-blocked"
+            style={{ lineHeight: "0.9", color: COLOR_GRAY_400 }}
+          >
+            {section.title}
+          </h2>
+
+          {section.description && (
+            <p
+              ref={descriptionRef}
+              className="text-base mb-12 short:mb-8 max-w-lg leading-relaxed grid-interaction-blocked"
+              style={{ color: COLOR_GRAY_400 }}
+            >
+              {section.description}
+            </p>
+          )}
+
+          {section.bullets && (
+            <ul className="space-y-4 grid-interaction-blocked">
+              {section.bullets.map((bullet: string, bulletIndex: number) => (
+                <li
+                  key={`bullet-${section.title}-${bullet}`}
                   ref={(el) => {
-                    if (el) bulletSvgRefs.current.set(bulletIndex, el);
-                    else bulletSvgRefs.current.delete(bulletIndex);
+                    if (el) bulletRefs.current.set(bulletIndex, el);
+                    else bulletRefs.current.delete(bulletIndex);
                   }}
-                  className="w-4 h-4 mt-1.5 mr-4 shrink-0"
-                  style={{ color: COLOR_GRAY_400 }}
-                  fill="currentColor"
-                  viewBox="0 0 16 16"
+                  className="flex items-start"
+                  style={{ opacity: 0.3 }}
                 >
-                  <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
-                </svg>
-                <span
-                  ref={(el) => {
-                    if (el) bulletSpanRefs.current.set(bulletIndex, el);
-                    else bulletSpanRefs.current.delete(bulletIndex);
-                  }}
-                  className="text-base"
-                  style={{ color: COLOR_GRAY_400 }}
-                >
-                  {bullet}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
+                  <svg
+                    ref={(el) => {
+                      if (el) bulletSvgRefs.current.set(bulletIndex, el);
+                      else bulletSvgRefs.current.delete(bulletIndex);
+                    }}
+                    className="w-4 h-4 mt-1.5 mr-4 shrink-0"
+                    style={{ color: COLOR_GRAY_400 }}
+                    fill="currentColor"
+                    viewBox="0 0 16 16"
+                  >
+                    <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
+                  </svg>
+                  <span
+                    ref={(el) => {
+                      if (el) bulletSpanRefs.current.set(bulletIndex, el);
+                      else bulletSpanRefs.current.delete(bulletIndex);
+                    }}
+                    className="text-base"
+                    style={{ color: COLOR_GRAY_400 }}
+                  >
+                    {bullet}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
-    </div>
-  );
-});
+    );
+  },
+);
 
 TextSection.displayName = "TextSection";
 
@@ -603,6 +603,7 @@ function StickyScrollRevealDesktopLayout({
   containerClassName,
   contentClassName,
   registerImagePanelRef,
+  registerScrollUpdater,
   sections,
   sectionRefs,
   stickyContainerRef,
@@ -611,6 +612,7 @@ function StickyScrollRevealDesktopLayout({
   containerClassName?: string;
   contentClassName?: string;
   registerImagePanelRef: (index: number, el: HTMLDivElement | null) => void;
+  registerScrollUpdater: (updater: () => void) => () => void;
   sections: StickySection[];
   sectionRefs: React.RefObject<HTMLDivElement | null>[];
   stickyContainerRef: React.RefObject<HTMLDivElement | null>;
@@ -625,6 +627,7 @@ function StickyScrollRevealDesktopLayout({
                 key={`section-${section.title}`}
                 section={section}
                 sectionRef={sectionRefs[index]}
+                registerScrollUpdater={registerScrollUpdater}
               />
             ))}
           </div>
@@ -678,6 +681,7 @@ export const StickyScrollReveal = ({
 
   // Ref registry for image panels - for direct DOM updates
   const imagePanelRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const textScrollUpdatersRef = useRef(new Set<() => void>());
 
   // Ref for desktop sticky container entrance animation
   const stickyContainerRef = useRef<HTMLDivElement>(null);
@@ -709,13 +713,30 @@ export const StickyScrollReveal = ({
     [],
   );
 
+  const registerScrollUpdater = useCallback((updater: () => void) => {
+    textScrollUpdatersRef.current.add(updater);
+    updater();
+
+    return () => {
+      textScrollUpdatersRef.current.delete(updater);
+    };
+  }, []);
+
   // ============================================================================
-  // SINGLE SCROLL SUBSCRIPTION for all image panel clipPaths
+  // SINGLE SCROLL SUBSCRIPTION for all desktop text and image mutations
   // ============================================================================
   useEffect(() => {
     if (isMobile) return;
 
-    const handleScroll = () => {
+    let rafId = 0;
+
+    const updateScrollStyles = () => {
+      rafId = 0;
+
+      textScrollUpdatersRef.current.forEach((updater) => {
+        updater();
+      });
+
       sectionRefs.forEach((sectionRef, index) => {
         if (!sectionRef.current || index === 0) return;
 
@@ -739,10 +760,21 @@ export const StickyScrollReveal = ({
       });
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
+    const scheduleUpdate = () => {
+      if (rafId === 0) {
+        rafId = requestAnimationFrame(updateScrollStyles);
+      }
+    };
 
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", scheduleUpdate, { passive: true });
+    scheduleUpdate();
+
+    return () => {
+      window.removeEventListener("scroll", scheduleUpdate);
+      if (rafId !== 0) {
+        cancelAnimationFrame(rafId);
+      }
+    };
   }, [sectionRefs, isMobile]);
 
   // Detect mobile/desktop
@@ -818,6 +850,7 @@ export const StickyScrollReveal = ({
       containerClassName={containerClassName}
       contentClassName={contentClassName}
       registerImagePanelRef={registerImagePanelRef}
+      registerScrollUpdater={registerScrollUpdater}
       sections={sections}
       sectionRefs={sectionRefs}
       stickyContainerRef={stickyContainerRef}

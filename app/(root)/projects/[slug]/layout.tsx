@@ -1,6 +1,11 @@
 import { fetchQuery } from "convex/nextjs";
 import { cacheLife, cacheTag } from "next/cache";
 import { api } from "@/convex/_generated/api";
+import {
+  getProjectCacheTag,
+  PROJECT_NAVIGATION_CACHE_TAG,
+  PROJECTS_CACHE_TAG,
+} from "@/lib/data/project-cache-tags";
 import { ProjectNavigation } from "./_components/project-navigation";
 import { ProjectCTA } from "./_components/project-cta";
 
@@ -13,17 +18,15 @@ interface LayoutProps {
 async function getNavigationData(slug: string) {
   "use cache";
   cacheLife("hours");
-  cacheTag(`project-nav-${slug}`);
+  cacheTag(
+    PROJECTS_CACHE_TAG,
+    getProjectCacheTag(slug),
+    PROJECT_NAVIGATION_CACHE_TAG,
+  );
 
-  try {
-    const data = await fetchQuery(api.projects.getProjectNavigation, {
-      projectSlug: slug,
-    });
-    return data;
-  } catch (error) {
-    console.error("Failed to fetch navigation data:", error);
-    return null;
-  }
+  return await fetchQuery(api.projects.getProjectNavigation, {
+    projectSlug: slug,
+  });
 }
 
 export default async function ProjectDetailLayout({

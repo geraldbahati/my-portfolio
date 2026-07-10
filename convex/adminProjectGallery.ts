@@ -7,6 +7,7 @@ import { action, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
 import { requireAdmin } from "./auth";
+import { triggerProjectRevalidate } from "./revalidate";
 
 const galleryTypeValidator = v.union(v.literal("feature"), v.literal("stack"));
 const deviceTypeValidator = v.optional(
@@ -70,7 +71,12 @@ export const createGalleryItem = action({
   returns: v.id("projectGallery"),
   handler: async (ctx, args): Promise<Id<"projectGallery">> => {
     await requireAdmin(ctx);
-    return await ctx.runMutation(internal.projectGallery.create, args);
+    const galleryId = await ctx.runMutation(
+      internal.projectGallery.create,
+      args,
+    );
+    await triggerProjectRevalidate(ctx, args.projectId);
+    return galleryId;
   },
 });
 
@@ -92,7 +98,14 @@ export const updateGalleryItem = action({
   returns: v.null(),
   handler: async (ctx, args): Promise<null> => {
     await requireAdmin(ctx);
-    return await ctx.runMutation(internal.projectGallery.update, args);
+    const item = await ctx.runQuery(internal.projectGallery.getByDocId, {
+      galleryId: args.galleryId,
+    });
+    await ctx.runMutation(internal.projectGallery.update, args);
+    if (item) {
+      await triggerProjectRevalidate(ctx, item.projectId);
+    }
+    return null;
   },
 });
 
@@ -129,7 +142,11 @@ export const deleteGalleryItem = action({
       }
     }
 
-    return await ctx.runMutation(internal.projectGallery.remove, args);
+    await ctx.runMutation(internal.projectGallery.remove, args);
+    if (existing) {
+      await triggerProjectRevalidate(ctx, existing.projectId);
+    }
+    return null;
   },
 });
 
@@ -148,7 +165,16 @@ export const reorderGallery = action({
   returns: v.null(),
   handler: async (ctx, args): Promise<null> => {
     await requireAdmin(ctx);
-    return await ctx.runMutation(internal.projectGallery.reorder, args);
+    const firstItem = args.galleryOrders[0]
+      ? await ctx.runQuery(internal.projectGallery.getByDocId, {
+          galleryId: args.galleryOrders[0].galleryId,
+        })
+      : null;
+    await ctx.runMutation(internal.projectGallery.reorder, args);
+    if (firstItem) {
+      await triggerProjectRevalidate(ctx, firstItem.projectId);
+    }
+    return null;
   },
 });
 

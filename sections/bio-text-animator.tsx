@@ -1,6 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
+import { getBioCharOpacity } from "@/lib/bio-char-opacity";
+
+export type SubscribeToTextProgress = (
+  listener: (progress: number) => void,
+) => () => void;
 
 /**
  * BioTextAnimator - Thin client component for per-character text reveal.
@@ -10,15 +15,10 @@ import { useEffect, useRef } from "react";
  * progress value forwarded from the shell.
  */
 export default function BioTextAnimator({
-  getTextProgress,
+  subscribeToTextProgress,
 }: {
-  getTextProgress: () => number;
+  subscribeToTextProgress: SubscribeToTextProgress;
 }) {
-  const charEls = useRef<{ el: HTMLElement; index: number }[]>([]);
-  const totalChars = useRef(0);
-  const rafId = useRef(0);
-  const lastProgress = useRef(-1);
-
   useEffect(() => {
     // Gather all character elements from the server-rendered bio
     const bioSection = document.querySelector("[data-bio-section]");
@@ -28,41 +28,19 @@ export default function BioTextAnimator({
       bioSection.getAttribute("data-total-chars") || "0",
       10,
     );
-    totalChars.current = total;
 
     const els = bioSection.querySelectorAll<HTMLElement>("[data-char-index]");
-    charEls.current = Array.from(els).map((el) => ({
+    const charEls = Array.from(els).map((el) => ({
       el,
       index: parseInt(el.getAttribute("data-char-index") || "0", 10),
     }));
 
-    // Animation loop driven by the shell's scroll progress
-    function animate() {
-      const progress = getTextProgress();
-
-      // Skip if progress hasn't changed
-      if (progress !== lastProgress.current) {
-        lastProgress.current = progress;
-        const total = totalChars.current;
-
-        for (const { el, index } of charEls.current) {
-          const charStart = index / total;
-          const charWidth = 3 / total;
-          const t = Math.min(
-            1,
-            Math.max(0, (progress - charStart) / charWidth),
-          );
-          el.style.opacity = String(0.2 + 0.8 * t);
-        }
+    return subscribeToTextProgress((progress) => {
+      for (const { el, index } of charEls) {
+        el.style.opacity = String(getBioCharOpacity(progress, index, total));
       }
-
-      rafId.current = requestAnimationFrame(animate);
-    }
-
-    rafId.current = requestAnimationFrame(animate);
-
-    return () => cancelAnimationFrame(rafId.current);
-  }, [getTextProgress]);
+    });
+  }, [subscribeToTextProgress]);
 
   return null;
 }

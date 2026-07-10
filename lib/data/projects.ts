@@ -15,6 +15,7 @@
 import { cacheLife, cacheTag } from "next/cache";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
+import { getProjectCacheTag, PROJECTS_CACHE_TAG } from "./project-cache-tags";
 
 /**
  * Project type matching Convex schema
@@ -57,16 +58,11 @@ export interface Project {
  */
 export async function getCachedProjects(): Promise<Project[]> {
   "use cache";
-  cacheTag("projects");
+  cacheTag(PROJECTS_CACHE_TAG);
   cacheLife("days");
 
-  try {
-    const projects = await fetchQuery(api.projects.getPublishedProjects);
-    return projects as Project[];
-  } catch (error) {
-    console.warn("Could not fetch projects:", error);
-    return [];
-  }
+  const projects = await fetchQuery(api.projects.getPublishedProjects);
+  return projects as Project[];
 }
 
 /**
@@ -79,21 +75,16 @@ export async function getCachedProjects(): Promise<Project[]> {
  * @returns The project if found, null otherwise
  */
 export async function getCachedProjectById(
-  projectId: string
+  projectId: string,
 ): Promise<Project | null> {
   "use cache";
-  cacheTag("projects", `project-${projectId}`);
+  cacheTag(PROJECTS_CACHE_TAG, getProjectCacheTag(projectId));
   cacheLife("days");
 
-  try {
-    const project = await fetchQuery(api.projects.getProjectById, {
-      projectId,
-    });
-    return project as Project | null;
-  } catch (error) {
-    console.error(`Error fetching project ${projectId}:`, error);
-    return null;
-  }
+  const project = await fetchQuery(api.projects.getProjectById, {
+    projectId,
+  });
+  return project as Project | null;
 }
 
 /**
@@ -103,14 +94,9 @@ export async function getCachedProjectById(
  */
 export async function getCachedProjectsCount(): Promise<number> {
   "use cache";
-  cacheTag("projects", "projects-count");
+  cacheTag(PROJECTS_CACHE_TAG);
   cacheLife("days");
 
-  try {
-    const projects = await fetchQuery(api.projects.getPublishedProjects);
-    return projects.length;
-  } catch (error) {
-    console.error("Error fetching projects count:", error);
-    return 0;
-  }
+  const projects = await fetchQuery(api.projects.getPublishedProjects);
+  return projects.length;
 }

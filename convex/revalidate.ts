@@ -1,3 +1,7 @@
+import type { Id } from "./_generated/dataModel";
+import { internal } from "./_generated/api";
+import type { ActionCtx } from "./_generated/server";
+
 /**
  * Helper to trigger on-demand cache revalidation on the Next.js site.
  *
@@ -10,8 +14,19 @@
  * - SITE_REVALIDATE_URL: the site origin, e.g. https://geraldbahati.dev
  * - REVALIDATE_SECRET:    shared secret matching the Next route handler
  */
+const PROJECTS_CACHE_TAG = "projects";
+const PROJECT_NAVIGATION_CACHE_TAG = "project-navigation";
+
+export function getProjectRevalidationTags(projectSlug?: string): string[] {
+  return [
+    PROJECTS_CACHE_TAG,
+    PROJECT_NAVIGATION_CACHE_TAG,
+    ...(projectSlug ? [`project-${projectSlug}`] : []),
+  ];
+}
+
 export async function triggerRevalidate(
-  tags: string[] = ["projects"],
+  tags: string[] = [PROJECTS_CACHE_TAG],
 ): Promise<void> {
   const baseUrl = process.env.SITE_REVALIDATE_URL;
   const secret = process.env.REVALIDATE_SECRET;
@@ -39,4 +54,16 @@ export async function triggerRevalidate(
   } catch (error) {
     console.warn("[revalidate] request error:", error);
   }
+}
+
+export async function triggerProjectRevalidate(
+  ctx: ActionCtx,
+  projectId: Id<"projects">,
+): Promise<void> {
+  const project: { id: string } | null = await ctx.runQuery(
+    internal.projects.getProjectByDocId,
+    { projectId },
+  );
+
+  await triggerRevalidate(getProjectRevalidationTags(project?.id));
 }

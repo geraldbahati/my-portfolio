@@ -88,18 +88,78 @@ export default function BioContent({
             {/* Tagline and Number */}
             <div className="flex justify-between items-start">
               <div className="text-xs sm:text-sm font-medium tracking-[0.2em] uppercase text-gray-600">
-                {taglineWords.map((word, wordIdx) => {
-                  const wordOffset = taglineWordOffsets[wordIdx];
+                <span className="sr-only">{tagline}</span>
+                <span aria-hidden="true">
+                  {taglineWords.map((word, wordIdx) => {
+                    const wordOffset = taglineWordOffsets[wordIdx];
+                    return (
+                      <span
+                        key={`tag-word-${wordOffset}`}
+                        className="inline-block whitespace-nowrap"
+                      >
+                        {word.split("").map((char, charIdx) => {
+                          const charIndex = wordOffset + charIdx;
+                          return (
+                            <span
+                              key={`tag-${charIndex}`}
+                              className="inline-block"
+                              data-char-index={charIndex}
+                              style={{ opacity: 0.2 }}
+                            >
+                              {char}
+                            </span>
+                          );
+                        })}
+                        {wordIdx < taglineWords.length - 1 && (
+                          <span
+                            className="inline-block"
+                            style={{ width: "0.25em" }}
+                          >
+                            {" "}
+                          </span>
+                        )}
+                      </span>
+                    );
+                  })}
+                </span>
+              </div>
+
+              <div className="text-xs sm:text-sm font-light text-gray-400 whitespace-nowrap">
+                <span className="sr-only">{numberText}</span>
+                <span aria-hidden="true">
+                  {numberChars.map((char, i) => {
+                    const charIndex = numberOffset + i;
+                    return (
+                      <span
+                        key={`num-${charIndex}`}
+                        className="inline-block"
+                        data-char-index={charIndex}
+                        style={{ opacity: 0.2 }}
+                      >
+                        {char}
+                      </span>
+                    );
+                  })}
+                </span>
+              </div>
+            </div>
+
+            {/* Main Text */}
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl short:text-3xl leading-tight font-light text-gray-900">
+              <span className="sr-only">{mainText}</span>
+              <span aria-hidden="true">
+                {mainTextWords.map((word, wordIdx) => {
+                  const wordOffset = charOffset + mainWordOffsets[wordIdx];
                   return (
                     <span
-                      key={`tag-word-${wordOffset}`}
+                      key={`main-word-${wordOffset}`}
                       className="inline-block whitespace-nowrap"
                     >
                       {word.split("").map((char, charIdx) => {
                         const charIndex = wordOffset + charIdx;
                         return (
                           <span
-                            key={`tag-${charIndex}`}
+                            key={`main-${charIndex}`}
                             className="inline-block"
                             data-char-index={charIndex}
                             style={{ opacity: 0.2 }}
@@ -108,7 +168,7 @@ export default function BioContent({
                           </span>
                         );
                       })}
-                      {wordIdx < taglineWords.length - 1 && (
+                      {wordIdx < mainTextWords.length - 1 && (
                         <span
                           className="inline-block"
                           style={{ width: "0.25em" }}
@@ -119,58 +179,7 @@ export default function BioContent({
                     </span>
                   );
                 })}
-              </div>
-
-              <div className="text-xs sm:text-sm font-light text-gray-400 whitespace-nowrap">
-                {numberChars.map((char, i) => {
-                  const charIndex = numberOffset + i;
-                  return (
-                    <span
-                      key={`num-${charIndex}`}
-                      className="inline-block"
-                      data-char-index={charIndex}
-                      style={{ opacity: 0.2 }}
-                    >
-                      {char}
-                    </span>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Main Text */}
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl short:text-3xl leading-tight font-light text-gray-900">
-              {mainTextWords.map((word, wordIdx) => {
-                const wordOffset = charOffset + mainWordOffsets[wordIdx];
-                return (
-                  <span
-                    key={`main-word-${wordOffset}`}
-                    className="inline-block whitespace-nowrap"
-                  >
-                    {word.split("").map((char, charIdx) => {
-                      const charIndex = wordOffset + charIdx;
-                      return (
-                        <span
-                          key={`main-${charIndex}`}
-                          className="inline-block"
-                          data-char-index={charIndex}
-                          style={{ opacity: 0.2 }}
-                        >
-                          {char}
-                        </span>
-                      );
-                    })}
-                    {wordIdx < mainTextWords.length - 1 && (
-                      <span
-                        className="inline-block"
-                        style={{ width: "0.25em" }}
-                      >
-                        {" "}
-                      </span>
-                    )}
-                  </span>
-                );
-              })}
+              </span>
             </h2>
 
             {/* CTA Button */}

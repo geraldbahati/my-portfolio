@@ -15,6 +15,35 @@ const rateLimiter = new RateLimiter(components.rateLimiter, {
   contactForm: { kind: "token bucket", rate: 5, period: HOUR, capacity: 3 },
 });
 
+const contactStatusValidator = v.union(
+  v.literal("pending"),
+  v.literal("sent"),
+  v.literal("delivered"),
+  v.literal("failed"),
+);
+
+const contactSubmissionValidator = v.object({
+  _id: v.id("contactSubmissions"),
+  _creationTime: v.number(),
+  name: v.string(),
+  email: v.string(),
+  message: v.string(),
+  emailId: v.optional(v.string()),
+  status: contactStatusValidator,
+  submittedAt: v.string(),
+  clientIP: v.optional(v.string()),
+  userAgent: v.optional(v.string()),
+});
+
+export function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+}
+
 function getContactRateLimitKey(args: { clientIP?: string; email: string }) {
   const normalizedIp = args.clientIP?.trim();
   if (normalizedIp) {
@@ -32,6 +61,18 @@ export const submitContactForm = mutation({
     privacyConsent: v.boolean(),
     clientIP: v.optional(v.string()),
   },
+  returns: v.union(
+    v.object({
+      success: v.literal(true),
+      message: v.string(),
+      submissionId: v.id("contactSubmissions"),
+      emailId: v.string(),
+    }),
+    v.object({
+      success: v.literal(false),
+      error: v.string(),
+    }),
+  ),
   handler: async (ctx, args) => {
     try {
       // Validate privacy consent
@@ -51,19 +92,15 @@ export const submitContactForm = mutation({
         );
       }
 
-      // Sanitize message content
-      const sanitizedMessage = args.message
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#x27;")
-        .replace(/\//g, "&#x2F;");
+      const escapedName = escapeHtml(args.name);
+      const escapedEmail = escapeHtml(args.email);
+      const escapedMessage = escapeHtml(args.message);
 
       // Store submission in database first
       const submissionId = await ctx.db.insert("contactSubmissions", {
         name: args.name,
         email: args.email,
-        message: sanitizedMessage,
+        message: escapedMessage,
         status: "pending",
         submittedAt: Date.now(),
         clientIP: args.clientIP,
@@ -76,7 +113,7 @@ export const submitContactForm = mutation({
             process.env.SENDER_EMAIL ||
             "Gerald Bahati <contact@yourdomain.com>",
           to: process.env.RECIPIENT_EMAIL || "your-email@example.com",
-          subject: `Portfolio Contact: ${args.name}`,
+          subject: `Portfolio Contact: ${escapedName}`,
           html: `
             <!DOCTYPE html>
             <html>
@@ -94,7 +131,7 @@ export const submitContactForm = mutation({
                     <!-- Header -->
                     <tr><td style="background-color: #141414; border-radius: 12px 12px 0 0; padding: 32px 32px 24px; border-top: 3px solid #d97706;">
                       <p style="margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #d97706; font-weight: 600;">New Submission</p>
-                      <h1 style="margin: 0; font-size: 22px; font-weight: 700; color: #ffffff; line-height: 1.3;">Message from ${args.name}</h1>
+                      <h1 style="margin: 0; font-size: 22px; font-weight: 700; color: #ffffff; line-height: 1.3;">Message from ${escapedName}</h1>
                     </td></tr>
 
                     <!-- Contact Details -->
@@ -103,11 +140,11 @@ export const submitContactForm = mutation({
                         <tr>
                           <td style="padding: 16px 20px; border-bottom: 1px solid #262626;">
                             <p style="margin: 0; font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #737373;">Name</p>
-                            <p style="margin: 4px 0 0; font-size: 15px; color: #e5e5e5; font-weight: 500;">${args.name}</p>
+                            <p style="margin: 4px 0 0; font-size: 15px; color: #e5e5e5; font-weight: 500;">${escapedName}</p>
                           </td>
                           <td style="padding: 16px 20px; border-bottom: 1px solid #262626; border-left: 1px solid #262626;">
                             <p style="margin: 0; font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #737373;">Email</p>
-                            <p style="margin: 4px 0 0; font-size: 15px; color: #d97706; font-weight: 500;">${args.email}</p>
+                            <p style="margin: 4px 0 0; font-size: 15px; color: #d97706; font-weight: 500;">${escapedEmail}</p>
                           </td>
                         </tr>
                         <tr>
@@ -128,7 +165,7 @@ export const submitContactForm = mutation({
                       <p style="margin: 0 0 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #737373; font-weight: 600;">Message</p>
                       <div style="background-color: #1a1a1a; border-radius: 8px; border: 1px solid #262626; padding: 20px;">
                         <p style="margin: 0; font-size: 15px; line-height: 1.7; color: #d4d4d4;">
-                          ${sanitizedMessage.replace(/\n/g, "<br>")}
+                          ${escapedMessage.replace(/\n/g, "<br>")}
                         </p>
                       </div>
                     </td></tr>
@@ -137,7 +174,7 @@ export const submitContactForm = mutation({
                     <tr><td style="background-color: #141414; padding: 0 32px 32px; border-radius: 0 0 12px 12px;">
                       <table role="presentation" cellpadding="0" cellspacing="0">
                         <tr><td style="background-color: #d97706; border-radius: 6px;">
-                          <a href="mailto:${args.email}" style="display: inline-block; padding: 12px 24px; font-size: 14px; font-weight: 600; color: #000000; text-decoration: none; letter-spacing: 0.5px;">Reply to ${args.name}</a>
+                          <a href="mailto:${escapedEmail}" style="display: inline-block; padding: 12px 24px; font-size: 14px; font-weight: 600; color: #000000; text-decoration: none; letter-spacing: 0.5px;">Reply to ${escapedName}</a>
                         </td></tr>
                       </table>
                     </td></tr>
@@ -183,7 +220,7 @@ export const submitContactForm = mutation({
 
                       <!-- Greeting -->
                       <h1 style="margin: 0 0 8px; font-size: 24px; font-weight: 700; color: #ffffff; line-height: 1.3;">Thanks for reaching out!</h1>
-                      <p style="margin: 0 0 24px; font-size: 15px; color: #a3a3a3;">Hi ${args.name},</p>
+                      <p style="margin: 0 0 24px; font-size: 15px; color: #a3a3a3;">Hi ${escapedName},</p>
 
                       <p style="margin: 0 0 32px; font-size: 15px; line-height: 1.7; color: #d4d4d4;">
                         Thanks for getting in touch. I've received your message and will get back to you shortly.
@@ -235,7 +272,7 @@ export const submitContactForm = mutation({
         });
 
         return {
-          success: true,
+          success: true as const,
           message: "Thank you for your message! I'll get back to you soon.",
           submissionId,
           emailId,
@@ -256,20 +293,20 @@ export const submitContactForm = mutation({
       if (error instanceof Error) {
         if (error.message.includes("Too many requests")) {
           return {
-            success: false,
+            success: false as const,
             error: error.message,
           };
         }
         if (error.message.includes("Privacy consent")) {
           return {
-            success: false,
+            success: false as const,
             error: "You must agree to the privacy policy to submit this form.",
           };
         }
       }
 
       return {
-        success: false,
+        success: false as const,
         error: "Something went wrong. Please try again later.",
       };
     }
@@ -293,15 +330,9 @@ export const getContactSubmissionCount = query({
 export const getContactSubmissions = query({
   args: {
     limit: v.optional(v.number()),
-    status: v.optional(
-      v.union(
-        v.literal("pending"),
-        v.literal("sent"),
-        v.literal("delivered"),
-        v.literal("failed"),
-      ),
-    ),
+    status: v.optional(contactStatusValidator),
   },
+  returns: v.array(contactSubmissionValidator),
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
 
@@ -335,6 +366,7 @@ export const getContactSubmissions = query({
 
 export const getContactSubmission = query({
   args: { id: v.id("contactSubmissions") },
+  returns: v.union(contactSubmissionValidator, v.null()),
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
 
@@ -350,6 +382,13 @@ export const getContactSubmission = query({
 
 export const getContactStats = query({
   args: {},
+  returns: v.object({
+    total: v.number(),
+    today: v.number(),
+    week: v.number(),
+    pending: v.number(),
+    failed: v.number(),
+  }),
   handler: async (ctx) => {
     await requireAdmin(ctx);
     const now = Date.now();
