@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import { useUploadFile } from "@convex-dev/r2/react";
 import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -11,6 +11,7 @@ import {
   getTransformedImageUrl,
   getStreamVideoUrls,
 } from "@/lib/cloudflare-media";
+import { sanitizeMediaPreviewUrl } from "@/lib/media-utils";
 
 interface MediaUploadProps {
   onUploadComplete: (url: string, metadata?: UploadMetadata) => void;
@@ -147,7 +148,13 @@ export function MediaUpload({
     status: "idle",
     progress: 0,
   });
-  const [preview, setPreview] = useState<string | null>(currentUrl || null);
+  const [preview, setPreview] = useState<string | null>(
+    sanitizeMediaPreviewUrl(currentUrl),
+  );
+  const safePreview = useMemo(
+    () => sanitizeMediaPreviewUrl(preview),
+    [preview],
+  );
 
   /**
    * Upload video to Cloudflare Stream
@@ -382,14 +389,14 @@ export function MediaUpload({
           disabled={isUploading}
         />
 
-        {preview ? (
+        {safePreview ? (
           <div className="relative">
-            {preview.includes("video") ||
-            preview.endsWith(".mp4") ||
-            preview.endsWith(".webm") ||
-            preview.includes(".m3u8") ? (
+            {safePreview.includes("video") ||
+            safePreview.endsWith(".mp4") ||
+            safePreview.endsWith(".webm") ||
+            safePreview.includes(".m3u8") ? (
               <video
-                src={preview}
+                src={safePreview}
                 className="w-full h-32 object-cover rounded"
                 muted
                 playsInline
@@ -397,7 +404,7 @@ export function MediaUpload({
             ) : (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={preview}
+                src={safePreview}
                 alt="Preview"
                 className="w-full h-32 object-cover rounded"
               />

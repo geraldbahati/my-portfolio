@@ -28,6 +28,47 @@ function hostnameEndsWith(url: string, domain: string): boolean {
   }
 }
 
+const ALLOWED_PREVIEW_HOSTS = [
+  R2_DOMAIN,
+  STREAM_DOMAIN,
+  TRANSFORM_ZONE,
+  "cloudinary.com",
+] as const;
+
+/**
+ * Allowlist media preview URLs before binding to DOM src attributes.
+ * Permits local blob previews during upload and trusted CDN/media hosts.
+ */
+export function sanitizeMediaPreviewUrl(
+  url: string | null | undefined,
+): string | null {
+  if (!url) return null;
+
+  if (url.startsWith("blob:")) {
+    try {
+      new URL(url);
+      return url;
+    } catch {
+      return null;
+    }
+  }
+
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "https:") {
+      return null;
+    }
+
+    const isAllowed = ALLOWED_PREVIEW_HOSTS.some((domain) =>
+      hostnameEndsWith(url, domain),
+    );
+
+    return isAllowed ? url : null;
+  } catch {
+    return null;
+  }
+}
+
 // ============================================================================
 // URL Detection
 // ============================================================================
