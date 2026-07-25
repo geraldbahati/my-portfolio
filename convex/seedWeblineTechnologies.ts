@@ -155,13 +155,19 @@ The site's job is to establish credibility before a visitor ever reaches a produ
     },
   ],
 
+  // ProjectGallery renders `feature` as the left column — its own comment calls
+  // it the "Long Scrolling Screenshot" — and `stack` as the right-hand column of
+  // mockups. So the tall header-to-footer capture belongs in `feature`, and the
+  // landscape scene shots stack beside it. (`deviceType` is stored but the
+  // component never reads it.)
   gallery: [
-    { src: img("landing-scene-01"), alt: "Hero — 'Technology that keeps business moving' with drifting image collage", caption: "Hero: an animated collage assembles as the page settles", galleryType: "feature" as const, width: 2400, height: 1350, deviceType: "desktop" as const, order: 0 },
-    { src: img("landing-scene-02"), alt: "Infrastructure chapter — resilient networks", caption: "Each service pillar pins as a full-bleed chapter", galleryType: "stack" as const, width: 2400, height: 1350, deviceType: "desktop" as const, order: 1 },
-    { src: img("landing-scene-04"), alt: "Connected security chapter", caption: "Imagery moves behind pinned copy as you scroll", galleryType: "stack" as const, width: 2400, height: 1350, deviceType: "desktop" as const, order: 2 },
-    { src: img("landing-scene-06"), alt: "Positioning statement", caption: "The argument, stated once, in full", galleryType: "stack" as const, width: 2400, height: 1350, deviceType: "desktop" as const, order: 3 },
-    { src: img("landing-scene-09"), alt: "Leadership quote section", caption: "Leadership quote closes the narrative", galleryType: "stack" as const, width: 2400, height: 1350, deviceType: "desktop" as const, order: 4 },
-    { src: img("landing-homepage-full"), alt: "Full Webline Technologies homepage, header to footer", caption: "The complete page, top to bottom", galleryType: "stack" as const, width: 1400, height: 7876, deviceType: "full-width" as const, order: 5 },
+    { src: img("landing-homepage-full"), alt: "Full Webline Technologies homepage, header to footer", caption: "The complete page, top to bottom", galleryType: "feature" as const, width: 1400, height: 7876, deviceType: "full-width" as const, order: 0 },
+    { src: img("landing-scene-01"), alt: "Hero — 'Technology that keeps business moving' with drifting image collage", caption: "Hero: an animated collage assembles as the page settles", galleryType: "stack" as const, width: 2400, height: 1350, deviceType: "desktop" as const, order: 1 },
+    { src: img("landing-scene-02"), alt: "Infrastructure chapter — resilient networks", caption: "Each service pillar pins as a full-bleed chapter", galleryType: "stack" as const, width: 2400, height: 1350, deviceType: "desktop" as const, order: 2 },
+    { src: img("landing-scene-04"), alt: "Connected security chapter", caption: "Imagery moves behind pinned copy as you scroll", galleryType: "stack" as const, width: 2400, height: 1350, deviceType: "desktop" as const, order: 3 },
+    { src: img("landing-scene-06"), alt: "Positioning statement", caption: "The argument, stated once, in full", galleryType: "stack" as const, width: 2400, height: 1350, deviceType: "desktop" as const, order: 4 },
+    { src: img("landing-scene-09"), alt: "Leadership quote section", caption: "Leadership quote closes the narrative", galleryType: "stack" as const, width: 2400, height: 1350, deviceType: "desktop" as const, order: 5 },
+    { src: img("landing-scene-10"), alt: "Closing section and footer", caption: "'Built for today, ready for what's next' — closing and footer", galleryType: "stack" as const, width: 2400, height: 1350, deviceType: "desktop" as const, order: 6 },
   ],
 };
 
@@ -306,14 +312,16 @@ Anonymous visitors get a real cart backed by an HTTP-only session cookie. On sig
     },
   ],
 
+  // Same arrangement: header-to-footer capture in the left `feature` column,
+  // component close-ups stacked on the right.
   gallery: [
-    { src: img("store-01-hero"), alt: "Webline Store homepage hero and category tiles", caption: "Homepage: hero carousel over a six-category grid", galleryType: "feature" as const, width: 2400, height: 1350, deviceType: "desktop" as const, order: 0 },
-    { src: img("store-09-product-detail"), alt: "Product detail page with gallery, key features and specifications", caption: "Product detail — gallery, features, full specification table", galleryType: "stack" as const, width: 2400, height: 1350, deviceType: "desktop" as const, order: 1 },
-    { src: img("store-07-product-card"), alt: "Product card hover state revealing quick add", caption: "Product card reveals quick-add on hover", galleryType: "stack" as const, width: 860, height: 1144, deviceType: "mobile" as const, order: 2 },
-    { src: img("store-03-mega-menu"), alt: "Store navigation mega menu open", caption: "Category navigation", galleryType: "stack" as const, width: 2400, height: 620, deviceType: "desktop" as const, order: 3 },
+    { src: img("store-homepage-full"), alt: "Full Webline Store homepage, header to footer", caption: "The complete homepage, top to bottom", galleryType: "feature" as const, width: 1400, height: 4776, deviceType: "full-width" as const, order: 0 },
+    { src: img("store-01-hero"), alt: "Webline Store homepage hero and category tiles", caption: "Hero carousel over a six-category grid", galleryType: "stack" as const, width: 2400, height: 1350, deviceType: "desktop" as const, order: 1 },
+    { src: img("store-09-product-detail"), alt: "Product detail page with gallery, key features and specifications", caption: "Product detail — gallery, features, full specification table", galleryType: "stack" as const, width: 2400, height: 1350, deviceType: "desktop" as const, order: 2 },
+    { src: img("store-13-catalogue"), alt: "Full product catalogue with faceted filters", caption: "Catalogue with server-driven faceted search", galleryType: "stack" as const, width: 2400, height: 1350, deviceType: "desktop" as const, order: 3 },
     { src: img("store-10-goes-great-with"), alt: "'Goes great with' recommendation module", caption: "Recommendations with inline variant selection and add-to-cart", galleryType: "stack" as const, width: 1552, height: 796, deviceType: "tablet" as const, order: 4 },
-    { src: img("store-13-catalogue"), alt: "Full product catalogue with faceted filters", caption: "Catalogue with server-driven faceted search", galleryType: "stack" as const, width: 2400, height: 1350, deviceType: "desktop" as const, order: 5 },
-    { src: img("store-homepage-full"), alt: "Full Webline Store homepage, header to footer", caption: "The complete homepage, top to bottom", galleryType: "stack" as const, width: 1400, height: 4776, deviceType: "full-width" as const, order: 6 },
+    { src: img("store-03-mega-menu"), alt: "Store navigation mega menu open", caption: "Category navigation", galleryType: "stack" as const, width: 2400, height: 620, deviceType: "desktop" as const, order: 5 },
+    { src: img("store-07-product-card"), alt: "Product card hover state revealing quick add", caption: "Product card reveals quick-add on hover", galleryType: "stack" as const, width: 860, height: 1144, deviceType: "mobile" as const, order: 6 },
   ],
 };
 
