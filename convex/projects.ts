@@ -455,6 +455,12 @@ export const getFullProjectDetails = query({
           period: v.optional(v.string()),
           year: v.optional(v.number()),
           features: v.optional(v.array(v.string())),
+          // These three exist in the schema and are writable from the admin
+          // details form, but were missing here — any project saved with a
+          // video set made this query fail its returns validator at runtime.
+          videoUrl: v.optional(v.string()),
+          videoPoster: v.optional(v.string()),
+          videoAlt: v.optional(v.string()),
           colorPalette: v.optional(colorPaletteValidator),
           relatedProjectIds: v.optional(v.array(v.string())),
           createdAt: v.number(),
