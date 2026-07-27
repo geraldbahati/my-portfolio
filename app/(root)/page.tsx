@@ -99,7 +99,8 @@ const personLd = {
   ],
 };
 
-export default async function Home() {
+/** Static homepage shell; below-fold sections retain their own fallbacks. */
+export default function Home() {
   return (
     <main id="main-content">
       <script type="application/ld+json">{JSON.stringify(websiteLd)}</script>

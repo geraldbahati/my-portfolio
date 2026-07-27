@@ -42,15 +42,83 @@ type SidebarContextProps = {
   toggleSidebar: () => void;
 };
 
-const SidebarContext = React.createContext<SidebarContextProps | null>(null);
+type BooleanStateSetter = React.Dispatch<React.SetStateAction<boolean>>;
+
+const SidebarOpenContext = React.createContext<boolean | null>(null);
+const SidebarSetOpenPropContext = React.createContext<
+  ((open: boolean) => void) | null
+>(null);
+const SidebarInternalSetOpenContext =
+  React.createContext<BooleanStateSetter | null>(null);
+const SidebarOpenMobileContext = React.createContext<boolean | null>(null);
+const SidebarSetOpenMobileContext =
+  React.createContext<BooleanStateSetter | null>(null);
+const SidebarIsMobileContext = React.createContext<boolean | null>(null);
 
 function useSidebar() {
-  const context = React.useContext(SidebarContext);
-  if (!context) {
+  const open = React.useContext(SidebarOpenContext);
+  const setOpenProp = React.useContext(SidebarSetOpenPropContext);
+  const setInternalOpen = React.useContext(SidebarInternalSetOpenContext);
+  const openMobile = React.useContext(SidebarOpenMobileContext);
+  const setOpenMobile = React.useContext(SidebarSetOpenMobileContext);
+  const isMobile = React.useContext(SidebarIsMobileContext);
+
+  if (
+    open === null ||
+    setInternalOpen === null ||
+    openMobile === null ||
+    setOpenMobile === null ||
+    isMobile === null
+  ) {
     throw new Error("useSidebar must be used within a SidebarProvider.");
   }
 
-  return context;
+  const setOpen = (value: boolean | ((value: boolean) => boolean)) => {
+    const openState = typeof value === "function" ? value(open) : value;
+    if (setOpenProp) {
+      setOpenProp(openState);
+    } else {
+      setInternalOpen(openState);
+    }
+
+    document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
+  };
+
+  const toggleSidebar = () => {
+    return isMobile ? setOpenMobile((current) => !current) : setOpen(!open);
+  };
+
+  return {
+    state: open ? "expanded" : "collapsed",
+    open,
+    setOpen,
+    openMobile,
+    setOpenMobile,
+    isMobile,
+    toggleSidebar,
+  } satisfies SidebarContextProps;
+}
+
+function SidebarKeyboardShortcut() {
+  const { toggleSidebar } = useSidebar();
+  const toggleSidebarFromShortcut = React.useEffectEvent(toggleSidebar);
+
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
+        (event.metaKey || event.ctrlKey)
+      ) {
+        event.preventDefault();
+        toggleSidebarFromShortcut();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  return null;
 }
 
 function SidebarProvider({
@@ -73,82 +141,40 @@ function SidebarProvider({
   // We use openProp and setOpenProp for control from outside the component.
   const [_open, _setOpen] = React.useState(defaultOpen);
   const open = openProp ?? _open;
-  const setOpen = React.useCallback(
-    (value: boolean | ((value: boolean) => boolean)) => {
-      const openState = typeof value === "function" ? value(open) : value;
-      if (setOpenProp) {
-        setOpenProp(openState);
-      } else {
-        _setOpen(openState);
-      }
-
-      // This sets the cookie to keep the sidebar state.
-      document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
-    },
-    [open, setOpenProp],
-  );
-
-  // Helper to toggle the sidebar.
-  const toggleSidebar = React.useCallback(() => {
-    return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open);
-  }, [isMobile, setOpen]);
-  const toggleSidebarFromShortcut = React.useEffectEvent(toggleSidebar);
-
-  // Adds a keyboard shortcut to toggle the sidebar.
-  React.useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (
-        event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
-        (event.metaKey || event.ctrlKey)
-      ) {
-        event.preventDefault();
-        toggleSidebarFromShortcut();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
-  // We add a state so that we can do data-state="expanded" or "collapsed".
-  // This makes it easier to style the sidebar with Tailwind classes.
-  const state = open ? "expanded" : "collapsed";
-
-  const contextValue = React.useMemo<SidebarContextProps>(
-    () => ({
-      state,
-      open,
-      setOpen,
-      isMobile,
-      openMobile,
-      setOpenMobile,
-      toggleSidebar,
-    }),
-    [state, open, setOpen, isMobile, openMobile, toggleSidebar],
-  );
 
   return (
-    <SidebarContext.Provider value={contextValue}>
-      <TooltipProvider delayDuration={0}>
-        <div
-          data-slot="sidebar-wrapper"
-          style={
-            {
-              "--sidebar-width": SIDEBAR_WIDTH,
-              "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
-              ...style,
-            } as React.CSSProperties
-          }
-          className={cn(
-            "group/sidebar-wrapper has-data-[variant=inset]:bg-sidebar flex min-h-svh w-full",
-            className,
-          )}
-          {...props}
-        >
-          {children}
-        </div>
-      </TooltipProvider>
-    </SidebarContext.Provider>
+    <SidebarOpenContext.Provider value={open}>
+      <SidebarSetOpenPropContext.Provider value={setOpenProp ?? null}>
+        <SidebarInternalSetOpenContext.Provider value={_setOpen}>
+          <SidebarOpenMobileContext.Provider value={openMobile}>
+            <SidebarSetOpenMobileContext.Provider value={setOpenMobile}>
+              <SidebarIsMobileContext.Provider value={isMobile}>
+                <SidebarKeyboardShortcut />
+                <TooltipProvider delayDuration={0}>
+                  <div
+                    data-slot="sidebar-wrapper"
+                    style={
+                      {
+                        "--sidebar-width": SIDEBAR_WIDTH,
+                        "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
+                        ...style,
+                      } as React.CSSProperties
+                    }
+                    className={cn(
+                      "group/sidebar-wrapper has-data-[variant=inset]:bg-sidebar flex min-h-svh w-full",
+                      className,
+                    )}
+                    {...props}
+                  >
+                    {children}
+                  </div>
+                </TooltipProvider>
+              </SidebarIsMobileContext.Provider>
+            </SidebarSetOpenMobileContext.Provider>
+          </SidebarOpenMobileContext.Provider>
+        </SidebarInternalSetOpenContext.Provider>
+      </SidebarSetOpenPropContext.Provider>
+    </SidebarOpenContext.Provider>
   );
 }
 

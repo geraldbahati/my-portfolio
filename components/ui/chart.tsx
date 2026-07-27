@@ -38,20 +38,16 @@ export type ChartConfig = {
   );
 };
 
-type ChartContextProps = {
-  config: ChartConfig;
-};
-
-const ChartContext = React.createContext<ChartContextProps | null>(null);
+const ChartContext = React.createContext<ChartConfig | null>(null);
 
 function useChart() {
-  const context = React.useContext(ChartContext);
+  const config = React.useContext(ChartContext);
 
-  if (!context) {
+  if (!config) {
     throw new Error("useChart must be used within a <ChartContainer />");
   }
 
-  return context;
+  return { config };
 }
 
 function ChartContainer({
@@ -68,10 +64,9 @@ function ChartContainer({
 }) {
   const uniqueId = React.useId();
   const chartId = `chart-${id || uniqueId.replace(/:/g, "")}`;
-  const contextValue = React.useMemo(() => ({ config }), [config]);
 
   return (
-    <ChartContext.Provider value={contextValue}>
+    <ChartContext.Provider value={config}>
       <div
         data-slot="chart"
         data-chart={chartId}

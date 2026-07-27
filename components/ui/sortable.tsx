@@ -77,17 +77,6 @@ interface SortableRootContextValue<T> {
   flatCursor: boolean;
 }
 
-const SortableRootContext =
-  React.createContext<SortableRootContextValue<unknown> | null>(null);
-
-function useSortableContext(consumerName: string) {
-  const context = React.useContext(SortableRootContext);
-  if (!context) {
-    throw new Error(`\`${consumerName}\` must be used within \`${ROOT_NAME}\``);
-  }
-  return context;
-}
-
 interface GetItemValue<T> {
   /**
    * Callback that returns a unique identifier for each sortable item. Required for array of objects.
@@ -108,16 +97,61 @@ type SortableRootProps<T> = DndContextProps &
     flatCursor?: boolean;
   };
 
+const SortableRootPropsContext =
+  React.createContext<SortableRootProps<unknown> | null>(null);
+const SortableRootIdContext = React.createContext<string | null>(null);
+const SortableRootActiveIdContext =
+  React.createContext<UniqueIdentifier | null | undefined>(undefined);
+const SortableRootSetActiveIdContext = React.createContext<
+  React.Dispatch<React.SetStateAction<UniqueIdentifier | null>> | undefined
+>(undefined);
+
+function useSortableContext(consumerName: string) {
+  const props = React.useContext(SortableRootPropsContext);
+  const id = React.useContext(SortableRootIdContext);
+  const activeId = React.useContext(SortableRootActiveIdContext);
+  const setActiveId = React.useContext(SortableRootSetActiveIdContext);
+
+  if (
+    props === null ||
+    id === null ||
+    activeId === undefined ||
+    setActiveId === undefined
+  ) {
+    throw new Error(`\`${consumerName}\` must be used within \`${ROOT_NAME}\``);
+  }
+
+  const orientation = props.orientation ?? "vertical";
+  const config = orientationConfig[orientation];
+  const getItemValue = (item: unknown): UniqueIdentifier => {
+    if (typeof item === "object" && !props.getItemValue) {
+      throw new Error("`getItemValue` is required when using array of objects");
+    }
+    return props.getItemValue
+      ? props.getItemValue(item)
+      : (item as UniqueIdentifier);
+  };
+
+  return {
+    id,
+    items: props.value.map((item) => getItemValue(item)),
+    modifiers: props.modifiers ?? config.modifiers,
+    strategy: props.strategy ?? config.strategy,
+    activeId,
+    setActiveId,
+    getItemValue,
+    flatCursor: props.flatCursor ?? false,
+  } satisfies SortableRootContextValue<unknown>;
+}
+
 function SortableRoot<T>(props: SortableRootProps<T>) {
   const {
     value,
     onValueChange,
     collisionDetection,
     modifiers,
-    strategy,
     onMove,
     orientation = "vertical",
-    flatCursor = false,
     getItemValue: getItemValueProp,
     accessibility,
     ...sortableProps
@@ -135,24 +169,14 @@ function SortableRoot<T>(props: SortableRootProps<T>) {
   );
   const config = orientationConfig[orientation];
 
-  const getItemValue = React.useCallback(
-    (item: T): UniqueIdentifier => {
-      if (typeof item === "object" && !getItemValueProp) {
-        throw new Error(
-          "`getItemValue` is required when using array of objects",
-        );
-      }
-      return getItemValueProp
-        ? getItemValueProp(item)
-        : (item as UniqueIdentifier);
-    },
-    [getItemValueProp],
-  );
-
-  const items = React.useMemo(
-    () => value.map((item) => getItemValue(item)),
-    [value, getItemValue],
-  );
+  const getItemValue = (item: T): UniqueIdentifier => {
+    if (typeof item === "object" && !getItemValueProp) {
+      throw new Error("`getItemValue` is required when using array of objects");
+    }
+    return getItemValueProp
+      ? getItemValueProp(item)
+      : (item as UniqueIdentifier);
+  };
 
   const onDragStart = (event: DragStartEvent) => {
     sortableProps.onDragStart?.(event);
@@ -246,49 +270,35 @@ function SortableRoot<T>(props: SortableRootProps<T>) {
   };
 
   const resolvedModifiers = modifiers ?? config.modifiers;
-  const resolvedStrategy = strategy ?? config.strategy;
-  const contextValue = React.useMemo(
-    () => ({
-      id,
-      items,
-      modifiers: resolvedModifiers,
-      strategy: resolvedStrategy,
-      activeId,
-      setActiveId,
-      getItemValue,
-      flatCursor,
-    }),
-    [
-      id,
-      items,
-      resolvedModifiers,
-      resolvedStrategy,
-      activeId,
-      getItemValue,
-      flatCursor,
-    ],
-  );
 
   return (
-    <SortableRootContext.Provider
-      value={contextValue as SortableRootContextValue<unknown>}
+    <SortableRootPropsContext.Provider
+      value={props as SortableRootProps<unknown>}
     >
-      <DndContext
-        collisionDetection={collisionDetection ?? config.collisionDetection}
-        modifiers={resolvedModifiers}
-        sensors={sensors}
-        {...sortableProps}
-        id={id}
-        onDragStart={onDragStart}
-        onDragEnd={onDragEnd}
-        onDragCancel={onDragCancel}
-        accessibility={{
-          announcements,
-          screenReaderInstructions,
-          ...accessibility,
-        }}
-      />
-    </SortableRootContext.Provider>
+      <SortableRootIdContext.Provider value={id}>
+        <SortableRootActiveIdContext.Provider value={activeId}>
+          <SortableRootSetActiveIdContext.Provider value={setActiveId}>
+            <DndContext
+              collisionDetection={
+                collisionDetection ?? config.collisionDetection
+              }
+              modifiers={resolvedModifiers}
+              sensors={sensors}
+              {...sortableProps}
+              id={id}
+              onDragStart={onDragStart}
+              onDragEnd={onDragEnd}
+              onDragCancel={onDragCancel}
+              accessibility={{
+                announcements,
+                screenReaderInstructions,
+                ...accessibility,
+              }}
+            />
+          </SortableRootSetActiveIdContext.Provider>
+        </SortableRootActiveIdContext.Provider>
+      </SortableRootIdContext.Provider>
+    </SortableRootPropsContext.Provider>
   );
 }
 
@@ -346,22 +356,36 @@ interface SortableItemContextValue {
   disabled?: boolean;
 }
 
-const SortableItemContext =
-  React.createContext<SortableItemContextValue | null>(null);
-
-function useSortableItemContext(consumerName: string) {
-  const context = React.useContext(SortableItemContext);
-  if (!context) {
-    throw new Error(`\`${consumerName}\` must be used within \`${ITEM_NAME}\``);
-  }
-  return context;
-}
-
 interface SortableItemProps extends React.ComponentProps<"div"> {
   value: UniqueIdentifier;
   asHandle?: boolean;
   asChild?: boolean;
   disabled?: boolean;
+}
+
+const SortableItemPropsContext =
+  React.createContext<SortableItemProps | null>(null);
+const SortableItemHookContext =
+  React.createContext<ReturnType<typeof useSortable> | null>(null);
+const SortableItemIdContext = React.createContext<string | null>(null);
+
+function useSortableItemContext(consumerName: string) {
+  const props = React.useContext(SortableItemPropsContext);
+  const sortable = React.useContext(SortableItemHookContext);
+  const id = React.useContext(SortableItemIdContext);
+
+  if (!props || !sortable || !id) {
+    throw new Error(`\`${consumerName}\` must be used within \`${ITEM_NAME}\``);
+  }
+
+  return {
+    id,
+    attributes: sortable.attributes,
+    listeners: sortable.listeners,
+    setActivatorNodeRef: sortable.setActivatorNodeRef,
+    isDragging: sortable.isDragging,
+    disabled: props.disabled,
+  } satisfies SortableItemContextValue;
 }
 
 function SortableItem(props: SortableItemProps) {
@@ -391,6 +415,7 @@ function SortableItem(props: SortableItemProps) {
 
   const context = useSortableContext(ITEM_NAME);
   const id = React.useId();
+  const sortable = useSortable({ id: value, disabled });
   const {
     attributes,
     listeners,
@@ -399,7 +424,7 @@ function SortableItem(props: SortableItemProps) {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: value, disabled });
+  } = sortable;
 
   const composedRef = useComposedRefs(ref, (node) => {
     if (disabled) return;
@@ -415,53 +440,38 @@ function SortableItem(props: SortableItemProps) {
     };
   })();
 
-  const itemContext = React.useMemo(
-    () => ({
-      id,
-      attributes,
-      listeners,
-      setActivatorNodeRef,
-      isDragging,
-      disabled,
-    }),
-    [
-      id,
-      attributes,
-      listeners,
-      setActivatorNodeRef,
-      isDragging,
-      disabled,
-    ],
-  );
-
   const ItemPrimitive = asChild ? Slot : "div";
 
   return (
-    <SortableItemContext.Provider value={itemContext}>
-      <ItemPrimitive
-        id={id}
-        data-disabled={disabled}
-        data-dragging={isDragging ? "" : undefined}
-        data-slot="sortable-item"
-        {...itemProps}
-        {...(asHandle && !disabled ? attributes : {})}
-        {...(asHandle && !disabled ? listeners : {})}
-        ref={composedRef}
-        style={composedStyle}
-        className={cn(
-          "focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1",
-          {
-            "touch-none select-none": asHandle,
-            "cursor-default": context.flatCursor,
-            "data-dragging:cursor-grabbing": !context.flatCursor,
-            "cursor-grab": !isDragging && asHandle && !context.flatCursor,
-            "opacity-50": isDragging,
-            "pointer-events-none opacity-50": disabled,
-          },
-          className,
-        )}
-      />
-    </SortableItemContext.Provider>
+    <SortableItemPropsContext.Provider value={props}>
+      <SortableItemHookContext.Provider value={sortable}>
+        <SortableItemIdContext.Provider value={id}>
+          <ItemPrimitive
+            id={id}
+            data-disabled={disabled}
+            data-dragging={isDragging ? "" : undefined}
+            data-slot="sortable-item"
+            {...itemProps}
+            {...(asHandle && !disabled ? attributes : {})}
+            {...(asHandle && !disabled ? listeners : {})}
+            ref={composedRef}
+            style={composedStyle}
+            className={cn(
+              "focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1",
+              {
+                "touch-none select-none": asHandle,
+                "cursor-default": context.flatCursor,
+                "data-dragging:cursor-grabbing": !context.flatCursor,
+                "cursor-grab": !isDragging && asHandle && !context.flatCursor,
+                "opacity-50": isDragging,
+                "pointer-events-none opacity-50": disabled,
+              },
+              className,
+            )}
+          />
+        </SortableItemIdContext.Provider>
+      </SortableItemHookContext.Provider>
+    </SortableItemPropsContext.Provider>
   );
 }
 

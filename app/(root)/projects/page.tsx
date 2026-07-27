@@ -123,7 +123,7 @@ function ProjectsGridSkeleton() {
  * - Static shell (header) renders instantly
  * - Projects content streams in (usually instant from cache)
  */
-export default async function ProjectsPage() {
+export default function ProjectsPage() {
   const breadcrumbLd = generateBreadcrumbSchema([
     { name: "Home", url: "https://geraldbahati.dev" },
     { name: "Projects", url: "https://geraldbahati.dev/projects" },
