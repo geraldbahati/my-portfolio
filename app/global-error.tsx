@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
+import * as Sentry from "@sentry/nextjs";
 
 export default function GlobalError({
   error,
@@ -13,19 +14,19 @@ export default function GlobalError({
   const [displayText, setDisplayText] = useState("Try Again");
   const intervalRef = useRef<NodeJS.Timeout>(null);
 
-  const clearScrambleInterval = useCallback(() => {
+  const clearScrambleInterval = () => {
     if (!intervalRef.current) return;
     clearInterval(intervalRef.current);
     intervalRef.current = null;
-  }, []);
+  };
 
   useEffect(() => {
-    // Log the error to an error reporting service
+    Sentry.captureException(error);
     console.error("Global error:", error);
   }, [error]);
 
   // Simple text scramble effect
-  const scrambleText = useCallback(() => {
+  const scrambleText = () => {
     const targetText = "Try Again";
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     const steps = 15;
@@ -59,24 +60,27 @@ export default function GlobalError({
         setDisplayText(targetText);
       }
     }, intervalMs);
-  }, [clearScrambleInterval]);
+  };
 
-  const handleMouseEnter = useCallback(() => {
+  const handleMouseEnter = () => {
     setIsHovered(true);
     scrambleText();
-  }, [scrambleText]);
+  };
 
-  const handleMouseLeave = useCallback(() => {
+  const handleMouseLeave = () => {
     setIsHovered(false);
     clearScrambleInterval();
     setDisplayText("Try Again");
-  }, [clearScrambleInterval]);
+  };
 
   useEffect(() => {
     return () => {
-      clearScrambleInterval();
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     };
-  }, [clearScrambleInterval]);
+  }, []);
 
   return (
     <html lang="en">
@@ -219,6 +223,7 @@ export default function GlobalError({
           {/* Retry Button */}
           <div className="animate-fade-in-delay-2">
             <button
+              type="button"
               onClick={() => reset()}
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}

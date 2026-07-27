@@ -14,6 +14,9 @@ import { NextResponse, type NextRequest } from "next/server";
  */
 
 const DEFAULT_TAGS = ["projects"];
+const CACHE_TAG_PATTERN =
+  /^(?:projects|project-navigation|project-[a-z0-9]+(?:-[a-z0-9]+)*)$/;
+const MAX_TAGS_PER_REQUEST = 20;
 
 export async function POST(req: NextRequest) {
   const expected = process.env.REVALIDATE_SECRET;
@@ -29,12 +32,23 @@ export async function POST(req: NextRequest) {
   let tags = DEFAULT_TAGS;
   try {
     const body = (await req.json()) as { tags?: unknown };
-    if (
-      Array.isArray(body.tags) &&
-      body.tags.every((t): t is string => typeof t === "string") &&
-      body.tags.length > 0
-    ) {
-      tags = body.tags;
+    if (body.tags !== undefined) {
+      if (
+        !Array.isArray(body.tags) ||
+        body.tags.length === 0 ||
+        body.tags.length > MAX_TAGS_PER_REQUEST ||
+        !body.tags.every(
+          (tag): tag is string =>
+            typeof tag === "string" && CACHE_TAG_PATTERN.test(tag),
+        )
+      ) {
+        return NextResponse.json(
+          { revalidated: false, message: "Invalid cache tags" },
+          { status: 400 },
+        );
+      }
+
+      tags = [...new Set(body.tags)];
     }
   } catch {
     // No/invalid body → fall back to default tags.

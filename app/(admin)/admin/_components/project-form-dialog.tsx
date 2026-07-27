@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -71,23 +71,11 @@ const emptyForm: ProjectFormData = {
   isPublished: true,
 };
 
-export default function ProjectFormDialog({
-  isOpen,
-  onClose,
-  onSuccess,
-  editingProject,
-  nextOrder,
-}: ProjectFormDialogProps) {
-  const createProjectAction = useAction(api.adminProjects.createProject);
-  const updateProjectAction = useAction(api.adminProjects.updateProject);
-
-  const [formData, setFormData] = useState<ProjectFormData>(emptyForm);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Update form data when editingProject changes
-  useEffect(() => {
-    if (editingProject) {
-      setFormData({
+function getInitialFormData(
+  editingProject: ProjectFormDialogProps["editingProject"],
+): ProjectFormData {
+  return editingProject
+    ? {
         id: editingProject.id,
         title: editingProject.title,
         description: editingProject.description || "",
@@ -98,19 +86,31 @@ export default function ProjectFormDialog({
         url: editingProject.url || "",
         aspectRatio: editingProject.aspectRatio || "16/9",
         isPublished: editingProject.isPublished,
-      });
-    } else {
-      setFormData(emptyForm);
-    }
-  }, [editingProject]);
+      }
+    : emptyForm;
+}
+
+export default function ProjectFormDialog({
+  isOpen,
+  onClose,
+  onSuccess,
+  editingProject,
+  nextOrder,
+}: ProjectFormDialogProps) {
+  const createProjectAction = useAction(api.adminProjects.createProject);
+  const updateProjectAction = useAction(api.adminProjects.updateProject);
+
+  const [formData, setFormData] = useState<ProjectFormData>(() =>
+    getInitialFormData(editingProject),
+  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    try {
-      if (editingProject) {
-        await updateProjectAction({
+    const save = editingProject
+      ? updateProjectAction({
           projectId: editingProject._id,
           title: formData.title,
           description: formData.description || undefined,
@@ -121,9 +121,8 @@ export default function ProjectFormDialog({
           url: formData.url || undefined,
           aspectRatio: formData.aspectRatio || undefined,
           isPublished: formData.isPublished,
-        });
-      } else {
-        await createProjectAction({
+        })
+      : createProjectAction({
           id: formData.id,
           title: formData.title,
           description: formData.description || undefined,
@@ -136,14 +135,18 @@ export default function ProjectFormDialog({
           order: nextOrder,
           isPublished: formData.isPublished,
         });
-      }
-      onSuccess();
-      setFormData(emptyForm);
-    } catch (error) {
+
+    const error = await save
+      .then(() => null)
+      .catch((cause: unknown) => cause)
+      .finally(() => setIsSubmitting(false));
+
+    if (error) {
       console.error("Failed to save project:", error);
       alert("Failed to save project");
-    } finally {
-      setIsSubmitting(false);
+    } else {
+      onSuccess();
+      setFormData(emptyForm);
     }
   };
 

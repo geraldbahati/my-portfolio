@@ -24,141 +24,139 @@ export default async function Image() {
   const imageSrc = `data:image/jpeg;base64,${imageData}`;
 
   return new ImageResponse(
-    (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "linear-gradient(to right, #a1a1aa, #ffffff, #ffffff)",
+        padding: "40px",
+        fontFamily: '"Inter"',
+      }}
+    >
+      {/* Main card container - centered */}
       <div
         style={{
-          width: "100%",
-          height: "100%",
           display: "flex",
+          flexDirection: "row",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(to right, #a1a1aa, #ffffff, #ffffff)",
-          padding: "40px",
-          fontFamily: '"Inter"',
+          gap: "100px",
         }}
       >
-        {/* Main card container - centered */}
+        {/* Tilted image with white border - larger */}
         <div
           style={{
             display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "100px",
+            flexShrink: 0,
+            transform: "rotate(-6deg)",
           }}
         >
-          {/* Tilted image with white border - larger */}
           <div
             style={{
               display: "flex",
-              flexShrink: 0,
-              transform: "rotate(-6deg)",
+              padding: "14px",
+              background: "white",
+              borderRadius: "32px",
+              boxShadow:
+                "0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 10px 20px -5px rgba(0, 0, 0, 0.1)",
             }}
           >
-            <div
+            <img
+              src={imageSrc}
+              alt="Gerald Bahati"
               style={{
-                display: "flex",
-                padding: "14px",
-                background: "white",
-                borderRadius: "32px",
-                boxShadow:
-                  "0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 10px 20px -5px rgba(0, 0, 0, 0.1)",
+                width: "320px",
+                height: "420px",
+                objectFit: "cover",
+                objectPosition: "center top",
+                borderRadius: "24px",
+                filter: "grayscale(20%)",
               }}
-            >
-              <img
-                src={imageSrc}
-                alt="Gerald Bahati"
-                style={{
-                  width: "320px",
-                  height: "420px",
-                  objectFit: "cover",
-                  objectPosition: "center top",
-                  borderRadius: "24px",
-                  filter: "grayscale(20%)",
-                }}
-              />
-            </div>
+            />
           </div>
+        </div>
 
-          {/* Content */}
-          <div
+        {/* Content */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-start",
+            gap: "20px",
+            maxWidth: "480px",
+          }}
+        >
+          {/* Domain tag */}
+          <span
+            style={{
+              display: "flex",
+              background: "#f3f4f6",
+              color: "#1f2937",
+              fontSize: "16px",
+              fontWeight: 600,
+              padding: "8px 20px",
+              borderRadius: "50px",
+              border: "1px solid #e5e7eb",
+            }}
+          >
+            geraldbahati.dev/projects
+          </span>
+
+          {/* Headline */}
+          <h1
             style={{
               display: "flex",
               flexDirection: "column",
-              alignItems: "flex-start",
-              gap: "20px",
-              maxWidth: "480px",
+              fontFamily: '"Inter"',
+              fontSize: "40px",
+              fontWeight: 700,
+              lineHeight: 1.1,
+              letterSpacing: "-0.025em",
+              color: "#000000",
+              margin: 0,
             }}
           >
-            {/* Domain tag */}
-            <span
-              style={{
-                display: "flex",
-                background: "#f3f4f6",
-                color: "#1f2937",
-                fontSize: "16px",
-                fontWeight: 600,
-                padding: "8px 20px",
-                borderRadius: "50px",
-                border: "1px solid #e5e7eb",
-              }}
-            >
-              geraldbahati.dev/projects
-            </span>
+            <span>Projects - Creative Digital Solutions</span>
+          </h1>
 
-            {/* Headline */}
-            <h1
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                fontFamily: '"Inter"',
-                fontSize: "40px",
-                fontWeight: 700,
-                lineHeight: 1.1,
-                letterSpacing: "-0.025em",
-                color: "#000000",
-                margin: 0,
-              }}
-            >
-              <span>Projects - Creative Digital Solutions</span>
-            </h1>
+          {/* Description */}
+          <p
+            style={{
+              display: "flex",
+              fontSize: "18px",
+              color: "#6b7280",
+              margin: 0,
+              lineHeight: 1.5,
+            }}
+          >
+            Explore a curated selection of quality, well-thought-out digital
+            solutions.
+          </p>
 
-            {/* Description */}
-            <p
-              style={{
-                display: "flex",
-                fontSize: "18px",
-                color: "#6b7280",
-                margin: 0,
-                lineHeight: 1.5,
-              }}
-            >
-              Explore a curated selection of quality, well-thought-out digital
-              solutions.
-            </p>
-
-            {/* CTA Button */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: "#000000",
-                color: "white",
-                fontSize: "18px",
-                fontWeight: 500,
-                margin: "10px 0",
-                padding: "16px 80px",
-                borderRadius: "50px",
-                boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.3)",
-              }}
-            >
-              View projects
-            </div>
+          {/* CTA Button */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "#000000",
+              color: "white",
+              fontSize: "18px",
+              fontWeight: 500,
+              margin: "10px 0",
+              padding: "16px 80px",
+              borderRadius: "50px",
+              boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.3)",
+            }}
+          >
+            View projects
           </div>
         </div>
       </div>
-    ),
+    </div>,
     {
       ...size,
       fonts: [

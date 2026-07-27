@@ -1,14 +1,25 @@
 "use client";
 
 import { m } from "motion/react";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { TextScramble } from "@/components/ui/text-scramble";
-import Analytics from "@/lib/analytics";
+import { trackContactChannelClicked } from "@/lib/analytics";
 
 interface ContactLinksProps {
   phoneNumber?: string;
   whatsappNumber?: string;
   className?: string;
+}
+
+function handleCall() {
+  trackContactChannelClicked({ channel: "phone", surface: "contact_page" });
+}
+
+function handleWhatsApp() {
+  trackContactChannelClicked({
+    channel: "whatsapp",
+    surface: "contact_page",
+  });
 }
 
 // Animated Contact Button Component
@@ -26,7 +37,7 @@ function AnimatedContactButton({
   const [isHovered, setIsHovered] = useState(false);
   const [shouldTriggerScramble, setShouldTriggerScramble] = useState(false);
 
-  const handleMouseEnter = useCallback(() => {
+  const handleMouseEnter = () => {
     setIsHovered(true);
     setShouldTriggerScramble(true);
 
@@ -34,21 +45,24 @@ function AnimatedContactButton({
     setTimeout(() => {
       setShouldTriggerScramble(false);
     }, 500);
-  }, []);
+  };
 
-  const handleMouseLeave = useCallback(() => {
+  const handleMouseLeave = () => {
     setIsHovered(false);
     setShouldTriggerScramble(false);
-  }, []);
+  };
 
-  const handleScrambleComplete = useCallback(() => {
+  const handleScrambleComplete = () => {
     setShouldTriggerScramble(false);
-  }, []);
+  };
 
   return (
     <m.a
       href={href}
       onClick={onClick}
+      // TextScramble randomises the visible characters while animating; without
+      // this a screen reader can read out a scrambled phone number.
+      aria-label={String(children)}
       className={`inline-block relative border-b transition-colors duration-300 cursor-pointer ${
         isHovered ? "border-primary" : "border-transparent"
       } ${className}`}
@@ -78,14 +92,6 @@ export function ContactLinks({
 }: ContactLinksProps) {
   const normalizedPhoneNumber = phoneNumber.replace(/\s/g, "");
   const whatsappUrl = `https://wa.me/${whatsappNumber}`;
-
-  const handleCall = () => {
-    Analytics.trackPhoneClick("Contact Page");
-  };
-
-  const handleWhatsApp = () => {
-    Analytics.trackOutboundLink(whatsappUrl, "WhatsApp Message - Contact Page");
-  };
 
   return (
     <div className={`flex flex-col items-start gap-4 ${className}`}>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -38,9 +38,11 @@ export default function ProjectTestimonialForm({
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [syncedTestimonial, setSyncedTestimonial] =
+    useState<typeof testimonial>(undefined);
 
-  // Sync form data when testimonial is loaded
-  useEffect(() => {
+  if (testimonial !== syncedTestimonial) {
+    setSyncedTestimonial(testimonial);
     if (testimonial) {
       setFormData({
         quote: testimonial.quote || "",
@@ -51,7 +53,7 @@ export default function ProjectTestimonialForm({
       });
       setHasChanges(false);
     }
-  }, [testimonial]);
+  }
 
   const updateField = <K extends keyof typeof formData>(
     field: K,
@@ -69,21 +71,23 @@ export default function ProjectTestimonialForm({
     }
 
     setIsSubmitting(true);
-    try {
-      await upsertTestimonial({
-        projectId,
-        quote: formData.quote,
-        authorName: formData.authorName,
-        authorRole: formData.authorRole || undefined,
-        authorCompany: formData.authorCompany || undefined,
-        authorImage: formData.authorImage || undefined,
-      });
-      setHasChanges(false);
-    } catch (error) {
+    const error = await upsertTestimonial({
+      projectId,
+      quote: formData.quote,
+      authorName: formData.authorName,
+      authorRole: formData.authorRole || undefined,
+      authorCompany: formData.authorCompany || undefined,
+      authorImage: formData.authorImage || undefined,
+    })
+      .then(() => null)
+      .catch((cause: unknown) => cause)
+      .finally(() => setIsSubmitting(false));
+
+    if (error) {
       console.error("Failed to save testimonial:", error);
       alert("Failed to save testimonial");
-    } finally {
-      setIsSubmitting(false);
+    } else {
+      setHasChanges(false);
     }
   };
 
@@ -92,8 +96,15 @@ export default function ProjectTestimonialForm({
     if (!confirm("Are you sure you want to delete this testimonial?")) return;
 
     setIsSubmitting(true);
-    try {
-      await deleteTestimonial({ projectId });
+    const error = await deleteTestimonial({ projectId })
+      .then(() => null)
+      .catch((cause: unknown) => cause)
+      .finally(() => setIsSubmitting(false));
+
+    if (error) {
+      console.error("Failed to delete testimonial:", error);
+      alert("Failed to delete testimonial");
+    } else {
       setFormData({
         quote: "",
         authorName: "",
@@ -102,11 +113,6 @@ export default function ProjectTestimonialForm({
         authorImage: "",
       });
       setHasChanges(false);
-    } catch (error) {
-      console.error("Failed to delete testimonial:", error);
-      alert("Failed to delete testimonial");
-    } finally {
-      setIsSubmitting(false);
     }
   };
 

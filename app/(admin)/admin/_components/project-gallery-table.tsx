@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -74,9 +74,11 @@ const emptyForm: GalleryFormData = {
   deviceType: undefined,
 };
 
-export default function ProjectGalleryTable({
-  projectId,
-}: ProjectGalleryTableProps) {
+export default function ProjectGalleryTable(props: ProjectGalleryTableProps) {
+  return useProjectGalleryTable(props);
+}
+
+function useProjectGalleryTable({ projectId }: ProjectGalleryTableProps) {
   const serverGallery = useQuery(api.adminProjectGallery.getByProjectId, {
     projectId,
   });
@@ -93,6 +95,8 @@ export default function ProjectGalleryTable({
 
   const [optimisticGallery, setOptimisticGallery] =
     useState<typeof serverGallery>(undefined);
+  const [syncedGallery, setSyncedGallery] =
+    useState<typeof serverGallery>(undefined);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Id<"projectGallery"> | null>(
     null,
@@ -100,11 +104,10 @@ export default function ProjectGalleryTable({
   const [formData, setFormData] = useState<GalleryFormData>(emptyForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (serverGallery) {
-      setOptimisticGallery(serverGallery);
-    }
-  }, [serverGallery]);
+  if (serverGallery !== syncedGallery) {
+    setSyncedGallery(serverGallery);
+    setOptimisticGallery(serverGallery);
+  }
 
   const gallery = optimisticGallery ?? serverGallery;
   const isLoading = gallery === undefined;
@@ -140,9 +143,8 @@ export default function ProjectGalleryTable({
     }
 
     setIsSubmitting(true);
-    try {
-      if (editingItem) {
-        await updateGalleryItem({
+    const save = editingItem
+      ? updateGalleryItem({
           galleryId: editingItem,
           src: formData.src,
           alt: formData.alt || undefined,
@@ -151,9 +153,8 @@ export default function ProjectGalleryTable({
           width: formData.width,
           height: formData.height,
           deviceType: formData.deviceType,
-        });
-      } else {
-        await createGalleryItem({
+        })
+      : createGalleryItem({
           projectId,
           src: formData.src,
           alt: formData.alt || undefined,
@@ -164,14 +165,18 @@ export default function ProjectGalleryTable({
           deviceType: formData.deviceType,
           order: gallery?.length ?? 0,
         });
-      }
-      setIsDialogOpen(false);
-      setFormData(emptyForm);
-    } catch (error) {
+
+    const error = await save
+      .then(() => null)
+      .catch((cause: unknown) => cause)
+      .finally(() => setIsSubmitting(false));
+
+    if (error) {
       console.error("Failed to save gallery item:", error);
       alert("Failed to save gallery item");
-    } finally {
-      setIsSubmitting(false);
+    } else {
+      setIsDialogOpen(false);
+      setFormData(emptyForm);
     }
   };
 

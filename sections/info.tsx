@@ -1,6 +1,6 @@
 "use client";
 
-import React, { memo, useRef, useEffect } from "react";
+import React, { useRef, useEffect } from "react";
 import { StickyScrollReveal } from "@/components/ui/sticky-scroll-reveal";
 import GridPattern from "@/components/ui/shadcn-io/grid-pattern";
 
@@ -64,7 +64,7 @@ const sections = [
   },
 ];
 
-const InfoSection = memo(function InfoSection() {
+const InfoSection = function InfoSection() {
   const closingRef = useRef<HTMLParagraphElement>(null);
 
   // Animate closing paragraph on intersection (manual IO avoids hydration mismatch)
@@ -94,7 +94,7 @@ const InfoSection = memo(function InfoSection() {
   }, []);
 
   return (
-    <div className="relative bg-white">
+    <div data-section-id="services" className="relative bg-white">
       {/* Grid Background Layer - Behind everything */}
       <div className="absolute inset-0 z-0">
         <GridPattern
@@ -133,7 +133,7 @@ const InfoSection = memo(function InfoSection() {
       </div>
     </div>
   );
-});
+};
 
 InfoSection.displayName = "InfoSection";
 

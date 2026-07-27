@@ -34,7 +34,7 @@ export default async function ProjectDetailLayout({
   params,
 }: LayoutProps) {
   const { slug } = await params;
-  const navigation = await getNavigationData(slug);
+  const navigation = slug === "_" ? null : await getNavigationData(slug);
 
   return (
     <>

@@ -36,10 +36,10 @@ export function ProjectChallenges({ challenges }: ProjectChallengesProps) {
           </svg>
         </div>
 
-        {challenges.map((challenge, idx) => (
+        {challenges.map((challenge) => (
           <div
-            key={idx}
-            className="animate-in fade-in slide-in-from-bottom-6 duration-700 mb-12 last:mb-0"
+            key={challenge._id}
+            className="project-reveal-up-700 mb-12 last:mb-0"
           >
             <h2 className="text-2xl md:text-3xl lg:text-3xl font-medium tracking-tight mb-8 text-foreground">
               {challenge.title}

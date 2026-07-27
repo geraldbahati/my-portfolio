@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useId, useState, useRef } from "react";
+import Image from "next/image";
 import { useUploadFile } from "@convex-dev/r2/react";
 import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -53,57 +54,50 @@ async function compressImage(
   maxWidth = 1920,
   quality = 0.85,
 ): Promise<File> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
+  const image = await createImageBitmap(file);
+
+  try {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      throw new Error("Could not get canvas context");
+    }
 
-    img.onload = () => {
-      let { width, height } = img;
+    let { width, height } = image;
+    if (width > maxWidth) {
+      height = (height * maxWidth) / width;
+      width = maxWidth;
+    }
 
-      // Scale down if needed
-      if (width > maxWidth) {
-        height = (height * maxWidth) / width;
-        width = maxWidth;
-      }
+    canvas.width = width;
+    canvas.height = height;
+    ctx.drawImage(image, 0, 0, width, height);
 
-      canvas.width = width;
-      canvas.height = height;
-
-      if (!ctx) {
-        reject(new Error("Could not get canvas context"));
-        return;
-      }
-
-      ctx.drawImage(img, 0, 0, width, height);
-
+    const blob = await new Promise<Blob>((resolve, reject) => {
       canvas.toBlob(
         (blob) => {
           if (!blob) {
             reject(new Error("Could not compress image"));
             return;
           }
-
-          // If compressed is larger, use original
-          if (blob.size >= file.size) {
-            resolve(file);
-            return;
-          }
-
-          const compressedFile = new File([blob], file.name, {
-            type: "image/webp",
-            lastModified: Date.now(),
-          });
-          resolve(compressedFile);
+          resolve(blob);
         },
         "image/webp",
         quality,
       );
-    };
+    });
 
-    img.onerror = () => reject(new Error("Could not load image"));
-    img.src = URL.createObjectURL(file);
-  });
+    if (blob.size >= file.size) {
+      return file;
+    }
+
+    return new File([blob], file.name, {
+      type: "image/webp",
+      lastModified: Date.now(),
+    });
+  } finally {
+    image.close();
+  }
 }
 
 /**
@@ -139,6 +133,7 @@ export function MediaUpload({
   currentUrl,
   label = "Upload Media",
 }: MediaUploadProps) {
+  const inputId = useId();
   const uploadFile = useUploadFile(api.r2);
   const generateStreamUploadUrl = useAction(api.stream.generateStreamUploadUrl);
 
@@ -156,160 +151,155 @@ export function MediaUpload({
   /**
    * Upload video to Cloudflare Stream
    */
-  const uploadToStream = useCallback(
-    async (file: File): Promise<{ uid: string; hlsUrl: string }> => {
-      // Get direct upload URL from Convex
-      const { uploadUrl, uid } = await generateStreamUploadUrl({
-        maxDurationSeconds: 3600, // 1 hour max
-      });
+  const uploadToStream = async (
+    file: File,
+  ): Promise<{ uid: string; hlsUrl: string }> => {
+    // Get direct upload URL from Convex
+    const { uploadUrl, uid } = await generateStreamUploadUrl({
+      maxDurationSeconds: 3600, // 1 hour max
+    });
 
-      // Upload directly to Stream
-      const formData = new FormData();
-      formData.append("file", file);
+    // Upload directly to Stream
+    const formData = new FormData();
+    formData.append("file", file);
 
-      const response = await fetch(uploadUrl, {
-        method: "POST",
-        body: formData,
-      });
+    const response = await fetch(uploadUrl, {
+      method: "POST",
+      body: formData,
+    });
 
-      if (!response.ok) {
-        throw new Error("Failed to upload video to Stream");
-      }
+    if (!response.ok) {
+      throw new Error("Failed to upload video to Stream");
+    }
 
-      // Get the HLS URL
-      const { hls } = getStreamVideoUrls(uid);
+    // Get the HLS URL
+    const { hls } = getStreamVideoUrls(uid);
 
-      return { uid, hlsUrl: hls };
-    },
-    [generateStreamUploadUrl],
-  );
+    return { uid, hlsUrl: hls };
+  };
 
   /**
    * Upload image to R2
    */
-  const uploadToR2 = useCallback(
-    async (file: File): Promise<{ key: string; url: string }> => {
-      const key = await uploadFile(file);
-      const url = `${MEDIA_BASE_URL}/${key}`;
-      return { key, url };
-    },
-    [uploadFile],
-  );
+  const uploadToR2 = async (
+    file: File,
+  ): Promise<{ key: string; url: string }> => {
+    const key = await uploadFile(file);
+    const url = `${MEDIA_BASE_URL}/${key}`;
+    return { key, url };
+  };
 
-  const handleFile = useCallback(
-    async (file: File) => {
-      const maxSizeBytes = maxSizeMB * 1024 * 1024;
+  const handleFile = async (file: File) => {
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
 
-      if (file.size > maxSizeBytes) {
+    if (file.size > maxSizeBytes) {
+      setUploadState({
+        status: "error",
+        progress: 0,
+        error: `File too large. Maximum size is ${maxSizeMB}MB`,
+      });
+      return;
+    }
+
+    const isImage = file.type.startsWith("image/");
+    const isVideo = file.type.startsWith("video/");
+
+    if (!isImage && !isVideo) {
+      setUploadState({
+        status: "error",
+        progress: 0,
+        error: "Unsupported file type",
+      });
+      return;
+    }
+
+    try {
+      if (isVideo) {
+        // Upload video to Cloudflare Stream
         setUploadState({
-          status: "error",
-          progress: 0,
-          error: `File too large. Maximum size is ${maxSizeMB}MB`,
+          status: "uploading",
+          progress: 30,
+          message: "Uploading to Stream...",
         });
-        return;
-      }
 
-      const isImage = file.type.startsWith("image/");
-      const isVideo = file.type.startsWith("video/");
+        const { uid, hlsUrl } = await uploadToStream(file);
 
-      if (!isImage && !isVideo) {
         setUploadState({
-          status: "error",
-          progress: 0,
-          error: "Unsupported file type",
+          status: "processing",
+          progress: 80,
+          message: "Processing video...",
         });
-        return;
-      }
 
-      try {
-        if (isVideo) {
-          // Upload video to Cloudflare Stream
+        // Get thumbnail URL
+        const { thumbnail } = getStreamVideoUrls(uid);
+
+        setUploadState({ status: "complete", progress: 100 });
+        // Preview the trusted Stream thumbnail rather than rendering a
+        // user-selected file directly from a blob URL.
+        setPreview(thumbnail);
+
+        onUploadComplete(hlsUrl, {
+          streamUid: uid,
+          thumbnailUrl: thumbnail,
+          type: "video",
+          originalName: file.name,
+        });
+      } else {
+        // Upload image to R2
+        let fileToUpload = file;
+
+        // Compress images (except GIFs)
+        if (!file.type.includes("gif")) {
           setUploadState({
-            status: "uploading",
-            progress: 30,
-            message: "Uploading to Stream...",
+            status: "compressing",
+            progress: 10,
+            message: "Compressing...",
           });
-
-          const { uid, hlsUrl } = await uploadToStream(file);
-
-          setUploadState({
-            status: "processing",
-            progress: 80,
-            message: "Processing video...",
-          });
-
-          // Get thumbnail URL
-          const { thumbnail } = getStreamVideoUrls(uid);
-
-          setUploadState({ status: "complete", progress: 100 });
-          // Preview the trusted Stream thumbnail rather than rendering a
-          // user-selected file directly from a blob URL.
-          setPreview(thumbnail);
-
-          onUploadComplete(hlsUrl, {
-            streamUid: uid,
-            thumbnailUrl: thumbnail,
-            type: "video",
-            originalName: file.name,
-          });
-        } else {
-          // Upload image to R2
-          let fileToUpload = file;
-
-          // Compress images (except GIFs)
-          if (!file.type.includes("gif")) {
-            setUploadState({
-              status: "compressing",
-              progress: 10,
-              message: "Compressing...",
-            });
-            fileToUpload = await compressImage(file);
-            console.log(
-              `[Upload] Compressed ${formatBytes(file.size)} -> ${formatBytes(fileToUpload.size)}`,
-            );
-          }
-
-          setUploadState({
-            status: "uploading",
-            progress: 50,
-            message: "Uploading...",
-          });
-
-          const { key, url } = await uploadToR2(fileToUpload);
-
-          // Generate optimized URL using Cloudflare Image Transformations
-          const optimizedUrl = getTransformedImageUrl(url, {
-            format: "auto",
-            quality: 85,
-          });
-
-          setUploadState({ status: "complete", progress: 100 });
-          // The R2 URL is generated by the upload integration and then
-          // validated again before it is bound to the preview element.
-          setPreview(url);
-
-          onUploadComplete(url, {
-            key,
-            type: "image",
-            originalName: file.name,
-            // Include transformed URL for display purposes
-            thumbnailUrl: optimizedUrl,
-          });
+          fileToUpload = await compressImage(file);
+          console.log(
+            `[Upload] Compressed ${formatBytes(file.size)} -> ${formatBytes(fileToUpload.size)}`,
+          );
         }
-      } catch (error) {
-        console.error("[Upload] Failed:", error);
-        setUploadState({
-          status: "error",
-          progress: 0,
-          error: error instanceof Error ? error.message : "Upload failed",
-        });
-        setPreview(null);
-      }
-    },
-    [maxSizeMB, onUploadComplete, uploadToStream, uploadToR2],
-  );
 
-  const handleDrag = useCallback((e: React.DragEvent) => {
+        setUploadState({
+          status: "uploading",
+          progress: 50,
+          message: "Uploading...",
+        });
+
+        const { key, url } = await uploadToR2(fileToUpload);
+
+        // Generate optimized URL using Cloudflare Image Transformations
+        const optimizedUrl = getTransformedImageUrl(url, {
+          format: "auto",
+          quality: 85,
+        });
+
+        setUploadState({ status: "complete", progress: 100 });
+        // The R2 URL is generated by the upload integration and then
+        // validated again before it is bound to the preview element.
+        setPreview(url);
+
+        onUploadComplete(url, {
+          key,
+          type: "image",
+          originalName: file.name,
+          // Include transformed URL for display purposes
+          thumbnailUrl: optimizedUrl,
+        });
+      }
+    } catch (error) {
+      console.error("[Upload] Failed:", error);
+      setUploadState({
+        status: "error",
+        progress: 0,
+        error: error instanceof Error ? error.message : "Upload failed",
+      });
+      setPreview(null);
+    }
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (e.type === "dragenter" || e.type === "dragover") {
@@ -317,43 +307,33 @@ export function MediaUpload({
     } else if (e.type === "dragleave") {
       setDragActive(false);
     }
-  }, []);
+  };
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setDragActive(false);
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
 
-      const file = e.dataTransfer.files?.[0];
-      if (file) {
-        handleFile(file);
-      }
-    },
-    [handleFile],
-  );
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      handleFile(file);
+    }
+  };
 
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        handleFile(file);
-      }
-    },
-    [handleFile],
-  );
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleFile(file);
+    }
+  };
 
-  const handleClick = useCallback(() => {
-    fileInputRef.current?.click();
-  }, []);
-
-  const handleRemove = useCallback(() => {
+  const handleRemove = () => {
     setPreview(null);
     setUploadState({ status: "idle", progress: 0 });
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-  }, []);
+  };
 
   const isUploading =
     uploadState.status === "compressing" ||
@@ -361,15 +341,68 @@ export function MediaUpload({
     uploadState.status === "processing";
 
   return (
-    <div className={cn("space-y-2", className)}>
-      <label className="text-sm font-medium">{label}</label>
+    <MediaUploadView
+      accept={accept}
+      className={className}
+      dragActive={dragActive}
+      fileInputRef={fileInputRef}
+      handleDrag={handleDrag}
+      handleDrop={handleDrop}
+      handleInputChange={handleInputChange}
+      handleRemove={handleRemove}
+      inputId={inputId}
+      isUploading={isUploading}
+      label={label}
+      maxSizeMB={maxSizeMB}
+      safePreview={safePreview}
+      uploadState={uploadState}
+    />
+  );
+}
 
-      <div
+function MediaUploadView({
+  accept,
+  className,
+  dragActive,
+  fileInputRef,
+  handleDrag,
+  handleDrop,
+  handleInputChange,
+  handleRemove,
+  inputId,
+  isUploading,
+  label,
+  maxSizeMB,
+  safePreview,
+  uploadState,
+}: {
+  accept: NonNullable<MediaUploadProps["accept"]>;
+  className?: string;
+  dragActive: boolean;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
+  handleDrag: (event: React.DragEvent) => void;
+  handleDrop: (event: React.DragEvent) => void;
+  handleInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  handleRemove: () => void;
+  inputId: string;
+  isUploading: boolean;
+  label: string;
+  maxSizeMB: number;
+  safePreview: string | null;
+  uploadState: UploadState;
+}) {
+  return (
+    <div className={cn("space-y-2", className)}>
+      <span id={`${inputId}-label`} className="text-sm font-medium">
+        {label}
+      </span>
+      <label
+        htmlFor={inputId}
+        aria-labelledby={`${inputId}-label`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
         onDrop={handleDrop}
-        onClick={!isUploading ? handleClick : undefined}
         className={cn(
           "relative border-2 border-dashed rounded-lg p-4 transition-colors cursor-pointer",
           dragActive
@@ -380,6 +413,7 @@ export function MediaUpload({
         )}
       >
         <input
+          id={inputId}
           ref={fileInputRef}
           type="file"
           accept={getAcceptString(accept)}
@@ -403,10 +437,13 @@ export function MediaUpload({
               />
             ) : (
               // codeql[js/dom-text-reinterpreted-as-html]: preview URL is allowlisted by sanitizeMediaPreviewUrl before binding to src
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <Image
+                loader={({ src }) => src}
                 src={encodeURI(safePreview)}
                 alt="Preview"
+                width={800}
+                height={128}
+                unoptimized
                 className="w-full h-32 object-cover rounded"
               />
             )}
@@ -436,7 +473,7 @@ export function MediaUpload({
                   {uploadState.progress > 0 && (
                     <div className="w-32 h-1 bg-muted rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-primary transition-all duration-300"
+                        className="h-full bg-primary transition-[width] duration-300"
                         style={{ width: `${uploadState.progress}%` }}
                       />
                     </div>
@@ -454,7 +491,7 @@ export function MediaUpload({
             {uploadState.progress > 0 && (
               <div className="mt-2 h-1 w-32 overflow-hidden rounded-full bg-muted">
                 <div
-                  className="h-full bg-primary transition-all duration-300"
+                  className="h-full bg-primary transition-[width] duration-300"
                   style={{ width: `${uploadState.progress}%` }}
                 />
               </div>
@@ -491,12 +528,10 @@ export function MediaUpload({
             ) : null}
           </div>
         )}
-      </div>
-
+      </label>
       {uploadState.status === "error" && (
         <p className="text-sm text-destructive">{uploadState.error}</p>
       )}
-
       {uploadState.status === "complete" && (
         <p className="text-sm text-green-600">Upload complete</p>
       )}

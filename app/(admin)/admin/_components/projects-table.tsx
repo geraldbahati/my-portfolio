@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { type ComponentProps, useState } from "react";
 import { useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -29,6 +29,10 @@ interface ProjectsTableProps {
   onManageProject?: (projectId: Id<"projects">) => void;
 }
 
+type EditingProject = ComponentProps<
+  typeof ProjectFormDialog
+>["editingProject"];
+
 export default function ProjectsTable({ onManageProject }: ProjectsTableProps) {
   const serverProjects = useQuery(api.adminProjects.getAllProjectsQuery);
   const deleteProjectAction = useAction(api.adminProjects.deleteProject);
@@ -39,16 +43,20 @@ export default function ProjectsTable({ onManageProject }: ProjectsTableProps) {
     useState<typeof serverProjects>(undefined);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingProject, setEditingProject] = useState<any | undefined>(
-    undefined,
-  );
+  const [editingProject, setEditingProject] =
+    useState<EditingProject>(undefined);
 
-  // Sync server data with local state
-  useEffect(() => {
-    if (serverProjects) {
-      setOptimisticProjects(serverProjects);
-    }
-  }, [serverProjects]);
+  // Reset the optimistic copy whenever fresh server data arrives. Adjusting
+  // state during render is React's documented alternative to a syncing effect:
+  // it re-renders before committing, instead of painting stale rows first and
+  // correcting them afterwards.
+  const [syncedProjects, setSyncedProjects] =
+    useState<typeof serverProjects>(undefined);
+
+  if (serverProjects !== syncedProjects) {
+    setSyncedProjects(serverProjects);
+    setOptimisticProjects(serverProjects);
+  }
 
   const projects = optimisticProjects ?? serverProjects;
   const isLoading = projects === undefined;
@@ -121,6 +129,7 @@ export default function ProjectsTable({ onManageProject }: ProjectsTableProps) {
 
       {/* Form Dialog */}
       <ProjectFormDialog
+        key={`${isDialogOpen}-${editingProject?._id ?? "new"}`}
         isOpen={isDialogOpen}
         onClose={handleDialogClose}
         onSuccess={handleDialogClose}

@@ -101,27 +101,6 @@ export function extractStreamUid(url: string): string | null {
   return match ? match[1] : null;
 }
 
-export interface StreamUrls {
-  hls: string;
-  dash: string;
-  mp4: string;
-  thumbnail: string;
-  animatedThumbnail: string;
-  iframe: string;
-}
-
-export function getStreamUrls(uid: string): StreamUrls {
-  const base = `https://${STREAM_SUBDOMAIN}/${uid}`;
-  return {
-    hls: `${base}/manifest/video.m3u8`,
-    dash: `${base}/manifest/video.mpd`,
-    mp4: `${base}/downloads/default.mp4`,
-    thumbnail: `${base}/thumbnails/thumbnail.jpg`,
-    animatedThumbnail: `${base}/thumbnails/thumbnail.gif`,
-    iframe: `${base}/iframe`,
-  };
-}
-
 export interface StreamThumbnailOptions {
   time?: string; // "1s", "50%", "2m30s"
   width?: number;
@@ -131,7 +110,7 @@ export interface StreamThumbnailOptions {
 
 export function getStreamThumbnail(
   uid: string,
-  options: StreamThumbnailOptions = {}
+  options: StreamThumbnailOptions = {},
 ): string {
   const params = new URLSearchParams();
   if (options.time) params.set("time", options.time);
@@ -144,75 +123,14 @@ export function getStreamThumbnail(
 }
 
 // ============================================================================
-// R2 Image Transformation Utilities
-// ============================================================================
-
-export interface ImageTransformOptions {
-  width?: number;
-  height?: number;
-  fit?: "scale-down" | "contain" | "cover" | "crop" | "pad";
-  quality?: number; // 1-100
-  format?: "auto" | "webp" | "avif" | "jpeg" | "png";
-  blur?: number; // 1-250
-  sharpen?: number; // 0-10
-  gravity?: "auto" | "center" | "top" | "bottom" | "left" | "right";
-  dpr?: number; // Device pixel ratio 1-3
-}
-
-export function transformR2Image(
-  url: string,
-  options: ImageTransformOptions = {}
-): string {
-  // Don't transform non-R2 URLs
-  if (!isR2Url(url)) return url;
-
-  const opts: ImageTransformOptions = {
-    format: "auto",
-    quality: 85,
-    fit: "cover",
-    ...options,
-  };
-
-  const optionsArray: string[] = [];
-  if (opts.width) optionsArray.push(`width=${opts.width}`);
-  if (opts.height) optionsArray.push(`height=${opts.height}`);
-  if (opts.fit) optionsArray.push(`fit=${opts.fit}`);
-  if (opts.quality) optionsArray.push(`quality=${opts.quality}`);
-  if (opts.format) optionsArray.push(`format=${opts.format}`);
-  if (opts.blur) optionsArray.push(`blur=${opts.blur}`);
-  if (opts.sharpen) optionsArray.push(`sharpen=${opts.sharpen}`);
-  if (opts.gravity) optionsArray.push(`gravity=${opts.gravity}`);
-  if (opts.dpr) optionsArray.push(`dpr=${opts.dpr}`);
-
-  const optionsString = optionsArray.join(",");
-  return `https://${TRANSFORM_ZONE}/cdn-cgi/image/${optionsString}/${url}`;
-}
-
-/**
- * Generate responsive srcSet for R2 images
- */
-export function getR2SrcSet(
-  url: string,
-  widths: number[] = [320, 640, 960, 1280, 1920],
-  options: Omit<ImageTransformOptions, "width"> = {}
-): string {
-  if (!isR2Url(url)) return "";
-
-  return widths
-    .map((width) => {
-      const transformedUrl = transformR2Image(url, { ...options, width });
-      return `${transformedUrl} ${width}w`;
-    })
-    .join(", ");
-}
-
-// ============================================================================
 // Aspect Ratio Utilities
 // ============================================================================
 
-export function parseAspectRatio(
-  aspectRatio: string | number
-): { width: number; height: number; ratio: number } {
+export function parseAspectRatio(aspectRatio: string | number): {
+  width: number;
+  height: number;
+  ratio: number;
+} {
   let ratio = 16 / 9; // Default
   let width = 16;
   let height = 9;
@@ -248,34 +166,3 @@ export function parseAspectRatio(
 
   return { width, height, ratio };
 }
-
-/**
- * Calculate optimal dimensions for a given container width and aspect ratio
- */
-export function calculateDimensions(
-  containerWidth: number,
-  aspectRatio: string | number
-): { width: number; height: number } {
-  const { ratio } = parseAspectRatio(aspectRatio);
-  return {
-    width: containerWidth,
-    height: Math.round(containerWidth / ratio),
-  };
-}
-
-// ============================================================================
-// Presets for common use cases
-// ============================================================================
-
-export const IMAGE_PRESETS = {
-  thumbnail: { width: 400, height: 300, quality: 75 },
-  card: { width: 800, height: 600, quality: 80 },
-  hero: { width: 1920, height: 1080, quality: 85 },
-  avatar: { width: 200, height: 200, quality: 80 },
-} as const;
-
-export const VIDEO_THUMBNAIL_PRESETS = {
-  small: { width: 320, height: 180 },
-  medium: { width: 640, height: 360 },
-  large: { width: 1280, height: 720 },
-} as const;

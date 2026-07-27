@@ -1,7 +1,8 @@
 "use client";
 
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, LazyMotion, domAnimation, m } from "motion/react";
 import { useState } from "react";
+import { trackFaqOpened } from "@/lib/analytics";
 
 // Types
 export interface FaqItem {
@@ -51,94 +52,106 @@ export function FaqAccordion({
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   const toggleAccordion = (index: number) => {
-    setOpenIndex(openIndex === index ? null : index);
+    const isOpening = openIndex !== index;
+    setOpenIndex(isOpening ? index : null);
+
+    // Only opens are tracked; a close is just the same question again.
+    if (isOpening) {
+      trackFaqOpened({ question: faqs[index].question, position: index + 1 });
+    }
   };
 
   // Determine if animations should be used
   const shouldAnimate = animationDuration > 0;
 
   return (
-    <div className={`space-y-0 ${className}`}>
-      {faqs.map((faq, index) => {
-        const ItemWrapper = shouldAnimate ? motion.div : 'div';
-        const itemProps = shouldAnimate
-          ? {
-              initial: { opacity: 0 },
-              whileInView: { opacity: 1 },
-              transition: { duration: animationDuration, delay: index * animationDelay },
-              viewport: { once: true },
-            }
-          : {};
+    <LazyMotion features={domAnimation}>
+      <div className={`space-y-0 ${className}`}>
+        {faqs.map((faq, index) => {
+          const ItemWrapper = shouldAnimate ? m.div : "div";
+          const itemProps = shouldAnimate
+            ? {
+                initial: { opacity: 0 },
+                whileInView: { opacity: 1 },
+                transition: {
+                  duration: animationDuration,
+                  delay: index * animationDelay,
+                },
+                viewport: { once: true },
+              }
+            : {};
 
-        return (
-          <ItemWrapper
-            key={index}
-            {...itemProps}
-            className={`border-t ${borderClassName} last:border-b last:${borderClassName} ${itemClassName}`}
-          >
-            <button
-              onClick={() => toggleAccordion(index)}
-              className="flex w-full items-center justify-between py-6 text-left transition-colors hover:text-gray-300"
-              aria-expanded={openIndex === index}
-              aria-controls={`faq-answer-${index}`}
+          return (
+            <ItemWrapper
+              key={faq.question}
+              {...itemProps}
+              className={`border-t ${borderClassName} last:border-b last:${borderClassName} ${itemClassName}`}
             >
-              <h3 className={`pr-4 uppercase ${questionClassName}`}>
-                {faq.question}
-              </h3>
-              <motion.div
-                animate={{ rotate: openIndex === index ? 45 : 0 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-                className={`flex-shrink-0 ${iconClassName}`}
-                aria-hidden="true"
+              <button
+                type="button"
+                onClick={() => toggleAccordion(index)}
+                className="flex w-full items-center justify-between py-6 text-left transition-colors hover:text-gray-300"
+                aria-expanded={openIndex === index}
+                aria-controls={`faq-answer-${index}`}
               >
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1}
-                    d="M12 6v12m6-6H6"
-                  />
-                </svg>
-              </motion.div>
-            </button>
-
-            <AnimatePresence>
-              {openIndex === index && (
-                <motion.div
-                  id={`faq-answer-${index}`}
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
+                <h3 className={`pr-4 uppercase ${questionClassName}`}>
+                  {faq.question}
+                </h3>
+                <m.div
+                  animate={{ rotate: openIndex === index ? 45 : 0 }}
                   transition={{ duration: 0.3, ease: "easeInOut" }}
-                  className="overflow-hidden"
+                  className={`flex-shrink-0 ${iconClassName}`}
+                  aria-hidden="true"
                 >
-                  <motion.div
-                    initial={{ y: -10 }}
-                    animate={{ y: 0 }}
-                    exit={{ y: -10 }}
-                    transition={{ duration: 0.3, delay: 0.05 }}
-                    className="pb-6"
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    <div className={`max-w-3xl ${answerClassName}`}>
-                      {typeof faq.answer === "string" ? (
-                        <p>{faq.answer}</p>
-                      ) : (
-                        faq.answer
-                      )}
-                    </div>
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </ItemWrapper>
-        );
-      })}
-    </div>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1}
+                      d="M12 6v12m6-6H6"
+                    />
+                  </svg>
+                </m.div>
+              </button>
+
+              <AnimatePresence>
+                {openIndex === index && (
+                  <m.div
+                    id={`faq-answer-${index}`}
+                    initial={{ opacity: 0, scaleY: 0.95 }}
+                    animate={{ opacity: 1, scaleY: 1 }}
+                    exit={{ opacity: 0, scaleY: 0.95 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="origin-top overflow-hidden"
+                  >
+                    <m.div
+                      initial={{ y: -10 }}
+                      animate={{ y: 0 }}
+                      exit={{ y: -10 }}
+                      transition={{ duration: 0.3, delay: 0.05 }}
+                      className="pb-6"
+                    >
+                      <div className={`max-w-3xl ${answerClassName}`}>
+                        {typeof faq.answer === "string" ? (
+                          <p>{faq.answer}</p>
+                        ) : (
+                          faq.answer
+                        )}
+                      </div>
+                    </m.div>
+                  </m.div>
+                )}
+              </AnimatePresence>
+            </ItemWrapper>
+          );
+        })}
+      </div>
+    </LazyMotion>
   );
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { warmRoute } from "@/lib/resource-warmup";
 
@@ -34,13 +34,14 @@ export function useAdaptivePrefetch(
 
   const isSamePage = normalizePath(pathname || "/") === normalizePath(href);
 
-  const prefetchNow = useCallback(() => {
+  const prefetchNow = () => {
     if (!enabled || isSamePage) {
       return;
     }
 
     warmRoute(href, (nextHref) => router.prefetch(nextHref));
-  }, [enabled, href, isSamePage, router]);
+  };
+  const prefetchFromViewport = useEffectEvent(prefetchNow);
 
   useEffect(() => {
     const element = elementRef.current;
@@ -59,11 +60,11 @@ export function useAdaptivePrefetch(
         observer.disconnect();
 
         if (delayMs > 0) {
-          timeoutId = window.setTimeout(prefetchNow, delayMs);
+          timeoutId = window.setTimeout(prefetchFromViewport, delayMs);
           return;
         }
 
-        prefetchNow();
+        prefetchFromViewport();
       },
       { rootMargin },
     );
@@ -76,19 +77,19 @@ export function useAdaptivePrefetch(
         window.clearTimeout(timeoutId);
       }
     };
-  }, [delayMs, enabled, isSamePage, prefetchNow, prefetchOnViewport, rootMargin]);
+  }, [delayMs, enabled, isSamePage, prefetchOnViewport, rootMargin]);
 
-  const handleMouseEnter = useCallback(() => {
+  const handleMouseEnter = () => {
     prefetchNow();
-  }, [prefetchNow]);
+  };
 
-  const handleFocus = useCallback(() => {
+  const handleFocus = () => {
     prefetchNow();
-  }, [prefetchNow]);
+  };
 
-  const setPrefetchRef = useCallback((node: HTMLElement | null) => {
+  const setPrefetchRef = (node: HTMLElement | null) => {
     elementRef.current = node;
-  }, []);
+  };
 
   return {
     prefetchNow,

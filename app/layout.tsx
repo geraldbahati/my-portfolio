@@ -1,24 +1,29 @@
 import type { Metadata } from "next";
-import { Syne, JetBrains_Mono } from "next/font/google";
+import "@fontsource-variable/syne/wght.css";
+import "@fontsource-variable/jetbrains-mono/wght.css";
 import "./globals.css";
 import { MotionProvider } from "@/components/MotionProvider";
 import { LenisProvider } from "@/components/LenisProvider";
 import { AnalyticsProvider } from "@/components/analytics-provider";
 import DeferredProviders from "@/components/DeferredProviders";
 
-const syne = Syne({
-  subsets: ["latin"],
-  variable: "--font-sans",
-  display: "swap", // Show fallback font immediately while loading
-  preload: true,
-});
+/**
+ * Ported from a stray `app/(root)/contact/head.tsx`, which used the legacy
+ * `head.tsx` convention that Next.js 16 no longer supports — so the preconnect
+ * it declared was never actually emitted.
+ */
+function getConvexOrigin() {
+  const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+  if (!convexUrl) {
+    return null;
+  }
 
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
-  display: "swap", // Show fallback font immediately while loading
-  preload: false, // Only preload if heavily used
-});
+  try {
+    return new URL(convexUrl).origin;
+  } catch {
+    return null;
+  }
+}
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://geraldbahati.dev"),
@@ -98,9 +103,20 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const convexOrigin = getConvexOrigin();
+
   return (
     <html lang="en">
       <head>
+        {convexOrigin && (
+          <>
+            <link rel="preconnect" href={convexOrigin} crossOrigin="" />
+            <link
+              rel="dns-prefetch"
+              href={`//${new URL(convexOrigin).hostname}`}
+            />
+          </>
+        )}
         <link
           rel="preconnect"
           href="https://customer-pdxnd9di8ybc2kur.cloudflarestream.com"
@@ -117,14 +133,10 @@ export default function RootLayout({
         />
         <link rel="dns-prefetch" href="//media.geraldbahati.dev" />
       </head>
-      <body
-        className={`${syne.variable} ${jetbrainsMono.variable} antialiased bg-background`}
-      >
+      <body className="antialiased bg-background">
         {/*<ClerkProvider>*/}
         <LenisProvider>
-          <MotionProvider>
-            {children}
-          </MotionProvider>
+          <MotionProvider>{children}</MotionProvider>
         </LenisProvider>
         {/*</ClerkProvider>*/}
         <DeferredProviders />

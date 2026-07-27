@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { cacheLife } from "next/cache";
 
 // Server components (zero JS cost)
 import HeroContent from "@/sections/hero-content";
@@ -101,19 +100,12 @@ const personLd = {
 };
 
 export default async function Home() {
-  "use cache";
-  cacheLife("hours");
-
   return (
     <main id="main-content">
-      <script type="application/ld+json">
-        {JSON.stringify(websiteLd)}
-      </script>
-      <script type="application/ld+json">
-        {JSON.stringify(personLd)}
-      </script>
+      <script type="application/ld+json">{JSON.stringify(websiteLd)}</script>
+      <script type="application/ld+json">{JSON.stringify(personLd)}</script>
 
-      <PageAnalytics trackPageView trackScroll trackTime />
+      <PageAnalytics />
 
       {/* Hero and Bio with scroll-triggered overlay effect */}
       <HeroBioOverlayShell

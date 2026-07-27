@@ -67,12 +67,24 @@ export default function ProjectEditor({
       {/* Tabs */}
       <Tabs defaultValue="details" className="w-full">
         <TabsList className="flex flex-row w-full h-auto p-1 bg-muted rounded-lg">
-          <TabsTrigger value="basic" className="flex-1">Basic</TabsTrigger>
-          <TabsTrigger value="details" className="flex-1">Details</TabsTrigger>
-          <TabsTrigger value="metrics" className="flex-1">Metrics</TabsTrigger>
-          <TabsTrigger value="testimonial" className="flex-1">Testimonial</TabsTrigger>
-          <TabsTrigger value="gallery" className="flex-1">Gallery</TabsTrigger>
-          <TabsTrigger value="challenges" className="flex-1">Challenges</TabsTrigger>
+          <TabsTrigger value="basic" className="flex-1">
+            Basic
+          </TabsTrigger>
+          <TabsTrigger value="details" className="flex-1">
+            Details
+          </TabsTrigger>
+          <TabsTrigger value="metrics" className="flex-1">
+            Metrics
+          </TabsTrigger>
+          <TabsTrigger value="testimonial" className="flex-1">
+            Testimonial
+          </TabsTrigger>
+          <TabsTrigger value="gallery" className="flex-1">
+            Gallery
+          </TabsTrigger>
+          <TabsTrigger value="challenges" className="flex-1">
+            Challenges
+          </TabsTrigger>
         </TabsList>
 
         {/* Basic Info Tab */}
@@ -124,6 +136,7 @@ export default function ProjectEditor({
 
           {/* Basic Info Edit Dialog */}
           <ProjectFormDialog
+            key={`${isBasicDialogOpen}-${project._id}`}
             isOpen={isBasicDialogOpen}
             onClose={() => setIsBasicDialogOpen(false)}
             onSuccess={() => setIsBasicDialogOpen(false)}

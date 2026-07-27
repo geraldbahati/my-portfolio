@@ -4,9 +4,8 @@ import { startTransition, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 
 interface PageAnalyticsProps {
-  trackPageView?: boolean;
   trackScroll?: boolean;
-  trackTime?: boolean;
+  trackSections?: boolean;
   scrollThresholds?: number[];
 }
 
@@ -21,17 +20,26 @@ const DeferredPageAnalyticsRuntime = dynamic(
   },
 );
 
+/**
+ * Supplementary page tracking (scroll depth, section visibility), loaded once
+ * the browser goes idle so it never competes with LCP.
+ *
+ * Pageviews, time on page and error capture are handled by PostHog itself and
+ * are not repeated here.
+ */
 export function PageAnalytics({
-  trackPageView = true,
   trackScroll = true,
-  trackTime = true,
-  scrollThresholds = [25, 50, 75, 100],
+  trackSections = true,
+  scrollThresholds,
 }: PageAnalyticsProps) {
   const [shouldStartTracking, setShouldStartTracking] = useState(false);
-  const isProduction = process.env.NODE_ENV === "production";
+
+  // Gated on the key rather than NODE_ENV so local runs can be verified.
+  // PostHog's built-in "internal and test accounts" filter excludes localhost.
+  const isEnabled = Boolean(process.env.NEXT_PUBLIC_POSTHOG_KEY);
 
   useEffect(() => {
-    if (!isProduction) {
+    if (!isEnabled) {
       return;
     }
 
@@ -63,17 +71,16 @@ export function PageAnalytics({
         window.clearTimeout(timeoutId);
       }
     };
-  }, [isProduction]);
+  }, [isEnabled]);
 
-  if (!isProduction || !shouldStartTracking) {
+  if (!isEnabled || !shouldStartTracking) {
     return null;
   }
 
   return (
     <DeferredPageAnalyticsRuntime
-      trackPageView={trackPageView}
       trackScroll={trackScroll}
-      trackTime={trackTime}
+      trackSections={trackSections}
       scrollThresholds={scrollThresholds}
     />
   );

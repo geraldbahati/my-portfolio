@@ -1,10 +1,10 @@
 "use client";
 
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import { AdaptiveLink } from "@/components/AdaptiveLink";
-import Analytics from "@/lib/analytics";
+import { trackContactCtaClicked } from "@/lib/analytics";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
 const GridPattern = dynamic(
@@ -26,41 +26,35 @@ const ANIMATION_DURATIONS = {
   HOVER_SCRAMBLE_SPEED: 0.04,
 } as const;
 
-type PortalTargets = {
-  gridSlot: Element | null;
-  namePortal: Element | null;
-  ctaPortal: Element | null;
-};
-
-const TextScrambleHoverTrigger = memo(() => {
+const TextScrambleHoverTrigger = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [shouldTrigger, setShouldTrigger] = useState(false);
-  const [hasTriggered, setHasTriggered] = useState(false);
+  const hasTriggeredRef = useRef(false);
   const scrambleTimeoutRef = useRef<NodeJS.Timeout>(null);
 
-  const handleMouseEnter = useCallback(() => {
+  const handleMouseEnter = () => {
     setIsHovered(true);
-    if (!hasTriggered) {
-      setHasTriggered(true);
+    if (!hasTriggeredRef.current) {
+      hasTriggeredRef.current = true;
       setShouldTrigger(true);
       scrambleTimeoutRef.current = setTimeout(() => {
         setShouldTrigger(false);
       }, ANIMATION_DURATIONS.HOVER_SCRAMBLE);
     }
-  }, [hasTriggered]);
+  };
 
-  const handleMouseLeave = useCallback(() => {
+  const handleMouseLeave = () => {
     if (scrambleTimeoutRef.current) {
       clearTimeout(scrambleTimeoutRef.current);
     }
     setIsHovered(false);
     setShouldTrigger(false);
-    setHasTriggered(false);
-  }, []);
+    hasTriggeredRef.current = false;
+  };
 
-  const handleScrambleComplete = useCallback(() => {
+  const handleScrambleComplete = () => {
     setShouldTrigger(false);
-  }, []);
+  };
 
   useEffect(() => {
     return () => {
@@ -75,13 +69,20 @@ const TextScrambleHoverTrigger = memo(() => {
       href="/contact"
       prefetchOnViewport
       prefetchRootMargin="150px"
+      // The label lives inside TextScramble, which randomises its characters
+      // mid-animation, so it is stated explicitly here.
+      aria-label="Request a project"
       onClick={() =>
-        Analytics.trackButtonClick("Request a project", "Hero CTA")
+        trackContactCtaClicked({
+          surface: "hero",
+          label: "Request a project",
+          destination: "/contact",
+        })
       }
       className="inline-block pointer-events-auto"
     >
       <span
-        className={`shrink-0 cursor-pointer relative inline-block border-b transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ${
+        className={`shrink-0 cursor-pointer relative inline-block border-b transition-[color,background-color,border-color,opacity,transform,box-shadow,filter] duration-300 hover:scale-[1.02] active:scale-[0.98] ${
           isHovered ? "border-primary" : "border-muted-foreground/50"
         }`}
         onMouseEnter={handleMouseEnter}
@@ -100,7 +101,7 @@ const TextScrambleHoverTrigger = memo(() => {
       </span>
     </AdaptiveLink>
   );
-});
+};
 
 TextScrambleHoverTrigger.displayName = "TextScrambleHoverTrigger";
 
@@ -118,14 +119,21 @@ export default function HeroEnhancements() {
     "(prefers-reduced-motion: reduce)",
   );
 
-  const portalTargets = useMemo<PortalTargets>(
-    () => ({
+  const portalTargets = (() => {
+    // This component is only loaded with `ssr: false`, so in practice the DOM is
+    // always present — but reading `document` unguarded during render makes that
+    // an invisible precondition. One stray server render would throw. Every
+    // consumer below already handles null targets.
+    if (typeof document === "undefined") {
+      return { gridSlot: null, namePortal: null, ctaPortal: null };
+    }
+
+    return {
       gridSlot: document.querySelector("[data-grid-pattern-slot]"),
       namePortal: document.querySelector("[data-hero-name-portal]"),
       ctaPortal: document.querySelector("[data-hero-cta-portal]"),
-    }),
-    [],
-  );
+    };
+  })();
 
   useEffect(() => {
     const nameStatic = document.querySelector("[data-hero-name-static]");
@@ -190,7 +198,8 @@ export default function HeroEnhancements() {
   return (
     <>
       {/* GridPattern → portaled into empty [data-grid-pattern-slot] */}
-      {!prefersReducedMotion && gridSlot &&
+      {!prefersReducedMotion &&
+        gridSlot &&
         createPortal(
           <GridPattern
             className="absolute inset-0"
@@ -226,11 +235,7 @@ export default function HeroEnhancements() {
         )}
 
       {/* TextScramble CTA → portaled into [data-hero-cta-portal] */}
-      {ctaPortal &&
-        createPortal(
-          <TextScrambleHoverTrigger />,
-          ctaPortal,
-        )}
+      {ctaPortal && createPortal(<TextScrambleHoverTrigger />, ctaPortal)}
     </>
   );
 }

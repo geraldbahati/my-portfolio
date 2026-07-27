@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import Image, { type StaticImageData } from "next/image";
 
 type ImageSource = string | StaticImageData;
@@ -35,10 +35,9 @@ export const CutoutMaskImage: React.FC<CutoutMaskImageProps> = ({
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  const currentImage = useMemo(
-    () => (clickToChangeImage ? imageArray[currentImageIndex] : imageUrl),
-    [clickToChangeImage, imageArray, currentImageIndex, imageUrl],
-  );
+  const currentImage = clickToChangeImage
+    ? imageArray[currentImageIndex]
+    : imageUrl;
 
   const handleClick = () => {
     if (clickToChangeImage && imageArray.length > 0) {
@@ -47,7 +46,7 @@ export const CutoutMaskImage: React.FC<CutoutMaskImageProps> = ({
   };
 
   // SVG mask as data URL for CSS
-  const maskSvg = useMemo(() => {
+  const maskSvg = (() => {
     const svg = `<svg viewBox="0 0 316 424" xmlns="http://www.w3.org/2000/svg">
       <path d="M108 48C108 21.4903 129.49 0 156 0H160C186.51 0 208 21.4903 208 48V52C208 78.5097 186.51 100 160 100H108V48Z" />
       <path d="M216 324H268C294.51 324 316 345.49 316 372V376C316 402.51 294.51 424 268 424H264C237.49 424 216 402.51 216 376V324Z" />
@@ -60,7 +59,7 @@ export const CutoutMaskImage: React.FC<CutoutMaskImageProps> = ({
       <path d="M216 48C216 21.4903 237.49 0 264 0H268C294.51 0 316 21.4903 316 48V160C316 186.51 294.51 208 268 208H216V48Z" />
     </svg>`;
     return `data:image/svg+xml;base64,${btoa(svg)}`;
-  }, []);
+  })();
 
   return (
     <div
@@ -107,9 +106,7 @@ export const CutoutMaskImage: React.FC<CutoutMaskImageProps> = ({
             className="object-cover transition-opacity duration-300"
             priority={priority}
             // Static imports carry a generated blurDataURL; only then is blur valid.
-            placeholder={
-              typeof currentImage === "object" ? "blur" : undefined
-            }
+            placeholder={typeof currentImage === "object" ? "blur" : undefined}
           />
         </div>
 
@@ -122,7 +119,7 @@ export const CutoutMaskImage: React.FC<CutoutMaskImageProps> = ({
             {imageArray.map((_, index) => (
               <div
                 key={index}
-                className={`h-2 rounded-full transition-all duration-300 shadow-sm ${
+                className={`h-2 rounded-full transition-[color,background-color,border-color,opacity,transform,box-shadow,filter] duration-300 shadow-sm ${
                   index === currentImageIndex
                     ? "bg-white opacity-100 w-6"
                     : "bg-white opacity-50 w-2"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -58,17 +58,18 @@ export default function ProjectChallengesTable({
 
   const [optimisticChallenges, setOptimisticChallenges] =
     useState<typeof serverChallenges>(undefined);
+  const [syncedChallenges, setSyncedChallenges] =
+    useState<typeof serverChallenges>(undefined);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingChallenge, setEditingChallenge] =
     useState<Id<"projectChallenges"> | null>(null);
   const [formData, setFormData] = useState<ChallengeFormData>(emptyForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (serverChallenges) {
-      setOptimisticChallenges(serverChallenges);
-    }
-  }, [serverChallenges]);
+  if (serverChallenges !== syncedChallenges) {
+    setSyncedChallenges(serverChallenges);
+    setOptimisticChallenges(serverChallenges);
+  }
 
   const challenges = optimisticChallenges ?? serverChallenges;
   const isLoading = challenges === undefined;
@@ -99,28 +100,30 @@ export default function ProjectChallengesTable({
     }
 
     setIsSubmitting(true);
-    try {
-      if (editingChallenge) {
-        await updateChallenge({
+    const save = editingChallenge
+      ? updateChallenge({
           challengeId: editingChallenge,
           title: formData.title,
           content: formData.content,
-        });
-      } else {
-        await createChallenge({
+        })
+      : createChallenge({
           projectId,
           title: formData.title,
           content: formData.content,
           order: challenges?.length ?? 0,
         });
-      }
-      setIsDialogOpen(false);
-      setFormData(emptyForm);
-    } catch (error) {
+
+    const error = await save
+      .then(() => null)
+      .catch((cause: unknown) => cause)
+      .finally(() => setIsSubmitting(false));
+
+    if (error) {
       console.error("Failed to save challenge:", error);
       alert("Failed to save challenge");
-    } finally {
-      setIsSubmitting(false);
+    } else {
+      setIsDialogOpen(false);
+      setFormData(emptyForm);
     }
   };
 

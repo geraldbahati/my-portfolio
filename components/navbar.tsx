@@ -1,10 +1,10 @@
 "use client";
 
-import React, { memo, useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { AdaptiveLink } from "@/components/AdaptiveLink";
-import Analytics from "@/lib/analytics";
+import { trackMenuToggled, trackNavigationClicked } from "@/lib/analytics";
 import { useLenis } from "@/components/LenisProvider";
 
 interface NavBarProps {
@@ -19,6 +19,14 @@ interface MenuButtonProps {
 
 const EXIT_DURATION_MS = 800;
 
+function handleLogoClick() {
+  trackNavigationClicked({
+    label: "Logo",
+    destination: "/",
+    surface: "navbar",
+  });
+}
+
 const MenuOverlay = dynamic(
   () =>
     import("@/components/navbar-menu-overlay").then((mod) => ({
@@ -29,7 +37,7 @@ const MenuOverlay = dynamic(
   },
 );
 
-const Navbar = memo(function Navbar() {
+const Navbar = function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
@@ -37,39 +45,36 @@ const Navbar = memo(function Navbar() {
   const lenis = useLenis();
   const exitTimerRef = useRef<NodeJS.Timeout>(null);
 
-  const handleSetIsOpen = useCallback(
-    (open: boolean) => {
-      if (isAnimating) {
-        return;
-      }
+  const handleSetIsOpen = (open: boolean) => {
+    if (isAnimating) {
+      return;
+    }
 
-      if (exitTimerRef.current) {
-        clearTimeout(exitTimerRef.current);
-        exitTimerRef.current = null;
-      }
+    if (exitTimerRef.current) {
+      clearTimeout(exitTimerRef.current);
+      exitTimerRef.current = null;
+    }
 
-      setIsAnimating(true);
+    setIsAnimating(true);
 
-      if (open) {
-        setShouldRender(true);
-        setIsClosing(false);
-        setIsOpen(true);
-        exitTimerRef.current = setTimeout(() => {
-          setIsAnimating(false);
-        }, 600);
-        return;
-      }
-
-      setIsClosing(true);
-      setIsOpen(false);
+    if (open) {
+      setShouldRender(true);
+      setIsClosing(false);
+      setIsOpen(true);
       exitTimerRef.current = setTimeout(() => {
-        setShouldRender(false);
-        setIsClosing(false);
         setIsAnimating(false);
-      }, EXIT_DURATION_MS);
-    },
-    [isAnimating],
-  );
+      }, 600);
+      return;
+    }
+
+    setIsClosing(true);
+    setIsOpen(false);
+    exitTimerRef.current = setTimeout(() => {
+      setShouldRender(false);
+      setIsClosing(false);
+      setIsAnimating(false);
+    }, EXIT_DURATION_MS);
+  };
 
   useEffect(() => {
     return () => {
@@ -106,13 +111,9 @@ const Navbar = memo(function Navbar() {
       )}
     </>
   );
-});
+};
 
-const NavBar = memo(function NavBar({ isOpen, setIsOpen }: NavBarProps) {
-  const handleLogoClick = useCallback(() => {
-    Analytics.trackLinkClick("Logo", "/", "internal");
-  }, []);
-
+const NavBar = function NavBar({ isOpen, setIsOpen }: NavBarProps) {
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 ${
@@ -135,7 +136,7 @@ const NavBar = memo(function NavBar({ isOpen, setIsOpen }: NavBarProps) {
               height={80}
               priority
               sizes="(max-width: 640px) 48px, (max-width: 768px) 56px, (max-width: 1024px) 56px, (max-width: 1280px) 64px, 80px"
-              className="w-12 h-12 sm:w-14 sm:h-14 md:w-14 md:h-14 lg:w-16 lg:h-16 xl:w-20 xl:h-20 short:w-14 short:h-14 invert brightness-0 transition-all duration-300"
+              className="w-12 h-12 sm:w-14 sm:h-14 md:w-14 md:h-14 lg:w-16 lg:h-16 xl:w-20 xl:h-20 short:w-14 short:h-14 invert brightness-0 transition-[color,background-color,border-color,opacity,transform,box-shadow,filter] duration-300"
             />
           </AdaptiveLink>
 
@@ -144,20 +145,18 @@ const NavBar = memo(function NavBar({ isOpen, setIsOpen }: NavBarProps) {
       </div>
     </nav>
   );
-});
+};
 
-const MenuButton = memo(function MenuButton({
-  isOpen,
-  setIsOpen,
-}: MenuButtonProps) {
-  const handleMenuToggle = useCallback(() => {
+const MenuButton = function MenuButton({ isOpen, setIsOpen }: MenuButtonProps) {
+  const handleMenuToggle = () => {
     const newState = !isOpen;
     setIsOpen(newState);
-    Analytics.trackButtonClick(newState ? "Open Menu" : "Close Menu", "Navbar");
-  }, [isOpen, setIsOpen]);
+    trackMenuToggled({ state: newState ? "opened" : "closed" });
+  };
 
   return (
     <button
+      type="button"
       className="relative z-50 w-12 h-12 flex flex-col items-center justify-center animate-nav-slide-down hover:scale-110 active:scale-90 transition-transform duration-200"
       style={{ animationDelay: "0.3s" }}
       onClick={handleMenuToggle}
@@ -166,7 +165,7 @@ const MenuButton = memo(function MenuButton({
     >
       <div className="relative w-8 h-6 flex flex-col justify-center">
         <span
-          className="absolute h-0.5 w-full bg-white transition-all duration-300 ease-in-out"
+          className="absolute h-0.5 w-full bg-white transition-transform duration-300 ease-in-out"
           style={{
             transform: isOpen
               ? "rotate(45deg) translateY(0)"
@@ -174,7 +173,7 @@ const MenuButton = memo(function MenuButton({
           }}
         />
         <span
-          className="absolute h-0.5 w-full bg-white transition-all duration-300 ease-in-out"
+          className="absolute h-0.5 w-full bg-white transition-transform duration-300 ease-in-out"
           style={{
             transform: isOpen
               ? "rotate(-45deg) translateY(0)"
@@ -184,6 +183,6 @@ const MenuButton = memo(function MenuButton({
       </div>
     </button>
   );
-});
+};
 
 export { Navbar };

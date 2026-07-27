@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { type ComponentProps, useState } from "react";
 import { useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -18,12 +18,14 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import FaqFormDialog from "./faq-form-dialog";
 
+type EditingFaq = ComponentProps<typeof FaqFormDialog>["editingFaq"];
+
 export default function FaqsTable() {
   const faqs = useQuery(api.adminFaqs.getAllFaqsQuery);
   const deleteFaqAction = useAction(api.adminFaqs.deleteFaq);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingFaq, setEditingFaq] = useState<any | undefined>(undefined);
+  const [editingFaq, setEditingFaq] = useState<EditingFaq>(undefined);
 
   const isLoading = faqs === undefined;
 
@@ -71,6 +73,7 @@ export default function FaqsTable() {
 
       {/* Form Dialog */}
       <FaqFormDialog
+        key={`${isDialogOpen}-${editingFaq?._id ?? "new"}`}
         isOpen={isDialogOpen}
         onClose={handleDialogClose}
         onSuccess={handleDialogClose}
@@ -148,7 +151,9 @@ export default function FaqsTable() {
                         <div className="line-clamp-2">{faq.answer}</div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={faq.isPublished ? "default" : "outline"}>
+                        <Badge
+                          variant={faq.isPublished ? "default" : "outline"}
+                        >
                           {faq.isPublished ? "Published" : "Draft"}
                         </Badge>
                       </TableCell>

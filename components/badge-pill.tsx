@@ -20,7 +20,7 @@ export const BadgePill: React.FC<BadgePillProps> = ({
   const isInteractive = !!onClick;
 
   const baseClasses =
-    "inline-flex items-center px-3 py-1 rounded-full text-sm lg:text-md font-medium transition-all duration-200";
+    "inline-flex items-center px-3 py-1 rounded-full text-sm lg:text-md font-medium transition-[color,background-color,border-color,opacity,transform,box-shadow,filter] duration-200";
   const colorClasses = "bg-muted text-muted-foreground";
   const interactiveClasses = isInteractive
     ? "cursor-pointer hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -16,9 +16,11 @@ interface ProjectDetailsFormProps {
   projectId: Id<"projects">;
 }
 
-export default function ProjectDetailsForm({
-  projectId,
-}: ProjectDetailsFormProps) {
+export default function ProjectDetailsForm(props: ProjectDetailsFormProps) {
+  return useProjectDetailsForm(props);
+}
+
+function useProjectDetailsForm({ projectId }: ProjectDetailsFormProps) {
   const details = useQuery(api.adminProjectDetails.getByProjectId, {
     projectId,
   });
@@ -46,29 +48,36 @@ export default function ProjectDetailsForm({
   const [newColorName, setNewColorName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [syncedDetails, setSyncedDetails] = useState<typeof details>(undefined);
 
-  // Sync form data when details are loaded
-  useEffect(() => {
+  if (details !== syncedDetails) {
+    setSyncedDetails(details);
     if (details) {
+      const colorKeys = new Set<string>();
       setFormData({
         heroImage: details.heroImage || "",
         heroAlt: details.heroAlt || "",
         tagline: details.tagline || "",
         fullDescription: details.fullDescription || "",
-        services: details.services || [],
+        services: [...new Set(details.services || [])],
         client: details.client || "",
         industry: details.industry || "",
         period: details.period || "",
         year: details.year,
-        features: details.features || [],
+        features: [...new Set(details.features || [])],
         videoUrl: details.videoUrl || "",
         videoPoster: details.videoPoster || "",
         videoAlt: details.videoAlt || "",
-        colorPalette: details.colorPalette || [],
+        colorPalette: (details.colorPalette || []).filter((color) => {
+          const key = `${color.hex}-${color.name ?? ""}`;
+          if (colorKeys.has(key)) return false;
+          colorKeys.add(key);
+          return true;
+        }),
       });
       setHasChanges(false);
     }
-  }, [details]);
+  }
 
   const updateField = <K extends keyof typeof formData>(
     field: K,
@@ -80,7 +89,9 @@ export default function ProjectDetailsForm({
 
   const addService = () => {
     if (newService.trim()) {
-      updateField("services", [...formData.services, newService.trim()]);
+      const service = newService.trim();
+      if (formData.services.includes(service)) return;
+      updateField("services", [...formData.services, service]);
       setNewService("");
     }
   };
@@ -94,7 +105,9 @@ export default function ProjectDetailsForm({
 
   const addFeature = () => {
     if (newFeature.trim()) {
-      updateField("features", [...formData.features, newFeature.trim()]);
+      const feature = newFeature.trim();
+      if (formData.features.includes(feature)) return;
+      updateField("features", [...formData.features, feature]);
       setNewFeature("");
     }
   };
@@ -108,10 +121,19 @@ export default function ProjectDetailsForm({
 
   const addColor = () => {
     if (newColorHex.trim()) {
-      updateField("colorPalette", [
-        ...formData.colorPalette,
-        { hex: newColorHex.trim(), name: newColorName.trim() || undefined },
-      ]);
+      const color = {
+        hex: newColorHex.trim(),
+        name: newColorName.trim() || undefined,
+      };
+      if (
+        formData.colorPalette.some(
+          (candidate) =>
+            candidate.hex === color.hex && candidate.name === color.name,
+        )
+      ) {
+        return;
+      }
+      updateField("colorPalette", [...formData.colorPalette, color]);
       setNewColorHex("#000000");
       setNewColorName("");
     }
@@ -128,31 +150,33 @@ export default function ProjectDetailsForm({
     e.preventDefault();
     setIsSubmitting(true);
 
-    try {
-      await upsertDetails({
-        projectId,
-        heroImage: formData.heroImage || undefined,
-        heroAlt: formData.heroAlt || undefined,
-        tagline: formData.tagline || undefined,
-        fullDescription: formData.fullDescription || undefined,
-        services: formData.services.length > 0 ? formData.services : undefined,
-        client: formData.client || undefined,
-        industry: formData.industry || undefined,
-        period: formData.period || undefined,
-        year: formData.year,
-        features: formData.features.length > 0 ? formData.features : undefined,
-        videoUrl: formData.videoUrl || undefined,
-        videoPoster: formData.videoPoster || undefined,
-        videoAlt: formData.videoAlt || undefined,
-        colorPalette:
-          formData.colorPalette.length > 0 ? formData.colorPalette : undefined,
-      });
-      setHasChanges(false);
-    } catch (error) {
+    const error = await upsertDetails({
+      projectId,
+      heroImage: formData.heroImage || undefined,
+      heroAlt: formData.heroAlt || undefined,
+      tagline: formData.tagline || undefined,
+      fullDescription: formData.fullDescription || undefined,
+      services: formData.services.length > 0 ? formData.services : undefined,
+      client: formData.client || undefined,
+      industry: formData.industry || undefined,
+      period: formData.period || undefined,
+      year: formData.year,
+      features: formData.features.length > 0 ? formData.features : undefined,
+      videoUrl: formData.videoUrl || undefined,
+      videoPoster: formData.videoPoster || undefined,
+      videoAlt: formData.videoAlt || undefined,
+      colorPalette:
+        formData.colorPalette.length > 0 ? formData.colorPalette : undefined,
+    })
+      .then(() => null)
+      .catch((cause: unknown) => cause)
+      .finally(() => setIsSubmitting(false));
+
+    if (error) {
       console.error("Failed to save details:", error);
       alert("Failed to save details");
-    } finally {
-      setIsSubmitting(false);
+    } else {
+      setHasChanges(false);
     }
   };
 
@@ -301,6 +325,7 @@ export default function ProjectDetailsForm({
               onClick={addService}
               size="icon"
               variant="outline"
+              aria-label="Add service"
             >
               <Plus className="h-4 w-4" />
             </Button>
@@ -308,7 +333,7 @@ export default function ProjectDetailsForm({
           <div className="flex flex-wrap gap-2">
             {formData.services.map((service, index) => (
               <div
-                key={index}
+                key={service}
                 className="flex items-center gap-1 bg-muted px-3 py-1 rounded-full text-sm"
               >
                 {service}
@@ -316,6 +341,7 @@ export default function ProjectDetailsForm({
                   type="button"
                   onClick={() => removeService(index)}
                   className="hover:text-destructive"
+                  aria-label={`Remove ${service}`}
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -345,6 +371,7 @@ export default function ProjectDetailsForm({
               onClick={addFeature}
               size="icon"
               variant="outline"
+              aria-label="Add feature"
             >
               <Plus className="h-4 w-4" />
             </Button>
@@ -352,7 +379,7 @@ export default function ProjectDetailsForm({
           <div className="flex flex-wrap gap-2">
             {formData.features.map((feature, index) => (
               <div
-                key={index}
+                key={feature}
                 className="flex items-center gap-1 bg-muted px-3 py-1 rounded-full text-sm"
               >
                 {feature}
@@ -360,6 +387,7 @@ export default function ProjectDetailsForm({
                   type="button"
                   onClick={() => removeFeature(index)}
                   className="hover:text-destructive"
+                  aria-label={`Remove ${feature}`}
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -415,6 +443,7 @@ export default function ProjectDetailsForm({
               onClick={addColor}
               size="icon"
               variant="outline"
+              aria-label="Add color"
             >
               <Plus className="h-4 w-4" />
             </Button>
@@ -422,7 +451,7 @@ export default function ProjectDetailsForm({
           <div className="flex flex-wrap gap-3">
             {formData.colorPalette.map((color, index) => (
               <div
-                key={index}
+                key={`${color.hex}-${color.name ?? "unnamed"}`}
                 className="flex items-center gap-2 bg-muted px-3 py-2 rounded-lg"
               >
                 <div
@@ -441,6 +470,7 @@ export default function ProjectDetailsForm({
                   type="button"
                   onClick={() => removeColor(index)}
                   className="hover:text-destructive ml-1"
+                  aria-label={`Remove ${color.name ?? color.hex}`}
                 >
                   <X className="h-3 w-3" />
                 </button>

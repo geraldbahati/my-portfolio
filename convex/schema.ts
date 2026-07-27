@@ -37,7 +37,9 @@ export default defineSchema({
   })
     .index("by_email", ["email"])
     .index("by_status", ["status"])
-    .index("by_submitted_at", ["submittedAt"]),
+    .index("by_submitted_at", ["submittedAt"])
+    // Resend delivery webhooks identify a submission only by its email ID.
+    .index("by_email_id", ["emailId"]),
 
   // ---------------------------------------------------------------------------
   // Projects (Main Table)

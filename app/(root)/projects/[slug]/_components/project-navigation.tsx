@@ -30,7 +30,7 @@ export function ProjectNavigation({
             {previousProject ? (
               <AdaptiveLink
                 href={`/projects/${previousProject.id}`}
-                className="group flex flex-col items-start gap-2 text-muted-foreground hover:text-foreground transition-colors h-full animate-in fade-in slide-in-from-left-4 duration-500"
+                className="group flex flex-col items-start gap-2 text-muted-foreground hover:text-foreground transition-colors h-full project-reveal-left-500"
                 prefetchOnViewport
                 prefetchRootMargin="150px"
                 prefetchDelayMs={1200}
@@ -46,7 +46,7 @@ export function ProjectNavigation({
             ) : (
               <AdaptiveLink
                 href="/projects"
-                className="group flex flex-col items-start gap-2 text-muted-foreground hover:text-foreground transition-colors h-full animate-in fade-in slide-in-from-left-4 duration-500"
+                className="group flex flex-col items-start gap-2 text-muted-foreground hover:text-foreground transition-colors h-full project-reveal-left-500"
                 prefetchOnViewport
                 prefetchRootMargin="150px"
                 prefetchDelayMs={1200}
@@ -67,7 +67,7 @@ export function ProjectNavigation({
             {nextProject ? (
               <AdaptiveLink
                 href={`/projects/${nextProject.id}`}
-                className="group flex flex-col items-end gap-2 text-muted-foreground hover:text-foreground transition-colors text-right h-full animate-in fade-in slide-in-from-right-4 duration-500"
+                className="group flex flex-col items-end gap-2 text-muted-foreground hover:text-foreground transition-colors text-right h-full project-reveal-right-500"
                 prefetchOnViewport
                 prefetchRootMargin="150px"
                 prefetchDelayMs={1200}
@@ -83,7 +83,7 @@ export function ProjectNavigation({
             ) : (
               <AdaptiveLink
                 href="/projects"
-                className="group flex flex-col items-end gap-2 text-muted-foreground hover:text-foreground transition-colors text-right h-full animate-in fade-in slide-in-from-right-4 duration-500"
+                className="group flex flex-col items-end gap-2 text-muted-foreground hover:text-foreground transition-colors text-right h-full project-reveal-right-500"
                 prefetchOnViewport
                 prefetchRootMargin="150px"
                 prefetchDelayMs={1200}

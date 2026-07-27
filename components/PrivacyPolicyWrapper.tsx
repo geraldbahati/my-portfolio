@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import type { MDXRemoteSerializeResult } from "next-mdx-remote";
-import type { PrivacyPolicySection } from "./PrivacyPolicy";
+import type { PrivacyHeading } from "@/lib/content";
 
 // Loading skeleton component
 function PrivacyPolicySkeleton() {
@@ -42,11 +42,12 @@ const PrivacyPolicy = dynamic(
   {
     ssr: false,
     loading: () => <PrivacyPolicySkeleton />,
-  }
+  },
 );
 
 interface PrivacyPolicyWrapperProps {
-  content: MDXRemoteSerializeResult | PrivacyPolicySection[];
+  content: MDXRemoteSerializeResult;
+  headings?: PrivacyHeading[];
   className?: string;
 }
 

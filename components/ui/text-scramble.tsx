@@ -1,5 +1,12 @@
 "use client";
-import { useEffect, useEffectEvent, useRef, useState, type ElementType, type HTMLAttributes } from "react";
+import {
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useState,
+  type ElementType,
+  type HTMLAttributes,
+} from "react";
 
 export type TextScrambleProps = {
   children: string;
@@ -85,15 +92,7 @@ export function TextScramble({
     }, intervalMs);
 
     return clearActiveInterval;
-  }, [
-    trigger,
-    duration,
-    speed,
-    characterSet,
-    text,
-    intervalMs,
-    stepCount,
-  ]);
+  }, [trigger, duration, speed, characterSet, text, intervalMs, stepCount]);
 
   const ComponentTag = Component as ElementType;
 
@@ -103,7 +102,7 @@ export function TextScramble({
       style={{ pointerEvents: "none", ...style }}
       {...props}
     >
-      {trigger ? displayText ?? text : text}
+      {trigger ? (displayText ?? text) : text}
     </ComponentTag>
   );
 }

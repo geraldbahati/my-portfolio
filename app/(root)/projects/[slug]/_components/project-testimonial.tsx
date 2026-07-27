@@ -26,7 +26,7 @@ export function ProjectTestimonial({ testimonial }: ProjectTestimonialProps) {
             // Two-column layout when image is provided
             <div className="flex flex-col md:flex-row gap-12 items-center">
               {/* Author Image */}
-              <div className="shrink-0 animate-in fade-in zoom-in-90 duration-500">
+              <div className="shrink-0 project-reveal-zoom-500">
                 <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden">
                   <Image
                     src={authorImage}
@@ -49,22 +49,22 @@ export function ProjectTestimonial({ testimonial }: ProjectTestimonialProps) {
                   className="text-foreground"
                 >
                   <path
-                    d="M5.29289 1.29291L6.70711 2.70712L3 6.41423V7.00001H7V14H1V5.5858L5.29289 1.29291Z"
+                    d="M5.29 1.29L6.71 2.71L3 6.41V7H7V14H1V5.59L5.29 1.29Z"
                     fill="currentColor"
                   />
                   <path
-                    d="M15 7.00001H11V6.41423L14.7071 2.70712L13.2929 1.29291L9 5.5858V14H15V7.00001Z"
+                    d="M15 7H11V6.41L14.71 2.71L13.29 1.29L9 5.59V14H15V7Z"
                     fill="currentColor"
                   />
                 </svg>
 
                 {/* Testimonial Text */}
-                <p className="text-lg md:text-xl md:leading-relaxed font-normal text-foreground animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
+                <p className="text-lg md:text-xl md:leading-relaxed font-normal text-foreground project-reveal-up-700 delay-100">
                   {quote}
                 </p>
 
                 {/* Author Details */}
-                <div className="space-y-1 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+                <div className="space-y-1 project-reveal-up-700 delay-200">
                   <h3 className="text-foreground text-xs font-bold uppercase tracking-widest">
                     {author}
                   </h3>
@@ -82,7 +82,7 @@ export function ProjectTestimonial({ testimonial }: ProjectTestimonialProps) {
             // Full-width layout when no image - original design spanning full width
             <div className="flex flex-col md:flex-row gap-8 items-start w-full">
               {/* Quote Icon SVG - Left Aligned */}
-              <div className="shrink-0 animate-in fade-in zoom-in-90 duration-500">
+              <div className="shrink-0 project-reveal-zoom-500">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="60"
@@ -92,11 +92,11 @@ export function ProjectTestimonial({ testimonial }: ProjectTestimonialProps) {
                   className="text-foreground"
                 >
                   <path
-                    d="M5.29289 1.29291L6.70711 2.70712L3 6.41423V7.00001H7V14H1V5.5858L5.29289 1.29291Z"
+                    d="M5.29 1.29L6.71 2.71L3 6.41V7H7V14H1V5.59L5.29 1.29Z"
                     fill="currentColor"
                   />
                   <path
-                    d="M15 7.00001H11V6.41423L14.7071 2.70712L13.2929 1.29291L9 5.5858V14H15V7.00001Z"
+                    d="M15 7H11V6.41L14.71 2.71L13.29 1.29L9 5.59V14H15V7Z"
                     fill="currentColor"
                   />
                 </svg>
@@ -105,12 +105,12 @@ export function ProjectTestimonial({ testimonial }: ProjectTestimonialProps) {
               {/* Text content spans remaining width */}
               <div className="space-y-8 flex-1">
                 {/* Testimonial Text */}
-                <p className="text-lg md:text-xl md:leading-relaxed font-normal text-foreground animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
+                <p className="text-lg md:text-xl md:leading-relaxed font-normal text-foreground project-reveal-up-700 delay-100">
                   {quote}
                 </p>
 
                 {/* Author Details */}
-                <div className="space-y-1 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
+                <div className="space-y-1 project-reveal-up-700 delay-200">
                   <h3 className="text-foreground text-xs font-bold uppercase tracking-widest">
                     {author}
                   </h3>
@@ -127,7 +127,7 @@ export function ProjectTestimonial({ testimonial }: ProjectTestimonialProps) {
           )}
 
           {/* SVG Separator Line */}
-          <div className="mt-20 w-full max-w-full overflow-hidden opacity-30 animate-in fade-in duration-1000 delay-400">
+          <div className="mt-20 w-full max-w-full overflow-hidden opacity-30 project-reveal-fade-1000 delay-400">
             <svg
               className="w-full h-auto"
               viewBox="0 0 1200 5"

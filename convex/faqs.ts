@@ -23,7 +23,7 @@ export const getPublishedFaqs = query({
       isPublished: v.boolean(),
       createdAt: v.number(),
       updatedAt: v.number(),
-    })
+    }),
   ),
   handler: async (ctx) => {
     const faqs = await ctx.db
@@ -50,7 +50,7 @@ export const getAllFaqs = internalQuery({
       isPublished: v.boolean(),
       createdAt: v.number(),
       updatedAt: v.number(),
-    })
+    }),
   ),
   handler: async (ctx) => {
     const faqs = await ctx.db.query("faqs").withIndex("by_order").collect();
@@ -75,7 +75,7 @@ export const getFaq = internalQuery({
       createdAt: v.number(),
       updatedAt: v.number(),
     }),
-    v.null()
+    v.null(),
   ),
   handler: async (ctx, args) => {
     return await ctx.db.get(args.faqId);
@@ -157,19 +157,21 @@ export const reorderFaqs = internalMutation({
       v.object({
         faqId: v.id("faqs"),
         order: v.number(),
-      })
+      }),
     ),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
     const now = Date.now();
 
-    for (const { faqId, order } of args.faqOrders) {
-      await ctx.db.patch(faqId, {
-        order,
-        updatedAt: now,
-      });
-    }
+    await Promise.all(
+      args.faqOrders.map(({ faqId, order }) =>
+        ctx.db.patch(faqId, {
+          order,
+          updatedAt: now,
+        }),
+      ),
+    );
 
     return null;
   },

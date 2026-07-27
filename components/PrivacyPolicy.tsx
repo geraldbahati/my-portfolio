@@ -6,15 +6,13 @@ import { PrintButton } from "./PrintButton";
 import { ComponentProps } from "react";
 import { ArrowUp } from "lucide-react";
 import { useEffect, useState } from "react";
-
-export interface PrivacyPolicySection {
-  id: string;
-  title: string;
-  content: string;
-}
+import { AnalyticsPreferences } from "./analytics-preferences";
+import type { PrivacyHeading } from "@/lib/content";
 
 export interface PrivacyPolicyProps {
-  content: MDXRemoteSerializeResult | PrivacyPolicySection[];
+  content: MDXRemoteSerializeResult;
+  /** Derived from the document's own headings so anchors can't go stale. */
+  headings?: PrivacyHeading[];
   className?: string;
 }
 
@@ -64,10 +62,7 @@ const mdxComponents = {
     />
   ),
   li: (props: ComponentProps<"li">) => (
-    <li
-      className="pl-2 text-muted-foreground print:text-black"
-      {...props}
-    />
+    <li className="pl-2 text-muted-foreground print:text-black" {...props} />
   ),
   a: (props: ComponentProps<"a">) => (
     <a
@@ -95,27 +90,29 @@ const mdxComponents = {
   ),
 };
 
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
 export function PrivacyPolicy({
   content,
+  headings = [],
   className = "",
 }: PrivacyPolicyProps) {
-  const isArrayContent = Array.isArray(content);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 300);
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   return (
-    <div className={`privacy-policy-container min-h-screen bg-gradient-to-br from-background to-muted print:bg-white ${className}`}>
+    <div
+      className={`privacy-policy-container min-h-screen bg-gradient-to-br from-background to-muted print:bg-white ${className}`}
+    >
       {/* Skip to main content for accessibility */}
       <a
         href="#privacy-content"
@@ -130,73 +127,34 @@ export function PrivacyPolicy({
         className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pt-32 relative print:py-8 print:pt-8"
       >
         <article className="bg-card rounded-3xl shadow-xl border border-border p-8 sm:p-12 prose prose-lg max-w-none dark:prose-invert print:rounded-none print:shadow-none print:border-none print:bg-white print:p-8">
-          {isArrayContent ? (
-            // Render sections if content is an array
-            <div className="space-y-8">
-              {content.map((section) => (
-                <section key={section.id} id={section.id}>
-                  <h2>{section.title}</h2>
-                  <div dangerouslySetInnerHTML={{ __html: section.content }} />
-                </section>
-              ))}
-            </div>
-          ) : (
-            // Render MDX content
-            <MDXRemote {...content} components={mdxComponents} />
-          )}
+          <MDXRemote {...content} components={mdxComponents} />
         </article>
 
         {/* Table of Contents */}
-        <nav
-          className="mt-12 pt-8 border-t border-border print:hidden"
-          aria-label="Table of contents"
-        >
-          <h2 className="text-xl font-semibold mb-4 text-foreground">
-            Quick Navigation
-          </h2>
-          <ul className="space-y-2">
-            <li>
-              <a
-                href="#data-collection"
-                className="text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
-              >
-                Data Collection
-              </a>
-            </li>
-            <li>
-              <a
-                href="#data-usage"
-                className="text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
-              >
-                How We Use Your Data
-              </a>
-            </li>
-            <li>
-              <a
-                href="#data-sharing"
-                className="text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
-              >
-                Data Sharing
-              </a>
-            </li>
-            <li>
-              <a
-                href="#your-rights"
-                className="text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
-              >
-                Your Rights
-              </a>
-            </li>
-            <li>
-              <a
-                href="#contact"
-                className="text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
-              >
-                Contact Information
-              </a>
-            </li>
-          </ul>
-        </nav>
+        {headings.length > 0 && (
+          <nav
+            className="mt-12 pt-8 border-t border-border print:hidden"
+            aria-label="Table of contents"
+          >
+            <h2 className="text-xl font-semibold mb-4 text-foreground">
+              Quick Navigation
+            </h2>
+            <ul className="space-y-2">
+              {headings.map((heading) => (
+                <li key={heading.id}>
+                  <a
+                    href={`#${heading.id}`}
+                    className="text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
+                  >
+                    {heading.title}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        )}
+
+        <AnalyticsPreferences />
       </main>
 
       {/* Floating Action Buttons */}
@@ -209,8 +167,9 @@ export function PrivacyPolicy({
         {/* Scroll to top button - Only when scrolled */}
         {showScrollTop && (
           <button
+            type="button"
             onClick={scrollToTop}
-            className="p-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
+            className="p-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg hover:shadow-xl transition-[background-color,box-shadow] duration-200"
             aria-label="Scroll to top"
           >
             <ArrowUp className="w-5 h-5" />

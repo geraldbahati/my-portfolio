@@ -133,10 +133,7 @@ function SortableRoot<T>(props: SortableRootProps<T>) {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
-  const config = React.useMemo(
-    () => orientationConfig[orientation],
-    [orientation],
-  );
+  const config = orientationConfig[orientation];
 
   const getItemValue = React.useCallback(
     (item: T): UniqueIdentifier => {
@@ -152,118 +149,110 @@ function SortableRoot<T>(props: SortableRootProps<T>) {
     [getItemValueProp],
   );
 
-  const items = React.useMemo(() => {
-    return value.map((item) => getItemValue(item));
-  }, [value, getItemValue]);
-
-  const onDragStart = React.useCallback(
-    (event: DragStartEvent) => {
-      sortableProps.onDragStart?.(event);
-
-      if (event.activatorEvent.defaultPrevented) return;
-
-      setActiveId(event.active.id);
-    },
-    [sortableProps],
+  const items = React.useMemo(
+    () => value.map((item) => getItemValue(item)),
+    [value, getItemValue],
   );
 
-  const onDragEnd = React.useCallback(
-    (event: DragEndEvent) => {
-      sortableProps.onDragEnd?.(event);
+  const onDragStart = (event: DragStartEvent) => {
+    sortableProps.onDragStart?.(event);
 
-      if (event.activatorEvent.defaultPrevented) return;
+    if (event.activatorEvent.defaultPrevented) return;
 
-      const { active, over } = event;
-      if (over && active.id !== over?.id) {
-        const activeIndex = value.findIndex(
-          (item) => getItemValue(item) === active.id,
-        );
-        const overIndex = value.findIndex(
-          (item) => getItemValue(item) === over.id,
-        );
+    setActiveId(event.active.id);
+  };
 
-        if (onMove) {
-          onMove({ ...event, activeIndex, overIndex });
-        } else {
-          onValueChange?.(arrayMove(value, activeIndex, overIndex));
-        }
+  const onDragEnd = (event: DragEndEvent) => {
+    sortableProps.onDragEnd?.(event);
+
+    if (event.activatorEvent.defaultPrevented) return;
+
+    const { active, over } = event;
+    if (over && active.id !== over?.id) {
+      const activeIndex = value.findIndex(
+        (item) => getItemValue(item) === active.id,
+      );
+      const overIndex = value.findIndex(
+        (item) => getItemValue(item) === over.id,
+      );
+
+      if (onMove) {
+        onMove({ ...event, activeIndex, overIndex });
+      } else {
+        onValueChange?.(arrayMove(value, activeIndex, overIndex));
       }
-      setActiveId(null);
+    }
+    setActiveId(null);
+  };
+
+  const onDragCancel = (event: DragEndEvent) => {
+    sortableProps.onDragCancel?.(event);
+
+    if (event.activatorEvent.defaultPrevented) return;
+
+    setActiveId(null);
+  };
+
+  const announcements: Announcements = {
+    onDragStart({ active }) {
+      const activeValue = active.id.toString();
+      return `Grabbed sortable item "${activeValue}". Current position is ${active.data.current?.sortable.index + 1} of ${value.length}. Use arrow keys to move, space to drop.`;
     },
-    [value, onValueChange, onMove, getItemValue, sortableProps],
-  );
 
-  const onDragCancel = React.useCallback(
-    (event: DragEndEvent) => {
-      sortableProps.onDragCancel?.(event);
-
-      if (event.activatorEvent.defaultPrevented) return;
-
-      setActiveId(null);
-    },
-    [sortableProps],
-  );
-
-  const announcements: Announcements = React.useMemo(
-    () => ({
-      onDragStart({ active }) {
-        const activeValue = active.id.toString();
-        return `Grabbed sortable item "${activeValue}". Current position is ${active.data.current?.sortable.index + 1} of ${value.length}. Use arrow keys to move, space to drop.`;
-      },
-      onDragOver({ active, over }) {
-        if (over) {
-          const overIndex = over.data.current?.sortable.index ?? 0;
-          const activeIndex = active.data.current?.sortable.index ?? 0;
-          const moveDirection = overIndex > activeIndex ? "down" : "up";
-          const activeValue = active.id.toString();
-          return `Sortable item "${activeValue}" moved ${moveDirection} to position ${overIndex + 1} of ${value.length}.`;
-        }
-        return "Sortable item is no longer over a droppable area. Press escape to cancel.";
-      },
-      onDragEnd({ active, over }) {
-        const activeValue = active.id.toString();
-        if (over) {
-          const overIndex = over.data.current?.sortable.index ?? 0;
-          return `Sortable item "${activeValue}" dropped at position ${overIndex + 1} of ${value.length}.`;
-        }
-        return `Sortable item "${activeValue}" dropped. No changes were made.`;
-      },
-      onDragCancel({ active }) {
+    onDragOver({ active, over }) {
+      if (over) {
+        const overIndex = over.data.current?.sortable.index ?? 0;
         const activeIndex = active.data.current?.sortable.index ?? 0;
+        const moveDirection = overIndex > activeIndex ? "down" : "up";
         const activeValue = active.id.toString();
-        return `Sorting cancelled. Sortable item "${activeValue}" returned to position ${activeIndex + 1} of ${value.length}.`;
-      },
-      onDragMove({ active, over }) {
-        if (over) {
-          const overIndex = over.data.current?.sortable.index ?? 0;
-          const activeIndex = active.data.current?.sortable.index ?? 0;
-          const moveDirection = overIndex > activeIndex ? "down" : "up";
-          const activeValue = active.id.toString();
-          return `Sortable item "${activeValue}" is moving ${moveDirection} to position ${overIndex + 1} of ${value.length}.`;
-        }
-        return "Sortable item is no longer over a droppable area. Press escape to cancel.";
-      },
-    }),
-    [value],
-  );
+        return `Sortable item "${activeValue}" moved ${moveDirection} to position ${overIndex + 1} of ${value.length}.`;
+      }
+      return "Sortable item is no longer over a droppable area. Press escape to cancel.";
+    },
 
-  const screenReaderInstructions: ScreenReaderInstructions = React.useMemo(
-    () => ({
-      draggable: `
-        To pick up a sortable item, press space or enter.
-        While dragging, use the ${orientation === "vertical" ? "up and down" : orientation === "horizontal" ? "left and right" : "arrow"} keys to move the item.
-        Press space or enter again to drop the item in its new position, or press escape to cancel.
-      `,
-    }),
-    [orientation],
-  );
+    onDragEnd({ active, over }) {
+      const activeValue = active.id.toString();
+      if (over) {
+        const overIndex = over.data.current?.sortable.index ?? 0;
+        return `Sortable item "${activeValue}" dropped at position ${overIndex + 1} of ${value.length}.`;
+      }
+      return `Sortable item "${activeValue}" dropped. No changes were made.`;
+    },
 
+    onDragCancel({ active }) {
+      const activeIndex = active.data.current?.sortable.index ?? 0;
+      const activeValue = active.id.toString();
+      return `Sorting cancelled. Sortable item "${activeValue}" returned to position ${activeIndex + 1} of ${value.length}.`;
+    },
+
+    onDragMove({ active, over }) {
+      if (over) {
+        const overIndex = over.data.current?.sortable.index ?? 0;
+        const activeIndex = active.data.current?.sortable.index ?? 0;
+        const moveDirection = overIndex > activeIndex ? "down" : "up";
+        const activeValue = active.id.toString();
+        return `Sortable item "${activeValue}" is moving ${moveDirection} to position ${overIndex + 1} of ${value.length}.`;
+      }
+      return "Sortable item is no longer over a droppable area. Press escape to cancel.";
+    },
+  };
+
+  const screenReaderInstructions: ScreenReaderInstructions = {
+    draggable: `
+      To pick up a sortable item, press space or enter.
+      While dragging, use the ${orientation === "vertical" ? "up and down" : orientation === "horizontal" ? "left and right" : "arrow"} keys to move the item.
+      Press space or enter again to drop the item in its new position, or press escape to cancel.
+    `,
+  };
+
+  const resolvedModifiers = modifiers ?? config.modifiers;
+  const resolvedStrategy = strategy ?? config.strategy;
   const contextValue = React.useMemo(
     () => ({
       id,
       items,
-      modifiers: modifiers ?? config.modifiers,
-      strategy: strategy ?? config.strategy,
+      modifiers: resolvedModifiers,
+      strategy: resolvedStrategy,
       activeId,
       setActiveId,
       getItemValue,
@@ -272,10 +261,8 @@ function SortableRoot<T>(props: SortableRootProps<T>) {
     [
       id,
       items,
-      modifiers,
-      strategy,
-      config.modifiers,
-      config.strategy,
+      resolvedModifiers,
+      resolvedStrategy,
       activeId,
       getItemValue,
       flatCursor,
@@ -288,7 +275,7 @@ function SortableRoot<T>(props: SortableRootProps<T>) {
     >
       <DndContext
         collisionDetection={collisionDetection ?? config.collisionDetection}
-        modifiers={modifiers ?? config.modifiers}
+        modifiers={resolvedModifiers}
         sensors={sensors}
         {...sortableProps}
         id={id}
@@ -420,15 +407,15 @@ function SortableItem(props: SortableItemProps) {
     if (asHandle) setActivatorNodeRef(node);
   });
 
-  const composedStyle = React.useMemo<React.CSSProperties>(() => {
+  const composedStyle = (() => {
     return {
       transform: CSS.Translate.toString(transform),
       transition,
       ...style,
     };
-  }, [transform, transition, style]);
+  })();
 
-  const itemContext = React.useMemo<SortableItemContextValue>(
+  const itemContext = React.useMemo(
     () => ({
       id,
       attributes,
@@ -437,7 +424,14 @@ function SortableItem(props: SortableItemProps) {
       isDragging,
       disabled,
     }),
-    [id, attributes, listeners, setActivatorNodeRef, isDragging, disabled],
+    [
+      id,
+      attributes,
+      listeners,
+      setActivatorNodeRef,
+      isDragging,
+      disabled,
+    ],
   );
 
   const ItemPrimitive = asChild ? Slot : "div";
@@ -525,8 +519,10 @@ const dropAnimation: DropAnimation = {
   }),
 };
 
-interface SortableOverlayProps
-  extends Omit<React.ComponentProps<typeof DragOverlay>, "children"> {
+interface SortableOverlayProps extends Omit<
+  React.ComponentProps<typeof DragOverlay>,
+  "children"
+> {
   container?: Element | DocumentFragment | null;
   children?:
     | ((params: { value: UniqueIdentifier }) => React.ReactNode)
@@ -538,9 +534,11 @@ function SortableOverlay(props: SortableOverlayProps) {
 
   const context = useSortableContext(OVERLAY_NAME);
 
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useLayoutEffect(() => setMounted(true), []);
+  const mounted = React.useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   const container =
     containerProp ?? (mounted ? globalThis.document?.body : null);
@@ -572,10 +570,4 @@ export {
   SortableItem,
   SortableItemHandle,
   SortableOverlay,
-  //
-  SortableRoot as Root,
-  SortableContent as Content,
-  SortableItem as Item,
-  SortableItemHandle as ItemHandle,
-  SortableOverlay as Overlay,
 };

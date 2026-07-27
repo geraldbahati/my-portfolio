@@ -5,6 +5,45 @@ import { serialize } from "next-mdx-remote/serialize";
 import remarkGfm from "remark-gfm";
 import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import GithubSlugger from "github-slugger";
+
+export interface PrivacyHeading {
+  id: string;
+  title: string;
+}
+
+/**
+ * Builds the quick-navigation list from the document's own `##` headings.
+ *
+ * `rehype-slug` derives heading IDs with github-slugger, so using the same
+ * slugger here keeps the anchors in step with the rendered markup — hardcoding
+ * them previously left every link in the table of contents pointing at an ID
+ * that no longer existed.
+ */
+function extractHeadings(markdown: string): PrivacyHeading[] {
+  const slugger = new GithubSlugger();
+  const headings: PrivacyHeading[] = [];
+  let inCodeFence = false;
+
+  for (const line of markdown.split("\n")) {
+    if (/^\s*```/.test(line)) {
+      inCodeFence = !inCodeFence;
+      continue;
+    }
+
+    if (inCodeFence) continue;
+
+    const match = /^##\s+(.+?)\s*$/.exec(line);
+    if (!match) continue;
+
+    const title = match[1].replace(/\s*\{#[^}]*\}\s*$/, "").trim();
+    if (title) {
+      headings.push({ id: slugger.slug(title), title });
+    }
+  }
+
+  return headings;
+}
 
 export async function getPrivacyContent() {
   try {
@@ -20,7 +59,11 @@ export async function getPrivacyContent() {
       try {
         content = await fs.readFile(fallbackPath, "utf8");
       } catch {
-        // If both files are missing, use default content
+        // A missing policy document is a deploy fault, not a normal state —
+        // make it visible rather than quietly serving the placeholder.
+        console.error(
+          "Privacy policy content missing: expected content/privacy.mdx or content/privacy.md",
+        );
         return getDefaultPrivacyContent();
       }
     }
@@ -48,6 +91,7 @@ export async function getPrivacyContent() {
     return {
       ...serialized,
       frontmatter,
+      headings: extractHeadings(mdxContent),
     };
   } catch (error) {
     console.error("Error loading privacy content:", error);
@@ -106,194 +150,43 @@ function parseFrontmatter(content: string) {
   return { content: mainContent, frontmatter };
 }
 
-async function getCurrentDate() {
-  "use cache";
-  return new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-}
-
+/**
+ * Rendered only when `content/privacy.md` cannot be read.
+ *
+ * This deliberately states no policy terms. It previously held a generic
+ * template — newsletter subscriptions, "mergers, acquisitions, or asset sales",
+ * corporate "we" voice — none of which describes this site, and all of which
+ * contradicted the real policy. On a legal page, showing nothing beats showing
+ * something untrue, so this now says only what is true: the document is
+ * missing, and here is who to ask.
+ */
 async function getDefaultPrivacyContent() {
-  const currentDate = await getCurrentDate();
-  const defaultContent = `# Privacy Policy
+  const notice = `# Privacy Policy
 
-Last updated: ${currentDate}
+This privacy policy is temporarily unavailable because of a technical problem on my end.
 
-## Introduction {#introduction}
+Rather than risk showing you terms that may be inaccurate, no policy text is shown here. For the current policy — or to make any privacy request, including access, correction, deletion, or withdrawing consent — email [contact@geraldbahati.dev](mailto:contact@geraldbahati.dev) and I will respond directly.
 
-Welcome to our privacy policy. We respect your privacy and are committed to protecting your personal data. This privacy policy will inform you about how we look after your personal data when you visit our website and tell you about your privacy rights and how the law protects you.
-
----
-
-## Data Collection {#data-collection}
-
-### Information We Collect
-
-We collect and process the following types of data:
-
-**Information you provide directly:**
-- Contact form submissions
-- Email communications
-- Newsletter subscriptions
-- User preferences and settings
-
-**Information collected automatically:**
-- IP address and location data
-- Browser type and version
-- Device information
-- Pages visited and time spent
-- Referring website information
-
-**Cookies and tracking technologies:**
-- Essential cookies for site functionality
-- Analytics cookies (with your consent)
-- Preference cookies for user experience
-
----
-
-## How We Use Your Data {#data-usage}
-
-### Primary Uses
-
-We use your personal data for the following purposes:
-
-**Service delivery:**
-- To provide and maintain our services
-- To process your requests and communications
-- To send you important updates and notifications
-
-**Improvement and analytics:**
-- To understand how our website is used
-- To improve our services and user experience
-- To conduct research and analytics
-
-**Legal compliance:**
-- To comply with legal obligations
-- To protect our rights and interests
-- To prevent fraud and abuse
-
----
-
-## Data Sharing {#data-sharing}
-
-### Our Commitment
-
-**We do not sell your personal data.** We may share your data only in these limited circumstances:
-
-**Service providers:**
-- Trusted third-party service providers who assist in operating our website
-- All providers are bound by strict data protection agreements
-
-**Legal requirements:**
-- When required by law or legal process
-- To protect our rights, property, or safety
-- To prevent or investigate fraud
-
-**Business transfers:**
-- In connection with mergers, acquisitions, or asset sales
-- You will be notified of any such change in ownership
-
----
-
-## Your Rights {#your-rights}
-
-### Data Protection Rights
-
-Under applicable data protection laws, you have the following rights:
-
-**Access and portability:**
-- Right to access your personal data
-- Right to receive your data in a portable format
-
-**Correction and deletion:**
-- Right to correct inaccurate personal data
-- Right to request deletion of your personal data
-
-**Control and restriction:**
-- Right to restrict processing of your data
-- Right to object to processing
-- Right to withdraw consent at any time
-
-**How to exercise your rights:**
-Contact us using the information below, and we will respond within 30 days.
-
----
-
-## Data Security
-
-We implement appropriate technical and organizational measures to protect your personal data against unauthorized access, alteration, disclosure, or destruction. However, no internet transmission is ever fully secure or error-free.
-
----
-
-## Contact Information {#contact}
-
-### Privacy Inquiries
-
-For any privacy-related questions or concerns, please contact us:
-
-**Email:** [privacy@geralbahati.com](mailto:privacy@geralbahati.com)
-
-**Response time:** We aim to respond to all privacy inquiries within 48 hours.
-
----
-
-*This privacy policy is effective as of the date listed above and may be updated from time to time. We will notify you of any significant changes.*`;
+Analytics stay switched off unless you have accepted them. You can change that choice using the controls below at any time.`;
 
   try {
-    return serialize(defaultContent, {
+    const serialized = await serialize(notice, {
       mdxOptions: {
         remarkPlugins: [remarkGfm],
         rehypePlugins: [rehypeSlug],
         development: process.env.NODE_ENV === 'development',
       },
     });
+
+    return { ...serialized, headings: [] as PrivacyHeading[] };
   } catch (error) {
-    console.error("Error serializing default content:", error);
-    // If even the default content fails, return a very basic serialized result
+    console.error("Error serializing privacy fallback notice:", error);
+
     return {
       compiledSource: '',
       scope: {},
       frontmatter: {},
+      headings: [] as PrivacyHeading[],
     };
   }
-}
-
-// Alternative: Use a simpler approach without MDX if you're having issues
-export async function getPrivacyContentSimple() {
-  try {
-    const contentPath = path.join(process.cwd(), "content", "privacy.md");
-    const content = await fs.readFile(contentPath, "utf8");
-
-    // Just return the raw markdown content
-    return {
-      content,
-      isMarkdown: true,
-    };
-  } catch {
-    return {
-      content: await getDefaultMarkdown(),
-      isMarkdown: true,
-    };
-  }
-}
-
-async function getDefaultMarkdown() {
-  const currentDate = await getCurrentDate();
-  return `# Privacy Policy
-
-Last updated: ${currentDate}
-
-## Introduction
-
-We respect your privacy and are committed to protecting your personal data.
-
-## Data Collection
-
-We collect information you provide directly and automatically collected information.
-
-## Your Rights
-
-You have rights to access, correct, and delete your personal data.
-
-## Contact
-
-Email: privacy@yoursite.com`;
 }

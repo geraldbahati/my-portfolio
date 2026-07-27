@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useRef,
-  useSyncExternalStore,
-} from "react";
+import { type ReactNode, useEffect, useRef, useSyncExternalStore } from "react";
 import dynamic from "next/dynamic";
 import BioTextAnimator, {
   type SubscribeToTextProgress,
@@ -52,17 +46,14 @@ export default function HeroBioOverlayShell({
     serverSnapshot,
   );
 
-  const subscribeToTextProgress = useCallback<SubscribeToTextProgress>(
-    (listener) => {
-      textProgressListenersRef.current.add(listener);
-      listener(textProgressRef.current);
+  const subscribeToTextProgress: SubscribeToTextProgress = (listener) => {
+    textProgressListenersRef.current.add(listener);
+    listener(textProgressRef.current);
 
-      return () => {
-        textProgressListenersRef.current.delete(listener);
-      };
-    },
-    [],
-  );
+    return () => {
+      textProgressListenersRef.current.delete(listener);
+    };
+  };
 
   useEffect(() => {
     const container = containerRef.current;

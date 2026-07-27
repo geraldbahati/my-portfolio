@@ -317,12 +317,14 @@ export const reorderProjects = internalMutation({
   handler: async (ctx, args) => {
     const now = Date.now();
 
-    for (const { projectId, order } of args.projectOrders) {
-      await ctx.db.patch(projectId, {
-        order,
-        updatedAt: now,
-      });
-    }
+    await Promise.all(
+      args.projectOrders.map(({ projectId, order }) =>
+        ctx.db.patch(projectId, {
+          order,
+          updatedAt: now,
+        }),
+      ),
+    );
 
     return null;
   },
@@ -361,21 +363,17 @@ export const seedProjects = internalMutation({
   returns: v.array(v.id("projects")),
   handler: async (ctx, args) => {
     const now = Date.now();
-    const insertedIds = [];
-
-    for (let i = 0; i < args.projects.length; i++) {
-      const project = args.projects[i];
-      const id = await ctx.db.insert("projects", {
-        ...project,
-        order: i,
-        isPublished: true,
-        createdAt: now,
-        updatedAt: now,
-      });
-      insertedIds.push(id);
-    }
-
-    return insertedIds;
+    return await Promise.all(
+      args.projects.map((project, order) =>
+        ctx.db.insert("projects", {
+          ...project,
+          order,
+          isPublished: true,
+          createdAt: now,
+          updatedAt: now,
+        }),
+      ),
+    );
   },
 });
 
@@ -603,15 +601,22 @@ export const getFullProjectDetails = query({
         .withIndex("by_published", (q) => q.eq("isPublished", true))
         .collect();
 
-      relatedProjects = allProjects
-        .filter((p) => details.relatedProjectIds!.includes(p.id))
-        .map((p) => ({
-          _id: p._id,
-          id: p.id,
-          title: p.title,
-          description: p.description,
-          poster: p.poster,
-        }));
+      const relatedProjectIds = new Set(details.relatedProjectIds);
+      relatedProjects = allProjects.reduce<typeof relatedProjects>(
+        (matches, candidate) => {
+          if (relatedProjectIds.has(candidate.id)) {
+            matches.push({
+              _id: candidate._id,
+              id: candidate.id,
+              title: candidate.title,
+              description: candidate.description,
+              poster: candidate.poster,
+            });
+          }
+          return matches;
+        },
+        [],
+      );
     }
 
     return {

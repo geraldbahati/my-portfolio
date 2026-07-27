@@ -130,54 +130,52 @@ function ContactFormUnavailable() {
 }
 
 const BASE_URL = "https://geraldbahati.dev";
-
-export default function ContactPage() {
-  const breadcrumbLd = generateBreadcrumbSchema([
-    { name: "Home", url: BASE_URL },
-    { name: "Contact", url: `${BASE_URL}/contact` },
-  ]);
-
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "ContactPage",
-    name: "Contact Gerald Bahati",
-    description: "Get in touch with Gerald for your next digital project",
-    url: "https://geraldbahati.dev/contact",
-    mainEntity: {
-      "@type": "Person",
-      name: "Gerald Bahati",
-      jobTitle: "Product Software Engineer",
-      address: {
-        "@type": "PostalAddress",
-        addressLocality: "Nairobi",
-        addressCountry: "KE",
-      },
+const CONTACT_BREADCRUMB_LD = generateBreadcrumbSchema([
+  { name: "Home", url: BASE_URL },
+  { name: "Contact", url: `${BASE_URL}/contact` },
+]);
+const CONTACT_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "ContactPage",
+  name: "Contact Gerald Bahati",
+  description: "Get in touch with Gerald for your next digital project",
+  url: "https://geraldbahati.dev/contact",
+  mainEntity: {
+    "@type": "Person",
+    name: "Gerald Bahati",
+    jobTitle: "Product Software Engineer",
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: "Nairobi",
+      addressCountry: "KE",
+    },
+    email: "contact@geraldbahati.dev",
+    contactPoint: {
+      "@type": "ContactPoint",
+      telephone: "+254-704-713-070",
       email: "contact@geraldbahati.dev",
-      contactPoint: {
-        "@type": "ContactPoint",
-        telephone: "+254-704-713-070",
-        email: "contact@geraldbahati.dev",
-        contactType: "customer service",
-        availableLanguage: ["English", "Swahili"],
-        hoursAvailable: {
-          "@type": "OpeningHoursSpecification",
-          dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-          opens: "08:00",
-          closes: "18:00",
-        },
+      contactType: "customer service",
+      availableLanguage: ["English", "Swahili"],
+      hoursAvailable: {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+        opens: "08:00",
+        closes: "18:00",
       },
     },
-  };
+  },
+};
 
+export default function ContactPage() {
   return (
     <>
       {/* Analytics - streams in, returns null */}
       <Suspense fallback={null}>
-        <PageAnalytics trackPageView trackTime />
+        <PageAnalytics trackScroll={false} />
       </Suspense>
 
-      <JsonLdScript data={jsonLd} />
-      <JsonLdScript data={breadcrumbLd} />
+      <JsonLdScript data={CONTACT_JSON_LD} />
+      <JsonLdScript data={CONTACT_BREADCRUMB_LD} />
 
       <main className="bg-white pt-[96px] sm:pt-[104px] md:pt-[104px] lg:pt-[112px] xl:pt-[128px]">
         {/* Hello Marquee - with Suspense for animation */}

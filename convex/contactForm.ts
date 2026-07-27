@@ -1,18 +1,93 @@
-import { components } from "./_generated/api";
-import { mutation, query } from "./_generated/server";
+import { components, internal } from "./_generated/api";
+import { internalMutation, mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { Resend } from "@convex-dev/resend";
+import { Resend, vOnEmailEventArgs } from "@convex-dev/resend";
 import { RateLimiter, HOUR } from "@convex-dev/rate-limiter";
 import { requireAdmin } from "./auth";
+import { contactSchema } from "../lib/validators/contactSchema";
 
-// Initialize Resend with test mode disabled for production
-export const resend = new Resend(components.resend, {
+// Initialize Resend with test mode disabled for production.
+// The explicit annotation is required: `resend` is exported, so the generated
+// `internal` object includes it, and the `onEmailEvent` reference below would
+// otherwise make its type depend on itself (TS7022).
+export const resend: Resend = new Resend(components.resend, {
   testMode: false, // Set to true for development
+  // Without this, delivery outcomes never reach the app: submissions stay on
+  // whatever status they had at send time and `delivered` is unreachable.
+  onEmailEvent: internal.contactForm.handleEmailEvent,
+});
+
+/**
+ * Delivery outcomes that change a submission's stored status. Events not listed
+ * here (opened, clicked, delivery_delayed, complained) are still reported to
+ * analytics but say nothing about whether the inquiry arrived.
+ */
+const STATUS_BY_EVENT: Partial<
+  Record<string, "sent" | "delivered" | "failed">
+> = {
+  "email.sent": "sent",
+  "email.delivered": "delivered",
+  "email.bounced": "failed",
+  "email.failed": "failed",
+};
+
+/**
+ * Runs when Resend reports what happened to an email.
+ *
+ * The stored `emailId` belongs to the notification sent to me, so this answers
+ * the question the client cannot: did the inquiry actually land in my inbox, or
+ * did it bounce after the form told the visitor it had been sent?
+ */
+// Declared with `vOnEmailEventArgs` rather than `resend.defineOnEmailEvent`:
+// the latter derives its type from the `resend` instance, whose own options
+// reference this mutation, and TypeScript cannot resolve that cycle.
+export const handleEmailEvent = internalMutation({
+  args: vOnEmailEventArgs,
+  returns: v.null(),
+  handler: async (ctx, { id, event }) => {
+    const submission = await ctx.db
+      .query("contactSubmissions")
+      // `.first()` rather than `.unique()`: a duplicate or unmatched ID must not
+      // throw and cost us the webhook. The confirmation email sent to the
+      // visitor has no stored ID, so its events legitimately match nothing.
+      .withIndex("by_email_id", (q) => q.eq("emailId", id))
+      .first();
+
+    const status = STATUS_BY_EVENT[event.type];
+
+    if (submission && status && submission.status !== status) {
+      await ctx.db.patch(submission._id, { status });
+    }
+
+    await ctx.scheduler.runAfter(0, internal.analytics.captureServerEvent, {
+      event: "inquiry_email_status_changed",
+      distinctId: id,
+      properties: {
+        status: event.type.replace("email.", ""),
+        email_id: id,
+        // Whether this event could be tied back to a stored submission at all.
+        matched_submission: submission !== null,
+      },
+    });
+
+    return null;
+  },
 });
 
 // Initialize rate limiter for contact form submissions
 const rateLimiter = new RateLimiter(components.rateLimiter, {
+  // Per-address bucket. On its own this constrains nobody, since an address is
+  // trivial to vary — hence the global backstop below.
   contactForm: { kind: "token bucket", rate: 5, period: HOUR, capacity: 3 },
+  // Caps total outbound volume regardless of how many distinct addresses are
+  // used. This is what bounds how far the form can be abused to send mail from
+  // this domain, which would put its sending reputation at risk.
+  contactFormGlobal: {
+    kind: "token bucket",
+    rate: 30,
+    period: HOUR,
+    capacity: 10,
+  },
 });
 
 const contactStatusValidator = v.union(
@@ -44,22 +119,14 @@ export function escapeHtml(value: string): string {
     .replace(/'/g, "&#x27;");
 }
 
-function getContactRateLimitKey(args: { clientIP?: string; email: string }) {
-  const normalizedIp = args.clientIP?.trim();
-  if (normalizedIp) {
-    return `ip:${normalizedIp}`;
-  }
-
-  return `email:${args.email.trim().toLowerCase()}`;
-}
-
 export const submitContactForm = mutation({
   args: {
     name: v.string(),
     email: v.string(),
     message: v.string(),
     privacyConsent: v.boolean(),
-    clientIP: v.optional(v.string()),
+    /** Hidden field; a real person never fills it. Non-empty means a bot. */
+    honeypot: v.optional(v.string()),
   },
   returns: v.union(
     v.object({
@@ -75,44 +142,86 @@ export const submitContactForm = mutation({
   ),
   handler: async (ctx, args) => {
     try {
-      // Validate privacy consent
-      if (!args.privacyConsent) {
-        throw new Error("Privacy consent is required");
-      }
-
-      // Fall back to the sender email so one missing IP lookup does not pool all visitors together.
-      const rateLimitKey = getContactRateLimitKey(args);
-      const { ok, retryAfter } = await rateLimiter.limit(ctx, "contactForm", {
-        key: rateLimitKey,
+      // This mutation is publicly callable, so every rule the client enforces
+      // has to be enforced again here. Both sides run the same schema so the
+      // two cannot drift apart.
+      const parsed = contactSchema.safeParse({
+        name: args.name,
+        email: args.email,
+        message: args.message,
+        privacyConsent: args.privacyConsent,
+        _honeypot: args.honeypot ?? "",
       });
 
-      if (!ok) {
+      if (!parsed.success) {
+        return {
+          success: false as const,
+          error: parsed.error.issues[0]?.message ?? "Invalid submission.",
+        };
+      }
+
+      // Checked here rather than only in the browser: a direct call to this
+      // mutation never runs the client-side check.
+      if (parsed.data._honeypot) {
+        return {
+          success: false as const,
+          error: "Invalid submission detected.",
+        };
+      }
+
+      const name = parsed.data.name.trim();
+      const email = parsed.data.email.trim().toLowerCase();
+      const message = parsed.data.message;
+
+      // Keyed on the address alone. The key used to include an IP taken from a
+      // client argument, which let a caller mint a fresh bucket per request
+      // simply by sending a different value.
+      const perAddress = await rateLimiter.limit(ctx, "contactForm", {
+        key: `email:${email}`,
+      });
+
+      if (!perAddress.ok) {
         throw new Error(
-          `Too many requests. Please try again in ${Math.ceil(retryAfter / (1000 * 60))} minutes.`,
+          `Too many requests. Please try again in ${Math.ceil(perAddress.retryAfter / (1000 * 60))} minutes.`,
         );
       }
 
-      const escapedName = escapeHtml(args.name);
-      const escapedEmail = escapeHtml(args.email);
-      const escapedMessage = escapeHtml(args.message);
+      // Consumed only after validation, so malformed submissions cannot drain it.
+      const overall = await rateLimiter.limit(ctx, "contactFormGlobal");
+
+      if (!overall.ok) {
+        throw new Error(
+          `Too many requests. Please try again in ${Math.ceil(overall.retryAfter / (1000 * 60))} minutes.`,
+        );
+      }
+
+      const escapedName = escapeHtml(name);
+      const escapedEmail = escapeHtml(email);
+      const escapedMessage = escapeHtml(message);
+      const senderEmail = process.env.SENDER_EMAIL;
+      const recipientEmail = process.env.RECIPIENT_EMAIL;
+
+      if (!senderEmail || !recipientEmail) {
+        console.error(
+          "Contact email configuration is missing SENDER_EMAIL or RECIPIENT_EMAIL",
+        );
+        throw new Error("Contact service is not configured");
+      }
 
       // Store submission in database first
       const submissionId = await ctx.db.insert("contactSubmissions", {
-        name: args.name,
-        email: args.email,
+        name,
+        email,
         message: escapedMessage,
         status: "pending",
         submittedAt: Date.now(),
-        clientIP: args.clientIP,
       });
 
       try {
         // Send email using Resend
         const emailId = await resend.sendEmail(ctx, {
-          from:
-            process.env.SENDER_EMAIL ||
-            "Gerald Bahati <contact@yourdomain.com>",
-          to: process.env.RECIPIENT_EMAIL || "your-email@example.com",
+          from: senderEmail,
+          to: recipientEmail,
           subject: `Portfolio Contact: ${escapedName}`,
           html: `
             <!DOCTYPE html>
@@ -196,10 +305,8 @@ export const submitContactForm = mutation({
 
         // Send confirmation email to the user
         await resend.sendEmail(ctx, {
-          from:
-            process.env.SENDER_EMAIL ||
-            "Gerald Bahati <contact@yourdomain.com>",
-          to: args.email,
+          from: senderEmail,
+          to: email,
           subject: "Got your message — I'll be in touch soon",
           html: `
             <!DOCTYPE html>
@@ -266,8 +373,8 @@ export const submitContactForm = mutation({
         console.log("Contact form submission successful:", {
           submissionId,
           emailId,
-          name: args.name,
-          email: args.email,
+          name,
+          email,
           timestamp: new Date().toISOString(),
         });
 

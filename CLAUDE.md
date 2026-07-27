@@ -195,6 +195,8 @@ export const checkAdmin = query({
 - `ENABLE_ADMIN` - Set to `true` to enable admin access (DEV ONLY - never set in production)
 
 **Convex Dashboard (for on-demand cache revalidation):**
+- `POSTHOG_PROJECT_KEY` - PostHog project key used by `convex/analytics.ts` for server-side capture. Unset means the delivery webhook still updates submission status but reports nothing to analytics.
+- `POSTHOG_HOST` - Ingestion host for server-side capture. Defaults to `https://eu.i.posthog.com`. Do **not** point this at the `/gbx` browser proxy; Convex has no ad blocker to evade and no origin to resolve a relative path against.
 - `SITE_REVALIDATE_URL` - Origin of the deployed site to revalidate, e.g. `https://geraldbahati.dev`. Admin write actions POST here after mutating projects.
 - `REVALIDATE_SECRET` - Shared secret sent in the `x-revalidate-secret` header; must match the value the Next.js `/api/revalidate` route checks.
 
@@ -206,6 +208,34 @@ export const checkAdmin = query({
 - `SENDER_EMAIL` - Email address for sending contact form submissions (Resend)
 - `RECIPIENT_EMAIL` - Email address to receive contact form submissions
 - `REVALIDATE_SECRET` - Shared secret the `/api/revalidate` route validates (must match the Convex value). Set on the hosting platform for production.
+- `NEXT_PUBLIC_POSTHOG_KEY` - PostHog project API key (`phc_...`). Analytics is fully disabled when this is unset, so local development stays clean by default.
+- `NEXT_PUBLIC_POSTHOG_HOST` - Ingestion host. Defaults to `https://eu.i.posthog.com`. Set it to a reverse-proxy origin to survive ad blockers (see below).
+
+### Analytics (PostHog)
+
+Product analytics run on PostHog Cloud EU. Vercel Speed Insights is kept for
+real-user Core Web Vitals; `@vercel/analytics` was removed so there is a single
+event pipeline.
+
+**How it is wired:**
+- `instrumentation-client.ts` - initializes PostHog before hydration (Next.js 15.3+ convention). Uses `defaults: "2026-05-30"`, which enables autocapture, history-change pageviews (required for App Router client navigation), `$pageleave`, web vitals, dead clicks and exception capture.
+- `lib/consent.ts` - stores the consent decision and honours the legacy `analytics-opt-out` key.
+- `components/consent-banner.tsx` - the consent UI. PostHog starts with `persistence: "memory"` and `opt_out_capturing_by_default: true`; accepting upgrades persistence to `localStorage+cookie` and opts in.
+- `lib/analytics.ts` - the tracking plan. Every custom event lives here; components import named functions rather than calling `posthog.capture` directly.
+- `lib/hooks/useAnalytics.ts` + `components/PageAnalytics.tsx` - scroll-depth and section-visibility tracking only, deferred to `requestIdleCallback`. Pageviews and time on page are *not* re-implemented here; PostHog handles them.
+
+**Event naming:** snake_case, past tense (`contact_form_submitted`, `project_opened`), matching the convention already used across the PostHog organisation.
+
+**Privacy defaults:** `person_profiles: "identified_only"`, session recordings mask all inputs, `/admin` and `/private` traffic is dropped in `before_send`, and sensitive query params are stripped from `$current_url` and `$referrer`.
+
+**Reverse proxy:** tracker blockers drop requests to `*.i.posthog.com`, which silently kills session replay and dead-click capture — both load their scripts from PostHog's asset host. All PostHog traffic is therefore served first-party from `/gbx`, via `rewrites()` in `next.config.ts`:
+
+- `/gbx/static/:path*` → `https://eu-assets.i.posthog.com/static/:path*`
+- `/gbx/:path*` → `https://eu.i.posthog.com/:path*`
+
+`NEXT_PUBLIC_POSTHOG_HOST=/gbx` selects it. Three things depend on this and must stay in step: `skipTrailingSlashRedirect: true` (PostHog's API rejects the redirect Next.js would otherwise issue), the `gbx` exclusion in the `proxy.ts` Clerk matcher (analytics requests need neither auth nor cookies), and the deliberately meaningless path name — blocklists match `/analytics`, `/tracking` and `/posthog`.
+
+This routes ingest, including session-replay payloads, through the host's metered egress. That is fine at portfolio traffic levels. If volume grows, switch to PostHog's managed reverse proxy on a subdomain (free on Cloud) and repoint `NEXT_PUBLIC_POSTHOG_HOST` at it — the rewrites become dead config at that point and can be deleted.
 
 ### Component Patterns
 

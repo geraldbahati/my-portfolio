@@ -1,9 +1,9 @@
 "use client";
 
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { AdaptiveLink } from "@/components/AdaptiveLink";
-import Analytics from "@/lib/analytics";
+import { trackContactCtaClicked } from "@/lib/analytics";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
 // Lazy load heavy components
@@ -33,35 +33,35 @@ const ANIMATION_DURATIONS = {
 } as const;
 
 // Memoized CTA Button with TextScramble effect
-const CTAButton = memo(() => {
+const CTAButton = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [shouldTrigger, setShouldTrigger] = useState(false);
-  const [hasTriggered, setHasTriggered] = useState(false);
+  const hasTriggeredRef = useRef(false);
   const scrambleTimeoutRef = useRef<NodeJS.Timeout>(null);
 
-  const handleMouseEnter = useCallback(() => {
+  const handleMouseEnter = () => {
     setIsHovered(true);
-    if (!hasTriggered) {
-      setHasTriggered(true);
+    if (!hasTriggeredRef.current) {
+      hasTriggeredRef.current = true;
       setShouldTrigger(true);
       scrambleTimeoutRef.current = setTimeout(() => {
         setShouldTrigger(false);
       }, ANIMATION_DURATIONS.HOVER_SCRAMBLE);
     }
-  }, [hasTriggered]);
+  };
 
-  const handleMouseLeave = useCallback(() => {
+  const handleMouseLeave = () => {
     if (scrambleTimeoutRef.current) {
       clearTimeout(scrambleTimeoutRef.current);
     }
     setIsHovered(false);
     setShouldTrigger(false);
-    setHasTriggered(false);
-  }, []);
+    hasTriggeredRef.current = false;
+  };
 
-  const handleScrambleComplete = useCallback(() => {
+  const handleScrambleComplete = () => {
     setShouldTrigger(false);
-  }, []);
+  };
 
   useEffect(() => {
     return () => {
@@ -77,7 +77,11 @@ const CTAButton = memo(() => {
       prefetchOnViewport
       prefetchRootMargin="150px"
       onClick={() =>
-        Analytics.trackButtonClick("Projekt anfragen", "Project CTA")
+        trackContactCtaClicked({
+          surface: "project_detail",
+          label: "Projekt anfragen",
+          destination: "/contact",
+        })
       }
       className="inline-block"
       onMouseEnter={handleMouseEnter}
@@ -85,7 +89,7 @@ const CTAButton = memo(() => {
       aria-label="Projekt anfragen"
     >
       <span
-        className={`flex-shrink-0 cursor-pointer relative inline-block border-b transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ${
+        className={`flex-shrink-0 cursor-pointer relative inline-block border-b transition-[color,background-color,border-color,opacity,transform,box-shadow,filter] duration-300 hover:scale-[1.02] active:scale-[0.98] ${
           isHovered ? "border-primary" : "border-white/50"
         }`}
       >
@@ -102,12 +106,14 @@ const CTAButton = memo(() => {
       </span>
     </AdaptiveLink>
   );
-});
+};
 
 CTAButton.displayName = "CTAButton";
 
 export function ProjectCTA() {
-  const prefersReducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
+  const prefersReducedMotion = useMediaQuery(
+    "(prefers-reduced-motion: reduce)",
+  );
 
   return (
     <section className="relative bg-black text-white py-24 md:py-32 overflow-hidden">
@@ -125,7 +131,7 @@ export function ProjectCTA() {
 
       {/* Content */}
       <div className="relative z-10 w-full flex justify-center px-4">
-        <div className="max-w-2xl space-y-6 text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="max-w-2xl space-y-6 text-center project-reveal-up-700">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
             Would you like to be featured here as well?
           </h2>

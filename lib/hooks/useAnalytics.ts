@@ -1,314 +1,129 @@
 /**
- * React Hooks for Vercel Analytics
+ * Analytics hooks.
  *
- * Custom hooks for tracking various user interactions and behaviors
+ * PostHog already captures pageviews (including App Router client navigation),
+ * time on page via `$pageleave`, and max scroll percentage. These hooks only
+ * cover what it can't infer on its own:
+ *
+ *   - scroll depth as discrete events, so depth can be used as a funnel step
+ *   - which sections were actually on screen
  */
 
-'use client';
+"use client";
 
-import { useEffect, useCallback, useRef } from 'react';
-import { usePathname } from 'next/navigation';
-import Analytics from '@/lib/analytics';
+import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
+import { trackScrollDepthReached, trackSectionViewed } from "@/lib/analytics";
 
-/**
- * Hook to track page views automatically on route changes
- */
-export function usePageViewTracking() {
-  const pathname = usePathname();
+const DEFAULT_THRESHOLDS = [25, 50, 75, 100];
 
-  useEffect(() => {
-    if (pathname) {
-      Analytics.trackPageView(pathname);
-    }
-  }, [pathname]);
+/** Case-study pages report their slug so depth can be compared per project. */
+function projectSlugFromPath(pathname: string): string | undefined {
+  return pathname.match(/^\/projects\/([^/]+)$/)?.[1];
 }
 
-/**
- * Hook to track scroll depth
- */
-export function useScrollTracking(thresholds: number[] = [25, 50, 75, 100]) {
+export function useScrollDepthTracking(options?: {
+  enabled?: boolean;
+  thresholds?: number[];
+}) {
+  const { enabled = true, thresholds = DEFAULT_THRESHOLDS } = options ?? {};
   const pathname = usePathname();
-  const trackedDepths = useRef<Set<number>>(new Set());
 
   useEffect(() => {
-    const handleScroll = () => {
-      const windowHeight = window.innerHeight;
-      const documentHeight = document.documentElement.scrollHeight;
-      const scrollTop = window.scrollY;
-      const scrollPercent = ((scrollTop + windowHeight) / documentHeight) * 100;
+    if (!enabled || !pathname) {
+      return;
+    }
 
-      thresholds.forEach((threshold) => {
-        if (scrollPercent >= threshold && !trackedDepths.current.has(threshold)) {
-          trackedDepths.current.add(threshold);
-          Analytics.trackScrollDepth({
+    const reached = new Set<number>();
+    const projectSlug = projectSlugFromPath(pathname);
+    let frame = 0;
+
+    const measure = () => {
+      frame = 0;
+
+      const scrollable =
+        document.documentElement.scrollHeight - window.innerHeight;
+
+      // Pages shorter than the viewport are fully seen on arrival; reporting
+      // 100% for them would drown out real depth data.
+      if (scrollable <= 0) {
+        return;
+      }
+
+      const depthPercent = (window.scrollY / scrollable) * 100;
+
+      for (const threshold of thresholds) {
+        if (depthPercent >= threshold && !reached.has(threshold)) {
+          reached.add(threshold);
+          trackScrollDepthReached({
             depth: threshold,
-            page: pathname || 'unknown',
+            page: pathname,
+            project_slug: projectSlug,
           });
         }
-      });
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [pathname, thresholds]);
-}
-
-/**
- * Hook to track time spent on page
- */
-export function useTimeTracking(location?: string) {
-  const pathname = usePathname();
-  const startTime = useRef<number>(Date.now());
-  const currentLocation = location || pathname || 'unknown';
-
-  useEffect(() => {
-    startTime.current = Date.now();
-
-    return () => {
-      const timeSpent = Date.now() - startTime.current;
-      // Only track if user spent more than 3 seconds
-      if (timeSpent > 3000) {
-        Analytics.trackTimeSpent(currentLocation, timeSpent);
       }
     };
-  }, [currentLocation]);
+
+    const onScroll = () => {
+      if (frame) {
+        return;
+      }
+      frame = window.requestAnimationFrame(measure);
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    measure();
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (frame) {
+        window.cancelAnimationFrame(frame);
+      }
+    };
+  }, [enabled, pathname, thresholds]);
 }
 
 /**
- * Hook to track visibility (when component comes into view)
+ * Reports the first time each `[data-section-id]` element is at least half
+ * visible, then stops watching it.
  */
-export function useVisibilityTracking(
-  ref: React.RefObject<HTMLElement>,
-  eventName: string,
-  options?: IntersectionObserverInit
-) {
-  const hasTracked = useRef(false);
+export function useSectionViewTracking(options?: { enabled?: boolean }) {
+  const { enabled = true } = options ?? {};
+  const pathname = usePathname();
+  const seen = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    const element = ref.current;
-    if (!element || hasTracked.current) return;
+    if (!enabled) {
+      return;
+    }
+
+    seen.current = new Set();
 
     const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && !hasTracked.current) {
-            Analytics.trackFeatureUse(eventName, {
-              visible: true,
-            });
-            hasTracked.current = true;
+        for (const entry of entries) {
+          const sectionId = (entry.target as HTMLElement).dataset.sectionId;
+
+          if (
+            !entry.isIntersecting ||
+            !sectionId ||
+            seen.current.has(sectionId)
+          ) {
+            continue;
           }
-        });
+
+          seen.current.add(sectionId);
+          trackSectionViewed({ section_id: sectionId, page: pathname ?? "" });
+          observer.unobserve(entry.target);
+        }
       },
-      {
-        threshold: 0.5,
-        ...options,
-      }
+      { threshold: 0.5 },
     );
 
-    observer.observe(element);
+    document
+      .querySelectorAll<HTMLElement>("[data-section-id]")
+      .forEach((section) => observer.observe(section));
 
-    return () => {
-      observer.unobserve(element);
-    };
-  }, [ref, eventName, options]);
-}
-
-/**
- * Hook to track link clicks
- */
-export function useTrackLink() {
-  return useCallback(
-    (linkText: string, destination: string, type: 'internal' | 'external' = 'internal') => {
-      Analytics.trackLinkClick(linkText, destination, type);
-    },
-    []
-  );
-}
-
-/**
- * Hook to track button clicks
- */
-export function useTrackButton() {
-  return useCallback((buttonName: string, location: string) => {
-    Analytics.trackButtonClick(buttonName, location);
-  }, []);
-}
-
-/**
- * Hook to track form submissions
- */
-export function useTrackForm() {
-  return useCallback(
-    (formName: string, success: boolean, formId?: string, errorMessage?: string) => {
-      Analytics.trackFormSubmission({
-        formName,
-        formId,
-        success,
-        errorMessage,
-      });
-    },
-    []
-  );
-}
-
-/**
- * Hook to track media interactions
- */
-export function useTrackMedia() {
-  return useCallback(
-    (
-      mediaType: 'image' | 'video' | 'audio',
-      action: 'play' | 'pause' | 'complete' | 'view',
-      mediaId?: string,
-      duration?: number
-    ) => {
-      Analytics.trackMediaInteraction({
-        mediaType,
-        action,
-        mediaId,
-        duration,
-      });
-    },
-    []
-  );
-}
-
-/**
- * Hook to track errors
- */
-export function useTrackError() {
-  return useCallback((errorName: string, errorMessage: string, context?: Record<string, string | number | boolean | null>) => {
-    Analytics.trackError(errorName, errorMessage, context);
-  }, []);
-}
-
-/**
- * Hook to track conversions
- */
-export function useTrackConversion() {
-  return useCallback(
-    (
-      eventName: string,
-      category: string,
-      value?: number,
-      currency: string = 'USD'
-    ) => {
-      Analytics.trackConversion(eventName, {
-        category,
-        value,
-        currency,
-      });
-    },
-    []
-  );
-}
-
-/**
- * Hook to track outbound links
- */
-export function useTrackOutboundLink() {
-  return useCallback((url: string, context?: string) => {
-    Analytics.trackOutboundLink(url, context);
-  }, []);
-}
-
-/**
- * Hook for analytics preferences
- */
-export function useAnalyticsPreferences() {
-  const enableAnalytics = useCallback(() => {
-    Analytics.enableAnalytics();
-  }, []);
-
-  const disableAnalytics = useCallback(() => {
-    Analytics.disableAnalytics();
-  }, []);
-
-  const isEnabled = Analytics.isAnalyticsEnabled();
-
-  return {
-    enableAnalytics,
-    disableAnalytics,
-    isEnabled,
-  };
-}
-
-/**
- * Comprehensive hook that combines multiple tracking features
- */
-export function useAnalytics(options?: {
-  trackPageView?: boolean;
-  trackScroll?: boolean;
-  trackTime?: boolean;
-  scrollThresholds?: number[];
-}) {
-  const {
-    trackPageView = true,
-    trackScroll = false,
-    trackTime = false,
-    scrollThresholds = [25, 50, 75, 100],
-  } = options || {};
-
-  const pathname = usePathname();
-
-  // Track page view
-  useEffect(() => {
-    if (trackPageView && pathname) {
-      Analytics.trackPageView(pathname);
-    }
-  }, [pathname, trackPageView]);
-
-  // Track scroll depth
-  useEffect(() => {
-    if (!trackScroll) return;
-
-    const trackedDepths = new Set<number>();
-
-    const handleScroll = () => {
-      const windowHeight = window.innerHeight;
-      const documentHeight = document.documentElement.scrollHeight;
-      const scrollTop = window.scrollY;
-      const scrollPercent = ((scrollTop + windowHeight) / documentHeight) * 100;
-
-      scrollThresholds.forEach((threshold) => {
-        if (scrollPercent >= threshold && !trackedDepths.has(threshold)) {
-          trackedDepths.add(threshold);
-          Analytics.trackScrollDepth({
-            depth: threshold,
-            page: pathname || 'unknown',
-          });
-        }
-      });
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [trackScroll, scrollThresholds, pathname]);
-
-  // Track time on page
-  useEffect(() => {
-    if (!trackTime) return;
-
-    const startTime = Date.now();
-    const location = pathname || 'unknown';
-
-    return () => {
-      const timeSpent = Date.now() - startTime;
-      // Only track if user spent more than 3 seconds
-      if (timeSpent > 3000) {
-        Analytics.trackTimeSpent(location, timeSpent);
-      }
-    };
-  }, [trackTime, pathname]);
-
-  return {
-    trackButton: useTrackButton(),
-    trackLink: useTrackLink(),
-    trackForm: useTrackForm(),
-    trackMedia: useTrackMedia(),
-    trackError: useTrackError(),
-    trackConversion: useTrackConversion(),
-    trackOutbound: useTrackOutboundLink(),
-    analytics: Analytics,
-  };
+    return () => observer.disconnect();
+  }, [enabled, pathname]);
 }

@@ -1,9 +1,11 @@
 # FAQ Accordion Component
 
 ## Overview
+
 A reusable, accessible accordion component for displaying FAQs with smooth animations and full customization support.
 
 ## Features
+
 - ✅ **Fully Accessible** - Proper ARIA attributes and keyboard navigation
 - ✅ **Customizable Styling** - Supports custom classes for all elements
 - ✅ **Animation Support** - Smooth expand/collapse with Framer Motion
@@ -13,6 +15,7 @@ A reusable, accessible accordion component for displaying FAQs with smooth anima
 ## Usage
 
 ### Basic Usage
+
 ```tsx
 import { FaqAccordion } from "@/components/faq-accordion";
 import { FAQ_DATA } from "@/constants/faq-data";
@@ -23,6 +26,7 @@ function MyComponent() {
 ```
 
 ### Custom Styling
+
 ```tsx
 <FaqAccordion
   faqs={FAQ_DATA}
@@ -35,31 +39,29 @@ function MyComponent() {
 ```
 
 ### Custom Animation Timing
+
 ```tsx
-<FaqAccordion
-  faqs={FAQ_DATA}
-  animationDelay={0.1}
-  animationDuration={0.8}
-/>
+<FaqAccordion faqs={FAQ_DATA} animationDelay={0.1} animationDuration={0.8} />
 ```
 
 ## Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `faqs` | `FaqItem[]` | **Required** | Array of FAQ items |
-| `className` | `string` | `""` | Additional classes for container |
-| `itemClassName` | `string` | `""` | Additional classes for each item |
-| `questionClassName` | `string` | `"text-white..."` | Classes for questions |
-| `answerClassName` | `string` | `"text-gray-400..."` | Classes for answers |
-| `iconClassName` | `string` | `"text-gray-400"` | Classes for expand icon |
-| `borderClassName` | `string` | `"border-primary/50"` | Classes for borders |
-| `animationDelay` | `number` | `0.05` | Stagger delay (seconds) |
-| `animationDuration` | `number` | `0.6` | Animation duration (seconds) |
+| Prop                | Type        | Default               | Description                      |
+| ------------------- | ----------- | --------------------- | -------------------------------- |
+| `faqs`              | `FaqItem[]` | **Required**          | Array of FAQ items               |
+| `className`         | `string`    | `""`                  | Additional classes for container |
+| `itemClassName`     | `string`    | `""`                  | Additional classes for each item |
+| `questionClassName` | `string`    | `"text-white..."`     | Classes for questions            |
+| `answerClassName`   | `string`    | `"text-gray-400..."`  | Classes for answers              |
+| `iconClassName`     | `string`    | `"text-gray-400"`     | Classes for expand icon          |
+| `borderClassName`   | `string`    | `"border-primary/50"` | Classes for borders              |
+| `animationDelay`    | `number`    | `0.05`                | Stagger delay (seconds)          |
+| `animationDuration` | `number`    | `0.6`                 | Animation duration (seconds)     |
 
 ## Types
 
 ### FaqItem
+
 ```typescript
 interface FaqItem {
   question: string;
@@ -68,6 +70,7 @@ interface FaqItem {
 ```
 
 ### FaqAccordionProps
+
 ```typescript
 interface FaqAccordionProps {
   faqs: FaqItem[];
@@ -124,6 +127,7 @@ sections/
 ## Examples
 
 ### With Custom Answer Component
+
 ```tsx
 const customFaqs: FaqItem[] = [
   {
@@ -143,6 +147,7 @@ const customFaqs: FaqItem[] = [
 ```
 
 ### Dark Theme Example
+
 ```tsx
 <FaqAccordion
   faqs={FAQ_DATA}
@@ -154,6 +159,7 @@ const customFaqs: FaqItem[] = [
 ```
 
 ### Light Theme Example
+
 ```tsx
 <FaqAccordion
   faqs={FAQ_DATA}

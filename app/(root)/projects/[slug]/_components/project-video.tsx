@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback, memo, useMemo } from "react";
+import { useRef, useState, useEffect } from "react";
 import { m, AnimatePresence } from "motion/react";
 import { EyeIcon } from "lucide-react";
 import Image from "next/image";
@@ -32,6 +32,11 @@ const CURSOR_VARIANTS = {
 
 const CURSOR_SPRING_CONFIG = { bounce: 0.001 } as const;
 const CURSOR_TRANSITION = { ease: "easeInOut" as const, duration: 0.15 };
+const FLOATING_TRANSITION = {
+  duration: 4,
+  repeat: Infinity,
+  ease: "easeInOut" as const,
+};
 
 /**
  * Hook for intersection observer visibility tracking
@@ -70,18 +75,15 @@ function useReducedMotion(): boolean {
 }
 
 // Custom cursor component - memoized for performance
-const HoverCursor = memo(function HoverCursor({
+const HoverCursor = function HoverCursor({
   isHovering,
 }: {
   isHovering: boolean;
 }) {
   return (
     <m.div
-      animate={{
-        width: isHovering ? 80 : 16,
-        height: isHovering ? 32 : 16,
-      }}
-      className="flex items-center justify-center rounded-[24px] bg-primary/90 backdrop-blur-md will-change-transform"
+      animate={{ scale: isHovering ? 1 : 0.2 }}
+      className="flex h-8 w-20 items-center justify-center rounded-[24px] bg-primary/90 backdrop-blur-md"
     >
       <AnimatePresence>
         {isHovering && (
@@ -99,17 +101,17 @@ const HoverCursor = memo(function HoverCursor({
       </AnimatePresence>
     </m.div>
   );
-});
+};
 
 // Left arrow indicator - memoized to prevent re-renders
-const LeftArrowIndicator = memo(function LeftArrowIndicator() {
+const LeftArrowIndicator = function LeftArrowIndicator() {
   return (
     <m.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.8, delay: 0.2 }}
-      className="absolute -left-4 top-24 md:-left-56 md:top-8 hidden lg:flex items-center justify-center pointer-events-none z-10 will-change-transform"
+      className="absolute -left-4 top-24 md:-left-56 md:top-8 hidden lg:flex items-center justify-center pointer-events-none z-10"
     >
       <span className="font-handwriting text-xl md:text-2xl font-medium text-primary whitespace-nowrap drop-shadow-[0_0_12px_hsl(var(--primary)/0.6)] mb-32 -mr-20">
         Check it out!
@@ -126,17 +128,17 @@ const LeftArrowIndicator = memo(function LeftArrowIndicator() {
       />
     </m.div>
   );
-});
+};
 
 // Right arrow indicator - memoized to prevent re-renders
-const RightArrowIndicator = memo(function RightArrowIndicator() {
+const RightArrowIndicator = function RightArrowIndicator() {
   return (
     <m.div
       initial={{ opacity: 0, y: -20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.8, delay: 0.4 }}
-      className="absolute -right-4 top-1/2 md:-right-32 hidden lg:flex flex-col items-end justify-center gap-4 pointer-events-none z-10 will-change-transform"
+      className="absolute -right-4 top-1/2 md:-right-32 hidden lg:flex flex-col items-end justify-center gap-4 pointer-events-none z-10"
     >
       <span className="font-handwriting text-xl md:text-2xl font-medium text-primary whitespace-nowrap drop-shadow-[0_0_12px_hsl(var(--primary)/0.6)] -mr-16">
         Click to visit
@@ -153,10 +155,10 @@ const RightArrowIndicator = memo(function RightArrowIndicator() {
       />
     </m.div>
   );
-});
+};
 
 // Mobile arrow indicator - centered above video, only visible on mobile
-const MobileArrowIndicator = memo(function MobileArrowIndicator() {
+const MobileArrowIndicator = function MobileArrowIndicator() {
   return (
     <m.div
       initial={{ opacity: 0, y: 10 }}
@@ -180,7 +182,7 @@ const MobileArrowIndicator = memo(function MobileArrowIndicator() {
       />
     </m.div>
   );
-});
+};
 
 export function ProjectVideo({
   videoUrl,
@@ -219,50 +221,36 @@ export function ProjectVideo({
   }, [posterUrl]);
 
   // Memoized floating animation config
-  const floatingAnimation = useMemo(
-    () => (url && !prefersReducedMotion ? { y: [0, -15, 0] } : {}),
-    [url, prefersReducedMotion],
-  );
-
-  const floatingTransition = useMemo(
-    () => ({
-      duration: 4,
-      repeat: Infinity,
-      ease: "easeInOut" as const,
-    }),
-    [],
-  );
+  const floatingAnimation =
+    url && !prefersReducedMotion ? { y: [0, -15, 0] } : {};
 
   // Handle cursor position for hover state
-  const handlePositionChange = useCallback((x: number, y: number) => {
+  const handlePositionChange = (x: number, y: number) => {
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       const isInside =
         x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
       setIsHovering(isInside);
     }
-  }, []);
+  };
 
   // Handle click to open URL
-  const handleClick = useCallback(() => {
+  const handleClick = () => {
     if (url) {
       window.open(url, "_blank", "noopener,noreferrer");
     }
-  }, [url]);
+  };
 
   // Handle keyboard interaction
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        handleClick();
-      }
-    },
-    [handleClick],
-  );
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleClick();
+    }
+  };
 
   // Memoized error handler
-  const handleError = useCallback(() => setHasError(true), []);
+  const handleError = () => setHasError(true);
 
   // Early returns for null states
   if (!videoUrl || hasError) {
@@ -292,8 +280,8 @@ export function ProjectVideo({
           {/* Video container with Floating Animation */}
           <m.div
             animate={floatingAnimation}
-            transition={floatingTransition}
-            className="relative will-change-transform"
+                transition={FLOATING_TRANSITION}
+            className="relative"
           >
             {/* Mobile arrow indicator - above video */}
             {showAnimations && <MobileArrowIndicator />}

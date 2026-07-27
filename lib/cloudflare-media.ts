@@ -6,21 +6,8 @@
  * - Videos: Cloudflare Stream HLS/DASH delivery
  */
 
-const R2_CUSTOM_DOMAIN = "media.geraldbahati.dev";
 const STREAM_SUBDOMAIN = "customer-pdxnd9di8ybc2kur.cloudflarestream.com";
 const TRANSFORM_ZONE = "geraldbahati.dev";
-
-/**
- * Safely check if a URL's hostname matches or is a subdomain of a given domain.
- */
-function hostnameEndsWith(url: string, domain: string): boolean {
-  try {
-    const { hostname } = new URL(url);
-    return hostname === domain || hostname.endsWith(`.${domain}`);
-  } catch {
-    return false;
-  }
-}
 
 // ============================================================================
 // IMAGE TRANSFORMATIONS
@@ -78,43 +65,6 @@ export function getTransformedImageUrl(
   return `https://${TRANSFORM_ZONE}/cdn-cgi/image/${optionsString}/${originalUrl}`;
 }
 
-/**
- * Generate responsive image srcSet for different screen sizes
- */
-export function getResponsiveImageSrcSet(
-  originalUrl: string,
-  widths: number[] = [320, 640, 960, 1280, 1920],
-  options: Omit<ImageTransformOptions, "width"> = {}
-): string {
-  return widths
-    .map((width) => {
-      const url = getTransformedImageUrl(originalUrl, { ...options, width });
-      return `${url} ${width}w`;
-    })
-    .join(", ");
-}
-
-/**
- * Get optimized thumbnail URL for project cards
- */
-export function getProjectThumbnail(
-  originalUrl: string,
-  size: "small" | "medium" | "large" = "medium"
-): string {
-  const sizes = {
-    small: { width: 400, height: 300 },
-    medium: { width: 800, height: 600 },
-    large: { width: 1200, height: 900 },
-  };
-
-  return getTransformedImageUrl(originalUrl, {
-    ...sizes[size],
-    fit: "cover",
-    format: "auto",
-    quality: 80,
-  });
-}
-
 // ============================================================================
 // VIDEO (CLOUDFLARE STREAM)
 // ============================================================================
@@ -145,72 +95,4 @@ export function getStreamVideoUrls(uid: string): StreamVideoUrls {
     animatedThumbnail: `https://${STREAM_SUBDOMAIN}/${uid}/thumbnails/thumbnail.gif`,
     iframe: `https://${STREAM_SUBDOMAIN}/${uid}/iframe`,
   };
-}
-
-/**
- * Get a thumbnail at a specific timestamp
- */
-export function getStreamThumbnailAt(
-  uid: string,
-  options: {
-    time?: string; // "1s", "50%", "2m30s"
-    width?: number;
-    height?: number;
-    fit?: "crop" | "clip" | "scale" | "fill";
-  } = {}
-): string {
-  const params = new URLSearchParams();
-
-  if (options.time) params.set("time", options.time);
-  if (options.width) params.set("width", options.width.toString());
-  if (options.height) params.set("height", options.height.toString());
-  if (options.fit) params.set("fit", options.fit);
-
-  const query = params.toString();
-  return `https://${STREAM_SUBDOMAIN}/${uid}/thumbnails/thumbnail.jpg${query ? `?${query}` : ""}`;
-}
-
-// ============================================================================
-// URL DETECTION & PARSING
-// ============================================================================
-
-/**
- * Check if a URL is a Cloudflare Stream video
- */
-export function isStreamUrl(url: string): boolean {
-  return hostnameEndsWith(url, "cloudflarestream.com");
-}
-
-/**
- * Check if a URL is an R2/media URL
- */
-export function isR2Url(url: string): boolean {
-  return hostnameEndsWith(url, R2_CUSTOM_DOMAIN) || hostnameEndsWith(url, "r2.cloudflarestorage.com");
-}
-
-/**
- * Extract Stream video UID from various URL formats
- */
-export function extractStreamUid(url: string): string | null {
-  // Format: https://customer-xxx.cloudflarestream.com/{uid}/...
-  const streamMatch = url.match(/cloudflarestream\.com\/([a-f0-9]+)/i);
-  if (streamMatch) return streamMatch[1];
-
-  // Format: https://watch.cloudflarestream.com/{uid}
-  const watchMatch = url.match(/watch\.cloudflarestream\.com\/([a-f0-9]+)/i);
-  if (watchMatch) return watchMatch[1];
-
-  return null;
-}
-
-/**
- * Get the R2 key from a media URL
- */
-export function extractR2Key(url: string): string | null {
-  // Format: https://media.geraldbahati.dev/{key}
-  if (url.includes(R2_CUSTOM_DOMAIN)) {
-    const urlObj = new URL(url);
-    return urlObj.pathname.slice(1); // Remove leading /
-  }
-  return null;
 }

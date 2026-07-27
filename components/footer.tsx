@@ -1,9 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { TextScramble } from "@/components/ui/text-scramble";
 import { Separator } from "@/components/ui/separator";
-import Analytics from "@/lib/analytics";
+import {
+  trackNavigationClicked,
+  trackOutboundLinkClicked,
+} from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 interface FooterProps {
@@ -42,7 +45,7 @@ function AnimatedLink({
   const [isHovered, setIsHovered] = useState(false);
   const [shouldTriggerScramble, setShouldTriggerScramble] = useState(false);
 
-  const handleMouseEnter = useCallback(() => {
+  const handleMouseEnter = () => {
     setIsHovered(true);
     setShouldTriggerScramble(true);
 
@@ -50,25 +53,39 @@ function AnimatedLink({
     setTimeout(() => {
       setShouldTriggerScramble(false);
     }, 500);
-  }, []);
+  };
 
-  const handleMouseLeave = useCallback(() => {
+  const handleMouseLeave = () => {
     setIsHovered(false);
     setShouldTriggerScramble(false);
-  }, []);
+  };
 
-  const handleScrambleComplete = useCallback(() => {
+  const handleScrambleComplete = () => {
     setShouldTriggerScramble(false);
-  }, []);
+  };
 
-  const handleClick = useCallback(() => {
-    Analytics.trackLinkClick(String(children), href, "internal");
-  }, [children, href]);
+  const handleClick = () => {
+    const label = String(children);
+
+    if (href.startsWith("/")) {
+      trackNavigationClicked({ label, destination: href, surface: "footer" });
+      return;
+    }
+
+    trackOutboundLinkClicked({
+      destination: href,
+      platform: label,
+      surface: "footer",
+    });
+  };
 
   return (
     <a
       href={href}
-      className={`inline-block relative border-b transition-all duration-300 hover:translate-x-[2px] ${
+      // TextScramble randomises the visible characters while animating, so the
+      // accessible name is stated explicitly rather than read from the text.
+      aria-label={String(children)}
+      className={`inline-block relative border-b transition-[color,background-color,border-color,opacity,transform,box-shadow,filter] duration-300 hover:translate-x-[2px] ${
         isHovered ? "border-primary" : "border-transparent"
       } ${className}`}
       onMouseEnter={handleMouseEnter}
@@ -116,8 +133,7 @@ export function Footer({
     () => 2026,
   );
   const copyrightText =
-    copyright ||
-    `©${currentYear} Gerald Bahati | All rights reserved.`;
+    copyright || `©${currentYear} Gerald Bahati | All rights reserved.`;
 
   const gridRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -217,7 +233,10 @@ export function Footer({
 
         {/* Copyright */}
         <div
-          className={cn("mt-16 pt-8 footer-reveal", isVisible && "footer-visible")}
+          className={cn(
+            "mt-16 pt-8 footer-reveal",
+            isVisible && "footer-visible",
+          )}
           style={{ animationDelay: "0.5s" }}
         >
           <p className="text-base text-gray-500">{copyrightText}</p>
