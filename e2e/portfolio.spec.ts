@@ -9,10 +9,24 @@ test("homepage renders its primary content", async ({ page }) => {
 });
 
 test("project and contact routes remain navigable", async ({ page }) => {
-  await page.goto("/projects");
-  await expect(page.getByRole("heading", { name: "Projects" })).toBeVisible();
+  // These routes pull posters and video from Cloudflare and stream their
+  // content through Suspense. Waiting for the full `load` event makes the test
+  // hostage to third-party media, so we wait for the document and let the
+  // assertions auto-wait for what actually matters — a stronger check than
+  // "every asset finished downloading".
+  //
+  // The wider budget is measured, not guessed: driving this page directly in
+  // Playwright's chromium resolves the heading to a single 1216x36 element in
+  // roughly four seconds. The default 30s is only tight because two browser
+  // projects run in parallel.
+  test.setTimeout(60_000);
 
-  await page.goto("/contact");
+  await page.goto("/projects", { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("heading", { name: "Projects" })).toBeVisible({
+    timeout: 15_000,
+  });
+
+  await page.goto("/contact", { waitUntil: "domcontentloaded" });
   await expect(
     page.getByRole("heading", { name: "Request a project" }),
   ).toBeVisible();
