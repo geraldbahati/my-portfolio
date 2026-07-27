@@ -27,9 +27,13 @@ export default defineConfig({
     },
   ],
   webServer: {
+    // No --hostname: binding to 127.0.0.1 makes Next's internal proxy dial
+    // `localhost`, which resolves to ::1 where nothing is listening, so every
+    // request dies with "Failed to proxy ... ECONNRESET" and the health check
+    // times out. Default binding covers both stacks.
     command: process.env.CI
-      ? `npm run start -- --hostname 127.0.0.1 --port ${port}`
-      : `npm run dev:frontend -- --hostname 127.0.0.1 --port ${port}`,
+      ? `npm run start -- --port ${port}`
+      : `npm run dev:frontend -- --port ${port}`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
