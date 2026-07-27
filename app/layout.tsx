@@ -134,11 +134,9 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="//media.geraldbahati.dev" />
       </head>
       <body className="antialiased bg-background">
-        {/*<ClerkProvider>*/}
         <LenisProvider>
           <MotionProvider>{children}</MotionProvider>
         </LenisProvider>
-        {/*</ClerkProvider>*/}
         <DeferredProviders />
         <AnalyticsProvider />
       </body>

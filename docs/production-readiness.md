@@ -22,7 +22,6 @@ A change is ready for production only when:
 ### Vercel
 
 - `NEXT_PUBLIC_CONVEX_URL`
-- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
 - `NEXT_PUBLIC_POSTHOG_KEY`
 - `NEXT_PUBLIC_POSTHOG_HOST`
 - `NEXT_PUBLIC_SENTRY_DSN`
@@ -47,6 +46,15 @@ is build-only and must never use a `NEXT_PUBLIC_` prefix.
 - `POSTHOG_HOST`
 - `CLOUDFLARE_ACCOUNT_ID`
 - `CLOUDFLARE_API_TOKEN`
+
+### Development admin
+
+These are needed only when running the development-only `/admin` dashboard.
+The public site, public API routes, production build, and browser smoke tests do
+not require Clerk credentials.
+
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+- `CLERK_SECRET_KEY`
 
 ## Sentry configuration
 

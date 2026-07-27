@@ -6,7 +6,7 @@ import { JsonLdScript } from "@/components/JsonLdScript";
 import GridPattern from "@/components/ui/shadcn-io/grid-pattern";
 import { ContactLinks } from "@/components/ContactLinks";
 import { PageAnalytics } from "@/components/PageAnalytics";
-import ConvexClientProvider from "@/components/ConvexClientProvider";
+import PublicConvexProvider from "@/components/PublicConvexProvider";
 import { generateBreadcrumbSchema } from "@/lib/seo";
 
 export const metadata: Metadata = {
@@ -265,9 +265,9 @@ export default function ContactPage() {
                   </h2>
                   {process.env.NEXT_PUBLIC_CONVEX_URL ? (
                     <Suspense fallback={<ContactFormSkeleton />}>
-                      <ConvexClientProvider>
+                      <PublicConvexProvider>
                         <ContactForm />
-                      </ConvexClientProvider>
+                      </PublicConvexProvider>
                     </Suspense>
                   ) : (
                     <ContactFormUnavailable />

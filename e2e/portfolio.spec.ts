@@ -55,3 +55,16 @@ test("production security headers are present", async ({ request }) => {
   expect(headers["x-content-type-options"]).toBe("nosniff");
   expect(headers["x-frame-options"]).toBe("DENY");
 });
+
+test("production keeps the development admin dashboard unavailable", async ({
+  request,
+}) => {
+  test.skip(!process.env.CI, "The admin dashboard is available in development.");
+
+  const response = await request.get("/admin", { maxRedirects: 0 });
+  const location = response.headers().location;
+
+  expect([307, 308]).toContain(response.status());
+  expect(location).toBeDefined();
+  expect(new URL(location!, "http://127.0.0.1:3100").pathname).toBe("/");
+});

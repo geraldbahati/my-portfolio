@@ -18,7 +18,7 @@ A modern, high-performance portfolio showcasing my software engineering experien
 | ------------- | ----------------------------------------------------------------- |
 | Framework     | Next.js 16 (App Router), React 19, TypeScript                     |
 | Styling       | Tailwind CSS v4, Framer Motion, shadcn/ui, Lenis                  |
-| Backend       | Convex, Clerk (Auth)                                              |
+| Backend       | Convex, Clerk (admin auth only)                                   |
 | Observability | Sentry error monitoring, PostHog analytics, Vercel Speed Insights |
 
 ## Project Structure
@@ -66,7 +66,7 @@ public/        Static assets (images, fonts)
 
    The required application keys are:
    - `CONVEX_DEPLOYMENT` and `NEXT_PUBLIC_CONVEX_URL` (Convex)
-   - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` (development admin)
+   - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` only when running the development admin dashboard
    - `NEXT_PUBLIC_SENTRY_DSN` (optional error monitoring)
 
    Convex-only secrets listed in `.env.example` must be configured in the
