@@ -20,6 +20,10 @@ jobs:
     env:
       NEXT_PUBLIC_CONVEX_URL: https://placeholder.convex.cloud
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_placeholder
+      # Not a real key. proxy.ts runs clerkMiddleware on every request, which
+      # throws "Missing secretKey" without this — the server then 500s and the
+      # Playwright webServer health check times out after 120s.
+      CLERK_SECRET_KEY: sk_test_placeholder
       REVALIDATE_SECRET: ci-only-placeholder-secret-32-chars
 
     steps:
