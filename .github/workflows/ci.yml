@@ -18,7 +18,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      NEXT_PUBLIC_CONVEX_URL: https://placeholder.convex.cloud
+      # A real deployment URL, not a placeholder: /projects and the homepage
+      # server-render Convex data, so a non-resolving host made those pages
+      # throw and the browser tests saw an empty document. This value is
+      # NEXT_PUBLIC_ and ships in the client bundle, so it is not a credential —
+      # it lives in secrets only to keep the deployment out of a public repo.
+      NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
       # Neither key is real, but the publishable one must still be structurally
       # valid: Clerk decodes it as base64 to derive the frontend API host, and
       # "pk_test_placeholder" fails with "Publishable key not valid". The suffix
