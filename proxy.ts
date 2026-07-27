@@ -6,12 +6,16 @@ import { clerkMiddleware } from "@clerk/nextjs/server";
 export default clerkMiddleware();
 
 export const config = {
-  matcher: [
-    // Skip Next.js internals, observability tunnels, and all static files,
-    // unless found in search params. Running Clerk on monitoring requests
-    // would add latency and cookies to traffic that needs neither.
-    "/((?!_next|gbx|monitoring|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    // Always run for API routes
-    "/(api|trpc)(.*)",
-  ],
+  // Allow-list rather than deny-list: run Clerk only where a session is
+  // actually consulted.
+  //
+  // `auth.protect()` in the admin layout requires clerkMiddleware to have run
+  // on that request, so /admin must stay matched. Nothing outside it does —
+  // ClerkProvider is commented out in the root layout, no public route calls
+  // auth() or currentUser(), and Convex's requireAdmin authenticates through
+  // the Convex/Clerk JWT rather than this middleware.
+  //
+  // The previous deny-list ran Clerk on every public page view, which cost an
+  // anonymous visitor a full handshake for a session that was never read.
+  matcher: ["/admin(.*)", "/(api|trpc)(.*)"],
 };
