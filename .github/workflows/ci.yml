@@ -19,9 +19,13 @@ jobs:
     timeout-minutes: 20
     env:
       NEXT_PUBLIC_CONVEX_URL: https://placeholder.convex.cloud
-      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_placeholder
-      # Not a real key. proxy.ts runs clerkMiddleware on every request, which
-      # throws "Missing secretKey" without this — the server then 500s and the
+      # Neither key is real, but the publishable one must still be structurally
+      # valid: Clerk decodes it as base64 to derive the frontend API host, and
+      # "pk_test_placeholder" fails with "Publishable key not valid". The suffix
+      # below decodes to "example.clerk.accounts.dev$".
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ZXhhbXBsZS5jbGVyay5hY2NvdW50cy5kZXYk
+      # proxy.ts runs clerkMiddleware on every request, which throws "Missing
+      # secretKey" without this — the server then 500s for every request and the
       # Playwright webServer health check times out after 120s.
       CLERK_SECRET_KEY: sk_test_placeholder
       REVALIDATE_SECRET: ci-only-placeholder-secret-32-chars
