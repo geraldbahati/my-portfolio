@@ -32,8 +32,7 @@ const nextConfig: NextConfig = {
   // client analytics off in development and previews without requiring a
   // second, manually maintained environment variable.
   env: {
-    NEXT_PUBLIC_VERCEL_ENV:
-      process.env.NEXT_PUBLIC_VERCEL_ENV ?? process.env.VERCEL_ENV ?? "",
+    NEXT_PUBLIC_VERCEL_ENV: process.env.VERCEL_ENV ?? "",
   },
 
   // Image optimization
