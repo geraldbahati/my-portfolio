@@ -1,4 +1,4 @@
-import { PrivacyPolicyWrapper } from "@/components/PrivacyPolicyWrapper";
+import { PrivacyPolicy } from "@/components/PrivacyPolicy";
 import { getPrivacyContent } from "@/lib/content";
 import {
   generateStructuredData,
@@ -89,8 +89,8 @@ function PrivacyContentSkeleton() {
 // Separate async component that handles dynamic data
 async function PrivacyContent() {
   await connection();
-  const { headings = [], ...content } = await getPrivacyContent();
-  return <PrivacyPolicyWrapper content={content} headings={headings} />;
+  const { markdown, headings = [] } = await getPrivacyContent();
+  return <PrivacyPolicy markdown={markdown} headings={headings} />;
 }
 
 export default function PrivacyPolicyPage() {

@@ -1,16 +1,14 @@
-// components/PrivacyPolicy.tsx
-"use client";
-
-import { MDXRemote, MDXRemoteSerializeResult } from "next-mdx-remote";
-import { PrintButton } from "./PrintButton";
 import { ComponentProps } from "react";
-import { ArrowUp } from "lucide-react";
-import { useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeSlug from "rehype-slug";
+import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import { AnalyticsPreferences } from "./analytics-preferences";
+import { PrivacyPolicyActions } from "./PrivacyPolicyActions";
 import type { PrivacyHeading } from "@/lib/content";
 
 export interface PrivacyPolicyProps {
-  content: MDXRemoteSerializeResult;
+  markdown: string;
   /** Derived from the document's own headings so anchors can't go stale. */
   headings?: PrivacyHeading[];
   className?: string;
@@ -90,25 +88,11 @@ const mdxComponents = {
   ),
 };
 
-function scrollToTop() {
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
 export function PrivacyPolicy({
-  content,
+  markdown,
   headings = [],
   className = "",
 }: PrivacyPolicyProps) {
-  const [showScrollTop, setShowScrollTop] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 300);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   return (
     <div
       className={`privacy-policy-container min-h-screen bg-gradient-to-br from-background to-muted print:bg-white ${className}`}
@@ -127,7 +111,16 @@ export function PrivacyPolicy({
         className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pt-32 relative print:py-8 print:pt-8"
       >
         <article className="bg-card rounded-3xl shadow-xl border border-border p-8 sm:p-12 prose prose-lg max-w-none dark:prose-invert print:rounded-none print:shadow-none print:border-none print:bg-white print:p-8">
-          <MDXRemote {...content} components={mdxComponents} />
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            rehypePlugins={[
+              rehypeSlug,
+              [rehypeAutolinkHeadings, { behavior: "wrap" }],
+            ]}
+            components={mdxComponents}
+          >
+            {markdown}
+          </ReactMarkdown>
         </article>
 
         {/* Table of Contents */}
@@ -157,25 +150,7 @@ export function PrivacyPolicy({
         <AnalyticsPreferences />
       </main>
 
-      {/* Floating Action Buttons */}
-      <div className="fixed bottom-8 right-8 flex flex-col gap-3 z-50 print:hidden">
-        {/* Print Button - Always visible */}
-        <div className="group">
-          <PrintButton />
-        </div>
-
-        {/* Scroll to top button - Only when scrolled */}
-        {showScrollTop && (
-          <button
-            type="button"
-            onClick={scrollToTop}
-            className="p-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg hover:shadow-xl transition-[background-color,box-shadow] duration-200"
-            aria-label="Scroll to top"
-          >
-            <ArrowUp className="w-5 h-5" />
-          </button>
-        )}
-      </div>
+      <PrivacyPolicyActions />
     </div>
   );
 }

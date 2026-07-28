@@ -11,6 +11,7 @@ import {
   type ConsentState,
 } from "@/lib/consent";
 import { applyConsent } from "@/lib/analytics";
+import { isPostHogEnabled } from "@/lib/posthog-client";
 
 /**
  * Both choices share one component so they can never drift apart visually.
@@ -80,9 +81,7 @@ export function ConsentBanner() {
   );
 
   const isVisible =
-    isHydrated &&
-    consent === "pending" &&
-    Boolean(process.env.NEXT_PUBLIC_POSTHOG_KEY);
+    isHydrated && consent === "pending" && isPostHogEnabled;
 
   if (!isVisible) {
     return null;

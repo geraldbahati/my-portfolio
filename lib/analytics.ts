@@ -14,7 +14,10 @@
  * Anything that doesn't feed one of those questions doesn't belong here.
  */
 
-import { getPostHogClient } from "@/lib/posthog-client";
+import {
+  getPostHogClient,
+  isPostHogEnabled,
+} from "@/lib/posthog-client";
 
 /** Where in the page an interaction happened. */
 export type Surface =
@@ -35,7 +38,7 @@ type EventProperties = Record<string, string | number | boolean | undefined>;
 function capture(event: string, properties?: EventProperties) {
   // Without a key, PostHog was never initialized in `instrumentation-client.ts`
   // and every call would be a no-op that still logs SDK warnings.
-  if (typeof window === "undefined" || !process.env.NEXT_PUBLIC_POSTHOG_KEY) {
+  if (typeof window === "undefined" || !isPostHogEnabled) {
     return;
   }
 
@@ -172,7 +175,7 @@ export function trackSectionViewed(params: {
  * can never apply consent differently.
  */
 export function applyConsent(decision: "accepted" | "rejected") {
-  if (typeof window === "undefined" || !process.env.NEXT_PUBLIC_POSTHOG_KEY) {
+  if (typeof window === "undefined" || !isPostHogEnabled) {
     return;
   }
 

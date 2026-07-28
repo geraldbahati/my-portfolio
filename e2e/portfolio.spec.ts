@@ -103,6 +103,23 @@ test("project and contact routes remain navigable", async ({ page }) => {
   ).toBeEditable();
 });
 
+test("privacy policy renders without runtime code evaluation", async ({
+  page,
+}) => {
+  await page.goto("/privacy", { waitUntil: "domcontentloaded" });
+
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Privacy Policy" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      level: 2,
+      name: "1. Introduction",
+    }),
+  ).toBeVisible();
+  await expect(page.locator("#privacy-content")).toBeVisible();
+});
+
 test("contact CTA reveals its media without an abrupt layout jump", async ({
   page,
   isMobile,
@@ -310,6 +327,7 @@ test("production security headers are present", async ({ request }) => {
   expect(response.ok()).toBeTruthy();
   expect(headers["content-security-policy"]).toContain("default-src 'self'");
   expect(headers["content-security-policy"]).toContain("object-src 'none'");
+  expect(headers["content-security-policy"]).not.toContain("'unsafe-eval'");
   expect(headers["permissions-policy"]).toContain("camera=()");
   expect(headers["x-content-type-options"]).toBe("nosniff");
   expect(headers["x-frame-options"]).toBe("DENY");
