@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_URL, toAbsoluteSiteUrl } from "@/lib/seo";
 import { projects as fallbackProjects } from "./(root)/projects/data";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -28,7 +28,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `${SITE_URL}/projects/${project.id}`,
     changeFrequency: "monthly",
     priority: 0.7,
-    images: project.poster ? [project.poster] : undefined,
+    images: project.poster ? [toAbsoluteSiteUrl(project.poster)] : undefined,
   }));
 
   if (!process.env.NEXT_PUBLIC_CONVEX_URL) {
@@ -42,7 +42,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(project.updatedAt || project.createdAt),
       changeFrequency: "monthly" as const,
       priority: 0.7,
-      images: project.poster ? [project.poster] : undefined,
+      images: project.poster ? [toAbsoluteSiteUrl(project.poster)] : undefined,
     }));
   } catch (error) {
     console.error("Could not fetch projects for sitemap:", error);

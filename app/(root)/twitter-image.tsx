@@ -120,7 +120,7 @@ export default async function Image() {
             }}
           >
             <span>Gerald Bahati</span>
-            <span>Product Software</span>
+            <span>Full-Stack Software</span>
             <span>Engineer</span>
           </h1>
 

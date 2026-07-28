@@ -15,6 +15,10 @@ export const SOCIAL_PROFILES = [
   "https://x.com/gerald_baha",
 ] as const;
 
+export function toAbsoluteSiteUrl(value: string) {
+  return new URL(value, `${SITE_URL}/`).toString();
+}
+
 export function generateStructuredData(data: Record<string, unknown>) {
   const baseSchema = {
     "@context": "https://schema.org",
