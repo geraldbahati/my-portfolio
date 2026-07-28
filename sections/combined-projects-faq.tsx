@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ProjectCard } from "@/components/project-card";
 import Image from "next/image";
 import { Instagram, Linkedin, Github } from "lucide-react";
@@ -8,6 +8,7 @@ import { SectionDivider } from "@/components/section-divider";
 import { FaqAccordion } from "@/components/faq-accordion";
 import { FAQ_DATA } from "@/constants/faq-data";
 import { Project } from "@/lib/data/projects";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 interface CombinedProjectsFaqSectionProps {
   projects: Project[];
@@ -94,9 +95,14 @@ const SOCIAL_LINKS = [
 ];
 
 // Social Sidebar - uses useIntersectOnce + CSS transitions (no SSR attribute mismatch)
-const SocialSidebar = function SocialSidebar() {
+const SocialSidebar = function SocialSidebar({
+  reducedMotion,
+}: {
+  reducedMotion: boolean;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const visible = useIntersectOnce(containerRef);
+  const shouldShow = visible || reducedMotion;
 
   return (
     <div ref={containerRef} className="hidden lg:flex flex-col gap-6">
@@ -110,9 +116,12 @@ const SocialSidebar = function SocialSidebar() {
             aria-label={social.label}
             className="text-gray-400 hover:text-text-inverted cursor-pointer transition-[color,background-color,border-color,opacity,transform,box-shadow,filter] duration-500 ease-out hover:scale-110 active:scale-95"
             style={{
-              opacity: visible ? 1 : 0,
-              transform: visible ? "translateX(0)" : "translateX(-20px)",
-              transitionDelay: `${index * 100}ms`,
+              opacity: shouldShow ? 1 : 0,
+              transform: shouldShow
+                ? "translateX(0)"
+                : "translateX(-20px)",
+              transitionDelay: reducedMotion ? "0ms" : `${index * 100}ms`,
+              transitionDuration: reducedMotion ? "0ms" : undefined,
             }}
           >
             {social.icon}
@@ -135,8 +144,9 @@ const SocialSidebar = function SocialSidebar() {
  * Animation strategy:
  * - Header entrance: useIntersectOnce hook + CSS transitions (no hydration mismatch)
  * - Social icons: useIntersectOnce hook + inline transition styles
- * - Horizontal scrollLeft: JS rAF (no CSS equivalent)
- * - FAQ translateY + background color: JS direct DOM manipulation (coupled to scrollLeft progress)
+ * - Horizontal gallery: compositor-only translate3d, scrubbed with JS rAF
+ * - FAQ translateY + background color: direct DOM manipulation, coupled to gallery progress
+ * - Measurements are cached outside the scroll loop and refreshed with ResizeObserver
  */
 const CombinedProjectsFaqSection = function CombinedProjectsFaqSection({
   ...props
@@ -149,202 +159,244 @@ function useCombinedProjectsFaqSection({
 }: CombinedProjectsFaqSectionProps) {
   const scrollTriggerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const scrollTrackRef = useRef<HTMLDivElement>(null);
   const stickyContainerRef = useRef<HTMLDivElement>(null);
   const projectsAreaRef = useRef<HTMLDivElement>(null);
   const faqSectionRef = useRef<HTMLElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLDivElement>(null);
   const descRef = useRef<HTMLDivElement>(null);
-  const rafIdRef = useRef<number | null>(null);
 
   // Header entrance animation via IntersectionObserver (client-only, no SSR attributes)
   const headerVisible = useIntersectOnce(headerRef);
-
-  // Dynamic: how much space is below projects in the sticky container (as vh)
-  const [spaceBelow, setSpaceBelow] = useState(30);
   const [isPlaybackActive, setIsPlaybackActive] = useState(true);
+  const prefersReducedMotion = useMediaQuery(
+    "(prefers-reduced-motion: reduce)",
+  );
+  const shouldShowHeader = headerVisible || prefersReducedMotion;
 
-  // Cached DOM measurements - updated on mount/resize, not every frame
-  const cachedMeasurementsRef = useRef({
-    sectionHeight: 0,
-    viewportHeight: 0,
-    scrollableDistance: 0,
-  });
-
-  // Track last FAQ-showing state to avoid redundant className toggles
-  const lastFaqShowingRef = useRef(false);
-  const lastPlaybackActiveRef = useRef(true);
-
-  // Measure the space below projects (responsive)
   useEffect(() => {
-    const measure = () => {
-      if (!projectsAreaRef.current || !stickyContainerRef.current) return;
+    const trigger = scrollTriggerRef.current;
+    const sticky = stickyContainerRef.current;
+    const viewport = scrollContainerRef.current;
+    const track = scrollTrackRef.current;
+    const projectsArea = projectsAreaRef.current;
+    const faq = faqSectionRef.current;
+    const title = titleRef.current?.querySelector("[data-projects-title]");
+    const desc = descRef.current?.querySelector("[data-projects-desc]");
 
-      const vh = window.innerHeight;
-      const stickyRect = stickyContainerRef.current.getBoundingClientRect();
-      const projectsRect = projectsAreaRef.current.getBoundingClientRect();
-
-      // How far from top of sticky container to bottom of projects
-      const projectsBottom = projectsRect.bottom - stickyRect.top;
-
-      // Space below projects = viewport height - projectsBottom
-      const belowSpace = vh - projectsBottom;
-
-      // Convert to vh percentage
-      const belowVh = Math.max(10, (belowSpace / vh) * 100);
-
-      setSpaceBelow(belowVh);
-
-      // Cache section measurements
-      if (scrollTriggerRef.current) {
-        const sectionHeight = scrollTriggerRef.current.offsetHeight;
-        const viewportHeight = window.innerHeight;
-        cachedMeasurementsRef.current = {
-          sectionHeight,
-          viewportHeight,
-          scrollableDistance: sectionHeight - viewportHeight,
-        };
-      }
-    };
-
-    const timer = setTimeout(measure, 500);
-    window.addEventListener("resize", measure);
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener("resize", measure);
-    };
-  }, [projects]);
-
-  // Scroll handler: horizontal scrollLeft + FAQ translateY + background color
-  // All done via direct DOM manipulation (no React state = no re-renders during scroll)
-  const updateScrollPosition = () => {
     if (
-      !scrollTriggerRef.current ||
-      !scrollContainerRef.current ||
-      !faqSectionRef.current
-    )
+      !trigger ||
+      !sticky ||
+      !viewport ||
+      !track ||
+      !projectsArea ||
+      !faq
+    ) {
       return;
+    }
 
-    const { scrollableDistance } = cachedMeasurementsRef.current;
+    const triggerElement = trigger;
+    const stickyElement = sticky;
+    const viewportElement = viewport;
+    const trackElement = track;
+    const projectsAreaElement = projectsArea;
+    const faqElement = faq;
 
-    // Only read rect.top - single layout trigger
-    const rect = scrollTriggerRef.current.getBoundingClientRect();
-    const scrolled = -rect.top;
-    const totalProgress = Math.max(
-      0,
-      Math.min(1, scrolled / scrollableDistance),
+    const horizontalPhaseEnd = 0.6;
+    const progressEpsilon = 0.0005;
+    const scrubTimeConstantMs = 85;
+    const reducedMotionQuery = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
     );
 
-    const horizontalScrollPhase = 0.6;
-    const nextPlaybackActive = totalProgress <= horizontalScrollPhase;
+    let frameId = 0;
+    let resizeFrameId = 0;
+    let currentProgress = 0;
+    let targetProgress = 0;
+    let lastFrameTime = 0;
+    let hasInitialProgress = false;
+    let lastFaqShowing = false;
+    let lastPlaybackActive = true;
+    let isTrackPromoted = false;
+    let isMounted = true;
 
-    if (lastPlaybackActiveRef.current !== nextPlaybackActive) {
-      lastPlaybackActiveRef.current = nextPlaybackActive;
-      setIsPlaybackActive(nextPlaybackActive);
-    }
-
-    if (totalProgress <= horizontalScrollPhase) {
-      // Phase 1: Horizontal scroll
-      const horizontalProgress = totalProgress / horizontalScrollPhase;
-
-      const container = scrollContainerRef.current;
-      const maxHorizontalScroll = container.scrollWidth - container.clientWidth;
-      const targetScrollLeft = horizontalProgress * maxHorizontalScroll;
-
-      if (Math.abs(container.scrollLeft - targetScrollLeft) > 1) {
-        container.scrollLeft = targetScrollLeft;
-      }
-
-      // FAQ stays below viewport (pushed down by spaceBelow vh)
-      faqSectionRef.current.style.transform = `translateY(${spaceBelow}vh)`;
-
-      // Toggle background color via class (only when state changes)
-      if (lastFaqShowingRef.current) {
-        lastFaqShowingRef.current = false;
-        scrollTriggerRef.current.classList.remove("bg-surface-dark");
-        scrollTriggerRef.current.classList.add("bg-surface-light");
-        stickyContainerRef.current!.classList.remove("bg-surface-dark");
-        stickyContainerRef.current!.classList.add("bg-surface-light");
-        // Toggle text colors
-        const title = scrollTriggerRef.current.querySelector(
-          "[data-projects-title]",
-        );
-        const desc = scrollTriggerRef.current.querySelector(
-          "[data-projects-desc]",
-        );
-        if (title) {
-          title.classList.remove("text-text-inverted");
-          title.classList.add("text-text-primary");
-        }
-        if (desc) {
-          desc.classList.remove("text-text-muted");
-          desc.classList.add("text-text-secondary");
-        }
-      }
-    } else {
-      // Phase 2: FAQ slides up
-      const slideProgress =
-        (totalProgress - horizontalScrollPhase) / (1 - horizontalScrollPhase);
-      const clampedSlide = Math.min(slideProgress, 1);
-
-      // Ensure horizontal scroll is at max
-      const container = scrollContainerRef.current;
-      const maxHorizontalScroll = container.scrollWidth - container.clientWidth;
-      if (container.scrollLeft < maxHorizontalScroll - 1) {
-        container.scrollLeft = maxHorizontalScroll;
-      }
-
-      // FAQ slides from translateY(spaceBelow vh) to translateY(0)
-      const translateY = (1 - clampedSlide) * spaceBelow;
-      faqSectionRef.current.style.transform = `translateY(${translateY}vh)`;
-
-      // Toggle background color via class (only when state changes)
-      if (!lastFaqShowingRef.current) {
-        lastFaqShowingRef.current = true;
-        scrollTriggerRef.current.classList.remove("bg-surface-light");
-        scrollTriggerRef.current.classList.add("bg-surface-dark");
-        stickyContainerRef.current!.classList.remove("bg-surface-light");
-        stickyContainerRef.current!.classList.add("bg-surface-dark");
-        // Toggle text colors
-        const title = scrollTriggerRef.current.querySelector(
-          "[data-projects-title]",
-        );
-        const desc = scrollTriggerRef.current.querySelector(
-          "[data-projects-desc]",
-        );
-        if (title) {
-          title.classList.remove("text-text-primary");
-          title.classList.add("text-text-inverted");
-        }
-        if (desc) {
-          desc.classList.remove("text-text-secondary");
-          desc.classList.add("text-text-muted");
-        }
-      }
-    }
-  };
-  const updateScrollPositionFromEvent = useEffectEvent(updateScrollPosition);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
-      rafIdRef.current = requestAnimationFrame(updateScrollPositionFromEvent);
+    let measurements = {
+      sectionTop: 0,
+      scrollableDistance: 1,
+      horizontalTravel: 0,
+      faqOffset: window.innerHeight * 0.3,
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
+    function setFaqSurface(isShowing: boolean) {
+      if (lastFaqShowing === isShowing) return;
+      lastFaqShowing = isShowing;
+
+      triggerElement.classList.toggle("bg-surface-dark", isShowing);
+      triggerElement.classList.toggle("bg-surface-light", !isShowing);
+      stickyElement.classList.toggle("bg-surface-dark", isShowing);
+      stickyElement.classList.toggle("bg-surface-light", !isShowing);
+
+      title?.classList.toggle("text-text-inverted", isShowing);
+      title?.classList.toggle("text-text-primary", !isShowing);
+      desc?.classList.toggle("text-text-muted", isShowing);
+      desc?.classList.toggle("text-text-secondary", !isShowing);
+    }
+
+    function readTargetProgress() {
+      const scrolled = window.scrollY - measurements.sectionTop;
+      return Math.max(
+        0,
+        Math.min(1, scrolled / measurements.scrollableDistance),
+      );
+    }
+
+    function setTrackPromotion(shouldPromote: boolean) {
+      if (isTrackPromoted === shouldPromote) return;
+      isTrackPromoted = shouldPromote;
+      trackElement.style.willChange = shouldPromote ? "transform" : "";
+    }
+
+    function renderFrame(timestamp: number) {
+      frameId = 0;
+      targetProgress = readTargetProgress();
+
+      if (!hasInitialProgress || reducedMotionQuery.matches) {
+        currentProgress = targetProgress;
+        hasInitialProgress = true;
+      } else {
+        const elapsed = Math.min(
+          64,
+          Math.max(0, timestamp - (lastFrameTime || timestamp)),
+        );
+        const blend = 1 - Math.exp(-elapsed / scrubTimeConstantMs);
+        currentProgress += (targetProgress - currentProgress) * blend;
+      }
+      lastFrameTime = timestamp;
+
+      const horizontalProgress = Math.min(
+        1,
+        currentProgress / horizontalPhaseEnd,
+      );
+      const faqProgress = Math.max(
+        0,
+        Math.min(
+          1,
+          (currentProgress - horizontalPhaseEnd) / (1 - horizontalPhaseEnd),
+        ),
+      );
+
+      const trackX = -horizontalProgress * measurements.horizontalTravel;
+      const faqY = (1 - faqProgress) * measurements.faqOffset;
+      const shouldPromoteTrack =
+        !reducedMotionQuery.matches &&
+        currentProgress > progressEpsilon &&
+        currentProgress < 1 - progressEpsilon;
+
+      setTrackPromotion(shouldPromoteTrack);
+      trackElement.style.transform = `translate3d(${trackX.toFixed(2)}px, 0, 0)`;
+      faqElement.style.transform = `translate3d(0, ${faqY.toFixed(2)}px, 0)`;
+
+      const isFaqShowing = currentProgress > horizontalPhaseEnd;
+      setFaqSurface(isFaqShowing);
+
+      const nextPlaybackActive = !isFaqShowing;
+      if (lastPlaybackActive !== nextPlaybackActive) {
+        lastPlaybackActive = nextPlaybackActive;
+        setIsPlaybackActive(nextPlaybackActive);
+      }
+
+      triggerElement.dataset.animationPhase = isFaqShowing
+        ? "faq"
+        : "projects";
+      triggerElement.dataset.animationProgress = currentProgress.toFixed(3);
+
+      if (
+        !reducedMotionQuery.matches &&
+        Math.abs(targetProgress - currentProgress) > progressEpsilon
+      ) {
+        frameId = requestAnimationFrame(renderFrame);
+      }
+    }
+
+    function scheduleRender() {
+      if (frameId === 0) {
+        frameId = requestAnimationFrame(renderFrame);
+      }
+    }
+
+    function measure() {
+      resizeFrameId = 0;
+
+      // Batch every layout read before applying any style updates.
+      const viewportHeight = window.innerHeight;
+      const triggerRect = triggerElement.getBoundingClientRect();
+      const stickyRect = stickyElement.getBoundingClientRect();
+      const projectsRect = projectsAreaElement.getBoundingClientRect();
+      const trackWidth = trackElement.scrollWidth;
+      const viewportWidth = viewportElement.clientWidth;
+      const sectionHeight = triggerElement.offsetHeight;
+
+      const projectsBottom = projectsRect.bottom - stickyRect.top;
+      const faqOffset = Math.max(
+        viewportHeight * 0.1,
+        viewportHeight - projectsBottom,
+      );
+
+      measurements = {
+        sectionTop: window.scrollY + triggerRect.top,
+        scrollableDistance: Math.max(1, sectionHeight - viewportHeight),
+        horizontalTravel: Math.max(0, trackWidth - viewportWidth),
+        faqOffset,
+      };
+
+      faqElement.style.setProperty(
+        "--faq-offset",
+        `${faqOffset.toFixed(2)}px`,
+      );
+      scheduleRender();
+    }
+
+    function scheduleMeasure() {
+      if (resizeFrameId !== 0) {
+        cancelAnimationFrame(resizeFrameId);
+      }
+      resizeFrameId = requestAnimationFrame(measure);
+    }
+
+    const resizeObserver = new ResizeObserver(scheduleMeasure);
+    resizeObserver.observe(viewportElement);
+    resizeObserver.observe(trackElement);
+    resizeObserver.observe(projectsAreaElement);
+
+    window.addEventListener("scroll", scheduleRender, { passive: true });
+    window.addEventListener("resize", scheduleMeasure, { passive: true });
+    reducedMotionQuery.addEventListener("change", scheduleRender);
+
+    void document.fonts?.ready.then(() => {
+      if (isMounted) scheduleMeasure();
+    });
+
+    measure();
 
     return () => {
-      window.removeEventListener("scroll", handleScroll);
-      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
+      isMounted = false;
+      resizeObserver.disconnect();
+      window.removeEventListener("scroll", scheduleRender);
+      window.removeEventListener("resize", scheduleMeasure);
+      reducedMotionQuery.removeEventListener("change", scheduleRender);
+      if (frameId !== 0) cancelAnimationFrame(frameId);
+      if (resizeFrameId !== 0) cancelAnimationFrame(resizeFrameId);
+      trackElement.style.willChange = "";
     };
-  }, []);
+  }, [projects]);
 
   return (
     <>
       {/* PROJECTS SECTION */}
       <div
         ref={scrollTriggerRef}
+        data-projects-scroll-root
         className="relative transition-colors duration-500 bg-surface-light"
         style={{
           height: "200vh",
@@ -359,8 +411,11 @@ function useCombinedProjectsFaqSection({
             ref={headerRef}
             className="absolute top-0 left-0 right-0 z-40 pt-16 short:pt-20 transition-[color,background-color,border-color,opacity,transform,box-shadow,filter] duration-500 ease-out"
             style={{
-              opacity: headerVisible ? 1 : 0,
-              transform: headerVisible ? "translateY(0)" : "translateY(32px)",
+              opacity: shouldShowHeader ? 1 : 0,
+              transform: shouldShowHeader
+                ? "translateY(0)"
+                : "translateY(32px)",
+              transitionDuration: prefersReducedMotion ? "0ms" : undefined,
             }}
           >
             <div className="max-w-7xl mx-auto px-6 pb-12 short:pb-4">
@@ -369,11 +424,14 @@ function useCombinedProjectsFaqSection({
                   ref={titleRef}
                   className="transition-[color,background-color,border-color,opacity,transform,box-shadow,filter] duration-500 ease-out"
                   style={{
-                    opacity: headerVisible ? 1 : 0,
-                    transform: headerVisible
+                    opacity: shouldShowHeader ? 1 : 0,
+                    transform: shouldShowHeader
                       ? "translateY(0)"
                       : "translateY(16px)",
-                    transitionDelay: "100ms",
+                    transitionDelay: prefersReducedMotion ? "0ms" : "100ms",
+                    transitionDuration: prefersReducedMotion
+                      ? "0ms"
+                      : undefined,
                   }}
                 >
                   <h1
@@ -387,11 +445,14 @@ function useCombinedProjectsFaqSection({
                   ref={descRef}
                   className="lg:pl-12 transition-[color,background-color,border-color,opacity,transform,box-shadow,filter] duration-500 ease-out"
                   style={{
-                    opacity: headerVisible ? 1 : 0,
-                    transform: headerVisible
+                    opacity: shouldShowHeader ? 1 : 0,
+                    transform: shouldShowHeader
                       ? "translateY(0)"
                       : "translateY(16px)",
-                    transitionDelay: "200ms",
+                    transitionDelay: prefersReducedMotion ? "0ms" : "200ms",
+                    transitionDuration: prefersReducedMotion
+                      ? "0ms"
+                      : undefined,
                   }}
                 >
                   <p
@@ -411,38 +472,44 @@ function useCombinedProjectsFaqSection({
           <div className="h-full flex items-start pb-20 short:pb-4 pt-80 lg:pt-64 short:pt-40">
             <div
               ref={scrollContainerRef}
-              data-projects-area
-              className="flex gap-6 overflow-hidden relative"
-              style={{ scrollBehavior: "auto" }}
+              data-projects-viewport
+              className="relative w-full min-w-0 overflow-hidden"
             >
-              <div className="w-[calc(50vw-45vw)] md:w-[calc(50vw-250px)] lg:w-[calc(50vw-333px)] laptop:w-[calc(50vw-270px)] short:w-[calc(50vw-250px)] flex-shrink-0" />
+              <div
+                ref={scrollTrackRef}
+                data-projects-area
+                data-projects-track
+                className="relative flex w-max gap-6"
+              >
+                <div className="w-[calc(50vw-45vw)] md:w-[calc(50vw-250px)] lg:w-[calc(50vw-333px)] laptop:w-[calc(50vw-270px)] short:w-[calc(50vw-250px)] flex-shrink-0" />
 
-              <div ref={projectsAreaRef} className="flex gap-6 px-6">
-                {projects.map((project) => (
-                  <div
-                    key={project.id}
-                    className="w-[90vw] md:w-[500px] lg:w-[666px] laptop:w-[540px] short:w-[500px] flex-shrink-0"
-                  >
-                    <ProjectCard
-                      id={project.id}
-                      src={project.src}
-                      type={project.type}
-                      title={project.title}
-                      alt={project.alt}
-                      url={project.url}
-                      badges={project.badges}
-                      aspectRatio="4/3"
-                      poster={project.poster}
-                      playbackEnabled={isPlaybackActive}
-                      freezeFrameOnPause
-                      surface="home_grid"
-                      className="w-full transition-[color,background-color,border-color,opacity,transform,box-shadow,filter] duration-500"
-                    />
-                  </div>
-                ))}
+                <div ref={projectsAreaRef} className="flex gap-6 px-6">
+                  {projects.map((project) => (
+                    <div
+                      key={project.id}
+                      className="w-[90vw] md:w-[500px] lg:w-[666px] laptop:w-[540px] short:w-[500px] flex-shrink-0"
+                    >
+                      <ProjectCard
+                        id={project.id}
+                        src={project.src}
+                        type={project.type}
+                        title={project.title}
+                        alt={project.alt}
+                        url={project.url}
+                        badges={project.badges}
+                        aspectRatio="4/3"
+                        poster={project.poster}
+                        playbackEnabled={isPlaybackActive}
+                        freezeFrameOnPause
+                        surface="home_grid"
+                        className="w-full transition-[color,background-color,border-color,opacity,transform,box-shadow,filter] duration-500"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="w-[calc(50vw-45vw)] md:w-[calc(50vw-250px)] lg:w-[calc(50vw-333px)] laptop:w-[calc(50vw-270px)] short:w-[calc(50vw-250px)] flex-shrink-0" />
               </div>
-
-              <div className="w-[calc(50vw-45vw)] md:w-[calc(50vw-250px)] lg:w-[calc(50vw-333px)] laptop:w-[calc(50vw-270px)] short:w-[calc(50vw-250px)] flex-shrink-0" />
             </div>
           </div>
         </div>
@@ -455,9 +522,10 @@ function useCombinedProjectsFaqSection({
         data-section-id="faq"
         className="bg-black text-white relative z-10"
         style={{
-          marginTop: `-${spaceBelow}vh`,
-          transform: `translateY(${spaceBelow}vh)`,
-        }}
+          "--faq-offset": "30vh",
+          marginTop: "calc(-1 * var(--faq-offset))",
+          transform: "translate3d(0, var(--faq-offset), 0)",
+        } as React.CSSProperties}
       >
         <div className="pb-32 short:pb-16">
           <div className="container mx-auto max-w-7xl px-6 lg:px-16 pt-20 short:pt-10">
@@ -473,7 +541,7 @@ function useCombinedProjectsFaqSection({
           <div className="container mx-auto max-w-7xl px-6 lg:px-16 py-20 short:py-10">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 short:gap-12 items-center mb-32 short:mb-16">
               <div className="flex items-end gap-6">
-                <SocialSidebar />
+                <SocialSidebar reducedMotion={prefersReducedMotion} />
                 <div className="relative w-full max-w-[540px] short:max-w-[420px] overflow-hidden rounded-lg">
                   <Image
                     src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=540&h=350&fit=crop&crop=faces&auto=format&q=75"
