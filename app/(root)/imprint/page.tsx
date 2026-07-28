@@ -5,7 +5,11 @@ import { ContactWrapper } from "@/components/imprint/contact-wrapper";
 import { ContactSkeleton } from "@/components/imprint/contact-skeleton";
 import { JsonLdScript } from "@/components/JsonLdScript";
 import imprintData from "@/constants/imprint.json";
-import { generateBreadcrumbSchema } from "@/lib/seo";
+import {
+  generateBreadcrumbSchema,
+  SITE_NAME,
+  SITE_URL,
+} from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Imprint - Legal Notice & Business Information",
@@ -19,10 +23,10 @@ export const metadata: Metadata = {
     "contact details",
   ],
   robots: {
-    index: true,
+    index: false,
     follow: true,
     googleBot: {
-      index: true,
+      index: false,
       follow: true,
     },
   },
@@ -30,6 +34,7 @@ export const metadata: Metadata = {
     canonical: "/imprint",
   },
   openGraph: {
+    siteName: SITE_NAME,
     title: "Imprint - Legal Notice & Business Information | Gerald Bahati",
     description:
       "Legal notice and imprint information for Gerald Bahati's portfolio. Find business contact details, responsible parties, and regulatory compliance information.",
@@ -45,12 +50,10 @@ export const metadata: Metadata = {
   },
 };
 
-const BASE_URL = "https://geraldbahati.dev";
-
 export default function ImprintPage() {
   const breadcrumbLd = generateBreadcrumbSchema([
-    { name: "Home", url: BASE_URL },
-    { name: "Imprint", url: `${BASE_URL}/imprint` },
+    { name: "Home", url: SITE_URL },
+    { name: "Imprint", url: `${SITE_URL}/imprint` },
   ]);
 
   return (

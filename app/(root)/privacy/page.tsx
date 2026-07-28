@@ -1,6 +1,12 @@
 import { PrivacyPolicyWrapper } from "@/components/PrivacyPolicyWrapper";
 import { getPrivacyContent } from "@/lib/content";
-import { generateStructuredData, generateBreadcrumbSchema } from "@/lib/seo";
+import {
+  generateStructuredData,
+  generateBreadcrumbSchema,
+  PERSON_ID,
+  SITE_NAME,
+  SITE_URL,
+} from "@/lib/seo";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { connection } from "next/server";
@@ -19,13 +25,18 @@ export const metadata: Metadata = {
     "data security",
   ],
   robots: {
-    index: true,
+    index: false,
     follow: true,
+    googleBot: {
+      index: false,
+      follow: true,
+    },
   },
   alternates: {
     canonical: "/privacy",
   },
   openGraph: {
+    siteName: SITE_NAME,
     title: "Privacy Policy - Data Protection & Security | Gerald Bahati",
     description:
       "Learn how we collect, use, and protect your personal information. Our privacy policy outlines our commitment to data security and GDPR compliance.",
@@ -82,18 +93,17 @@ async function PrivacyContent() {
   return <PrivacyPolicyWrapper content={content} headings={headings} />;
 }
 
-const BASE_URL = "https://geraldbahati.dev";
-
 export default function PrivacyPolicyPage() {
   const breadcrumbLd = generateBreadcrumbSchema([
-    { name: "Home", url: BASE_URL },
-    { name: "Privacy Policy", url: `${BASE_URL}/privacy` },
+    { name: "Home", url: SITE_URL },
+    { name: "Privacy Policy", url: `${SITE_URL}/privacy` },
   ]);
 
   const structuredData = generateStructuredData({
-    "@type": "Organization",
+    "@type": "Person",
+    "@id": PERSON_ID,
     name: "Gerald Bahati",
-    url: "https://geraldbahati.dev",
+    url: SITE_URL,
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "Privacy Inquiries",

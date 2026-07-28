@@ -13,6 +13,17 @@ import dynamic from "next/dynamic";
 import { SectionDivider } from "@/components/section-divider";
 import CombinedProjectsFaqWrapper from "@/sections/combined-projects-faq-wrapper";
 import { PageAnalytics } from "@/components/PageAnalytics";
+import { JsonLdScript } from "@/components/JsonLdScript";
+import {
+  PERSON_ID,
+  PROFILE_PAGE_ID,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_TITLE,
+  SITE_URL,
+  SOCIAL_PROFILES,
+  WEBSITE_ID,
+} from "@/lib/seo";
 
 // Below-fold: lazy-loaded client components for code-splitting
 const InfoSection = dynamic(() => import("@/sections/info"), {
@@ -25,12 +36,17 @@ const ContactSection = dynamic(() => import("@/sections/contact"), {
 // SEO Metadata
 export const metadata: Metadata = {
   title: {
-    absolute: "Gerald Bahati - Product Software Engineer | 2+ Years Experience",
+    absolute: SITE_TITLE,
   },
-  description:
-    "Product Software Engineer with 2+ years shipping production e-commerce and fintech experiences. Specializing in React, Next.js, Spring Boot, Go, and real-time systems with measurable business impact.",
+  description: SITE_DESCRIPTION,
   keywords: [
+    "Gerald Bahati",
+    "Gerald Bahati software engineer",
+    "Gerald Bahati portfolio",
+    "Nairobi software engineer",
+    "Kenya software engineer",
     "product software engineer",
+    "full-stack software engineer",
     "software engineer",
     "portfolio",
     "Next.js",
@@ -45,18 +61,18 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "Gerald Bahati - Product Software Engineer | 2+ Years Experience",
-    description:
-      "Product Software Engineer with 2+ years shipping production e-commerce and fintech experiences. Specializing in React, Next.js, Spring Boot, Go, and real-time systems with measurable business impact.",
+    siteName: SITE_NAME,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
     type: "website",
     locale: "en_KE",
     url: "/",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Gerald Bahati - Product Software Engineer | 2+ Years Experience",
-    description:
-      "Product Software Engineer with 2+ years shipping production e-commerce and fintech experiences. Specializing in React, Next.js, Spring Boot, Go, and real-time systems.",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    creator: "@gerald_baha",
   },
   robots: {
     index: true,
@@ -71,31 +87,59 @@ export const metadata: Metadata = {
   },
 };
 
-const BASE_URL = "https://geraldbahati.dev";
-
-const websiteLd = {
+const homepageLd = {
   "@context": "https://schema.org",
-  "@type": "WebSite",
-  name: "Gerald Bahati Portfolio",
-  url: BASE_URL,
-};
-
-const personLd = {
-  "@context": "https://schema.org",
-  "@type": "Person",
-  name: "Gerald Bahati",
-  url: BASE_URL,
-  jobTitle: "Product Software Engineer",
-  email: "contact@geraldbahati.dev",
-  address: {
-    "@type": "PostalAddress",
-    addressLocality: "Nairobi",
-    addressCountry: "KE",
-  },
-  sameAs: [
-    "https://www.linkedin.com/in/geraldbahati/",
-    "https://github.com/geraldbahati",
-    "https://x.com/gerald_baha",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": WEBSITE_ID,
+      name: SITE_NAME,
+      alternateName: "Gerald Bahati Portfolio",
+      url: SITE_URL,
+      description: SITE_DESCRIPTION,
+      inLanguage: "en-KE",
+      publisher: { "@id": PERSON_ID },
+    },
+    {
+      "@type": "ProfilePage",
+      "@id": PROFILE_PAGE_ID,
+      url: SITE_URL,
+      name: SITE_TITLE,
+      description: SITE_DESCRIPTION,
+      inLanguage: "en-KE",
+      isPartOf: { "@id": WEBSITE_ID },
+      mainEntity: { "@id": PERSON_ID },
+    },
+    {
+      "@type": "Person",
+      "@id": PERSON_ID,
+      name: SITE_NAME,
+      url: SITE_URL,
+      image: {
+        "@type": "ImageObject",
+        url: `${SITE_URL}/hero-image.webp`,
+      },
+      jobTitle: "Full-Stack Software Engineer",
+      description: SITE_DESCRIPTION,
+      email: "contact@geraldbahati.dev",
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: "Nairobi",
+        addressCountry: "KE",
+      },
+      knowsAbout: [
+        "Full-stack software engineering",
+        "React",
+        "Next.js",
+        "TypeScript",
+        "Go",
+        "Java",
+        "E-commerce platforms",
+        "Real-time systems",
+      ],
+      sameAs: SOCIAL_PROFILES,
+      mainEntityOfPage: { "@id": PROFILE_PAGE_ID },
+    },
   ],
 };
 
@@ -103,8 +147,7 @@ const personLd = {
 export default function Home() {
   return (
     <main id="main-content">
-      <script type="application/ld+json">{JSON.stringify(websiteLd)}</script>
-      <script type="application/ld+json">{JSON.stringify(personLd)}</script>
+      <JsonLdScript data={homepageLd} />
 
       <PageAnalytics />
 

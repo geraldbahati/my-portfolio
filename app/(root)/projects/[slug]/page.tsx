@@ -5,7 +5,12 @@ import { fetchQuery } from "convex/nextjs";
 import { cacheLife, cacheTag } from "next/cache";
 import dynamic from "next/dynamic";
 import { api } from "@/convex/_generated/api";
-import { generateBreadcrumbSchema } from "@/lib/seo";
+import {
+  generateBreadcrumbSchema,
+  PERSON_ID,
+  SITE_NAME,
+  SITE_URL,
+} from "@/lib/seo";
 import { PageAnalytics } from "@/components/PageAnalytics";
 import { JsonLdScript } from "@/components/JsonLdScript";
 import { ProjectHero } from "./_components/project-hero";
@@ -119,6 +124,7 @@ export async function generateMetadata({
     keywords,
     openGraph: {
       type: "article",
+      siteName: SITE_NAME,
       title: projectTitle,
       description: projectDescription,
       url: projectPath,
@@ -131,7 +137,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: projectTitle,
       description: projectDescription,
-      creator: "@geraldbahati",
+      creator: "@gerald_baha",
     },
     alternates: {
       canonical: projectPath,
@@ -169,8 +175,6 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   );
 }
 
-const BASE_URL = "https://geraldbahati.dev";
-
 async function ProjectContent({ slug }: { slug: string }) {
   if (slug === "_") {
     notFound();
@@ -186,11 +190,11 @@ async function ProjectContent({ slug }: { slug: string }) {
   const { project, details, metrics, gallery, challenges, testimonial } = data;
 
   const projectTitle = project?.title ?? "Project";
-  const projectUrl = `${BASE_URL}/projects/${slug}`;
+  const projectUrl = `${SITE_URL}/projects/${slug}`;
 
   const breadcrumbLd = generateBreadcrumbSchema([
-    { name: "Home", url: BASE_URL },
-    { name: "Projects", url: `${BASE_URL}/projects` },
+    { name: "Home", url: SITE_URL },
+    { name: "Projects", url: `${SITE_URL}/projects` },
     { name: projectTitle, url: projectUrl },
   ]);
 
@@ -202,8 +206,9 @@ async function ProjectContent({ slug }: { slug: string }) {
     url: projectUrl,
     author: {
       "@type": "Person",
+      "@id": PERSON_ID,
       name: "Gerald Bahati",
-      url: BASE_URL,
+      url: SITE_URL,
     },
     ...(project?.poster && { image: project.poster }),
     ...(details?.industry && { genre: details.industry }),

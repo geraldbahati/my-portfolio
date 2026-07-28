@@ -4,7 +4,7 @@ import manSitting from "@/public/man-sitting.webp";
 
 const tagline = "Shipping Production Impact";
 const mainText =
-  "Full-stack engineer building edge-first web applications. From multi-layer caching strategies to AI-powered recommendation engines, I architect systems that are fast, scalable, and impactful";
+  "Gerald Bahati is a full-stack software engineer based in Nairobi, Kenya, building fast web products, e-commerce platforms, and real-time systems with React, Next.js, TypeScript, Go, and Java.";
 const numberText = "(01)";
 
 /**

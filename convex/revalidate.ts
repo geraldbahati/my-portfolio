@@ -11,7 +11,7 @@ import type { ActionCtx } from "./_generated/server";
  * so admin UX is never blocked by revalidation.
  *
  * Requires these Convex deployment env vars:
- * - SITE_REVALIDATE_URL: the site origin, e.g. https://geraldbahati.dev
+ * - SITE_REVALIDATE_URL: the canonical site origin, e.g. https://www.geraldbahati.dev
  * - REVALIDATE_SECRET:    shared secret matching the Next route handler
  */
 const PROJECTS_CACHE_TAG = "projects";

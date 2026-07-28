@@ -37,7 +37,7 @@ export default function HeroContent({
         >
           <Image
             src={heroImage}
-            alt="Gerald Bahati - Product Software Engineer"
+            alt="Gerald Bahati - Full-Stack Software Engineer"
             fill
             priority
             fetchPriority="high"
@@ -74,19 +74,19 @@ export default function HeroContent({
           {/* Name section - Static text, TextScramble overlays after hydration */}
           <div className="mb-8 short:mb-4 overflow-hidden">
             <div className="reveal-up" data-hero-name-wrapper>
-              <p
+              <h1
                 data-hero-name-static
                 className="text-xs sm:text-sm lg:text-base font-light text-primary tracking-[0.2em] sm:tracking-[0.3em] uppercase"
               >
                 Gerald Bahati
-              </p>
+              </h1>
               <div data-hero-name-portal className="hidden" />
             </div>
           </div>
 
           {/* Main Title - Clip reveal animation */}
           <div className="mb-8 sm:mb-10 lg:mb-12 short:mb-6">
-            <h1
+            <h2
               className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl short:text-6xl font-thin leading-tight sm:leading-none tracking-tight grid-interaction-blocked pointer-events-auto text-white"
               style={{ fontSize: "clamp(2.25rem, 6vw, 6rem)" }}
             >
@@ -108,7 +108,7 @@ export default function HeroContent({
                   Software Engineer
                 </span>
               </span>
-            </h1>
+            </h2>
           </div>
 
           {/* Description and CTA */}

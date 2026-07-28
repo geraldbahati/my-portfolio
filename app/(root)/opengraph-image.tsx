@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { readFile } from "node:fs/promises";
 
 // Image metadata
-export const alt = "Gerald Bahati - Product Software Engineer";
+export const alt = "Gerald Bahati - Full-Stack Software Engineer";
 export const size = {
   width: 1200,
   height: 630,
@@ -120,7 +120,7 @@ export default async function Image() {
             }}
           >
             <span>Gerald Bahati</span>
-            <span>Product Software</span>
+            <span>Full-Stack Software</span>
             <span>Engineer</span>
           </h1>
 
