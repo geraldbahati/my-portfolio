@@ -127,6 +127,11 @@ export const submitContactForm = mutation({
     privacyConsent: v.boolean(),
     /** Hidden field; a real person never fills it. Non-empty means a bot. */
     honeypot: v.optional(v.string()),
+    /**
+     * Temporary rollout compatibility for the pre-PR production client.
+     * Deliberately ignored: rate limiting must never trust a client-supplied IP.
+     */
+    clientIP: v.optional(v.string()),
   },
   returns: v.union(
     v.object({

@@ -38,6 +38,7 @@ is build-only and must never use a `NEXT_PUBLIC_` prefix.
 
 - `CLERK_JWT_ISSUER_DOMAIN`
 - `ENABLE_ADMIN` (`false` in production)
+- `RESEND_API_KEY`
 - `SENDER_EMAIL`
 - `RECIPIENT_EMAIL`
 - `SITE_REVALIDATE_URL`
@@ -46,6 +47,10 @@ is build-only and must never use a `NEXT_PUBLIC_` prefix.
 - `POSTHOG_HOST`
 - `CLOUDFLARE_ACCOUNT_ID`
 - `CLOUDFLARE_API_TOKEN`
+- `R2_ACCESS_KEY_ID`
+- `R2_SECRET_ACCESS_KEY`
+- `R2_ENDPOINT`
+- `R2_BUCKET`
 
 ### Development admin
 
