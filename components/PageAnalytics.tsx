@@ -2,6 +2,7 @@
 
 import { startTransition, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import { isPostHogEnabled } from "@/lib/posthog-client";
 
 interface PageAnalyticsProps {
   trackScroll?: boolean;
@@ -34,9 +35,7 @@ export function PageAnalytics({
 }: PageAnalyticsProps) {
   const [shouldStartTracking, setShouldStartTracking] = useState(false);
 
-  // Gated on the key rather than NODE_ENV so local runs can be verified.
-  // PostHog's built-in "internal and test accounts" filter excludes localhost.
-  const isEnabled = Boolean(process.env.NEXT_PUBLIC_POSTHOG_KEY);
+  const isEnabled = isPostHogEnabled;
 
   useEffect(() => {
     if (!isEnabled) {

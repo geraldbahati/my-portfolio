@@ -28,6 +28,14 @@ const contentSecurityPolicy = `
   .trim();
 
 const nextConfig: NextConfig = {
+  // Vercel exposes VERCEL_ENV during the build. Publishing it explicitly keeps
+  // client analytics off in development and previews without requiring a
+  // second, manually maintained environment variable.
+  env: {
+    NEXT_PUBLIC_VERCEL_ENV:
+      process.env.NEXT_PUBLIC_VERCEL_ENV ?? process.env.VERCEL_ENV ?? "",
+  },
+
   // Image optimization
   images: {
     remotePatterns: [

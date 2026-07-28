@@ -5,6 +5,11 @@ const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 const posthogHost =
   process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://eu.i.posthog.com";
 
+export const isPostHogEnabled =
+  process.env.NODE_ENV === "production" &&
+  process.env.NEXT_PUBLIC_VERCEL_ENV === "production" &&
+  Boolean(posthogKey);
+
 const SENSITIVE_QUERY_PARAMS = [
   "token",
   "secret",
@@ -40,7 +45,7 @@ function scrubUrl(rawUrl: unknown): string | undefined {
 export function getPostHogClient(options?: {
   force?: boolean;
 }): Promise<PostHog | null> {
-  if (typeof window === "undefined" || !posthogKey) {
+  if (typeof window === "undefined" || !isPostHogEnabled || !posthogKey) {
     return Promise.resolve(null);
   }
 
@@ -113,6 +118,7 @@ export function getPostHogClient(options?: {
 export function schedulePostHogInitialization() {
   if (
     typeof window === "undefined" ||
+    !isPostHogEnabled ||
     !posthogKey ||
     getConsent() !== "accepted"
   ) {

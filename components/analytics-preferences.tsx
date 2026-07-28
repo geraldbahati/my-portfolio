@@ -10,6 +10,7 @@ import {
   type ConsentState,
 } from "@/lib/consent";
 import { applyConsent } from "@/lib/analytics";
+import { isPostHogEnabled } from "@/lib/posthog-client";
 
 const emptySubscribe = () => () => {};
 const serverConsent = (): ConsentState => "pending";
@@ -76,7 +77,7 @@ export function AnalyticsPreferences() {
     serverConsent,
   );
 
-  if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) {
+  if (!isPostHogEnabled) {
     return null;
   }
 

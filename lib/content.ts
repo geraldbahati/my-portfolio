@@ -1,10 +1,6 @@
 // lib/content.ts
 import fs from "fs/promises";
 import path from "path";
-import { serialize } from "next-mdx-remote/serialize";
-import remarkGfm from "remark-gfm";
-import rehypeSlug from "rehype-slug";
-import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import GithubSlugger from "github-slugger";
 
 export interface PrivacyHeading {
@@ -71,25 +67,8 @@ export async function getPrivacyContent() {
     // Parse frontmatter if present
     const { content: mdxContent, frontmatter } = parseFrontmatter(content);
 
-    // Clean content to prevent MDX parsing errors
-    const cleanedContent = cleanMDXContent(mdxContent);
-
-    // Serialize MDX content with plugins
-    const serialized = await serialize(cleanedContent, {
-      mdxOptions: {
-        remarkPlugins: [remarkGfm],
-        rehypePlugins: [
-          rehypeSlug,
-          [rehypeAutolinkHeadings, { behavior: "wrap" }],
-          // Remove rehypePrism if causing issues
-        ],
-        development: process.env.NODE_ENV === 'development',
-      },
-      parseFrontmatter: false,
-    });
-
     return {
-      ...serialized,
+      markdown: mdxContent,
       frontmatter,
       headings: extractHeadings(mdxContent),
     };
@@ -98,33 +77,6 @@ export async function getPrivacyContent() {
     // Return default content if there's any error
     return getDefaultPrivacyContent();
   }
-}
-
-// Function to clean MDX content and escape problematic characters
-function cleanMDXContent(content: string): string {
-  // Replace standalone curly braces that aren't part of MDX expressions
-  let cleaned = content
-    // Escape single curly braces that might cause issues
-    .replace(/(?<!\\)\{(?!{)/g, '\\{')
-    .replace(/(?<!\\)\}(?!})/g, '\\}')
-    // But preserve double curly braces for interpolation
-    .replace(/\\{\\{/g, '{{')
-    .replace(/\\}\\}/g, '}}');
-
-  // Remove or escape other problematic MDX characters if needed
-  // For example, if you have angle brackets that look like JSX
-  cleaned = cleaned
-    .replace(/<(?!\/?(a|p|div|span|h[1-6]|ul|ol|li|strong|em|code|pre|blockquote|img|table|thead|tbody|tr|td|th|br|hr)\b)/gi, '&lt;')
-    .replace(/(?<!<[^>]*)>/g, (match, offset, str) => {
-      // Only replace if it's not part of an HTML tag
-      const beforeText = str.substring(Math.max(0, offset - 50), offset);
-      if (beforeText.includes('<') && !beforeText.includes('>')) {
-        return match;
-      }
-      return '&gt;';
-    });
-
-  return cleaned;
 }
 
 function parseFrontmatter(content: string) {
@@ -160,7 +112,7 @@ function parseFrontmatter(content: string) {
  * something untrue, so this now says only what is true: the document is
  * missing, and here is who to ask.
  */
-async function getDefaultPrivacyContent() {
+function getDefaultPrivacyContent() {
   const notice = `# Privacy Policy
 
 This privacy policy is temporarily unavailable because of a technical problem on my end.
@@ -169,24 +121,9 @@ Rather than risk showing you terms that may be inaccurate, no policy text is sho
 
 Analytics stay switched off unless you have accepted them. You can change that choice using the controls below at any time.`;
 
-  try {
-    const serialized = await serialize(notice, {
-      mdxOptions: {
-        remarkPlugins: [remarkGfm],
-        rehypePlugins: [rehypeSlug],
-        development: process.env.NODE_ENV === 'development',
-      },
-    });
-
-    return { ...serialized, headings: [] as PrivacyHeading[] };
-  } catch (error) {
-    console.error("Error serializing privacy fallback notice:", error);
-
-    return {
-      compiledSource: '',
-      scope: {},
-      frontmatter: {},
-      headings: [] as PrivacyHeading[],
-    };
-  }
+  return {
+    markdown: notice,
+    frontmatter: {},
+    headings: [] as PrivacyHeading[],
+  };
 }
