@@ -204,6 +204,105 @@ test("contact CTA reveals its media without an abrupt layout jump", async ({
   expect(collapsedWidth).toBeLessThanOrEqual(1);
 });
 
+test("projects gallery uses a compositor transform before handing off to FAQ", async ({
+  page,
+}) => {
+  test.setTimeout(60_000);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/", { waitUntil: "load" });
+
+  const projectsLoading = page.getByText("Loading projects...", {
+    exact: true,
+  });
+  const trigger = page.locator("[data-projects-scroll-root]");
+  const viewport = page.locator("[data-projects-viewport]");
+  const track = page.locator("[data-projects-track]");
+
+  await projectsLoading.scrollIntoViewIfNeeded();
+  await expect(projectsLoading).toHaveCount(0, { timeout: 15_000 });
+  await expect(trigger).toHaveCount(1);
+  await expect(viewport).toHaveCount(1);
+  await expect(track).toHaveCount(1);
+  await expect(trigger).toHaveAttribute("data-animation-phase", "projects");
+
+  const scrollToProgress = async (progress: number) => {
+    await trigger.evaluate((element, nextProgress) => {
+      const root = element as HTMLElement;
+      const rect = root.getBoundingClientRect();
+      const sectionTop = window.scrollY + rect.top;
+      const scrollableDistance = root.offsetHeight - window.innerHeight;
+      window.scrollTo({
+        top: sectionTop + scrollableDistance * nextProgress,
+        behavior: "auto",
+      });
+    }, progress);
+  };
+
+  const readAnimation = async () =>
+    trigger.evaluate((element) => {
+      const trackElement = element.querySelector<HTMLElement>(
+        "[data-projects-track]",
+      );
+      const viewportElement = element.querySelector<HTMLElement>(
+        "[data-projects-viewport]",
+      );
+      const faqElement = element.nextElementSibling as HTMLElement | null;
+
+      if (!trackElement || !viewportElement || !faqElement) {
+        throw new Error("Projects animation elements are unavailable");
+      }
+
+      const trackTransform = new DOMMatrixReadOnly(
+        getComputedStyle(trackElement).transform,
+      );
+      const faqTransform = new DOMMatrixReadOnly(
+        getComputedStyle(faqElement).transform,
+      );
+
+      return {
+        faqY: faqTransform.m42,
+        phase: element.dataset.animationPhase,
+        progress: Number(element.dataset.animationProgress),
+        trackX: trackTransform.m41,
+        viewportScrollLeft: viewportElement.scrollLeft,
+        willChange: getComputedStyle(trackElement).willChange,
+      };
+    });
+
+  await scrollToProgress(0);
+  await expect
+    .poll(async () => (await readAnimation()).progress)
+    .toBeLessThanOrEqual(0.01);
+  const start = await readAnimation();
+
+  await scrollToProgress(0.3);
+  await expect
+    .poll(async () => (await readAnimation()).progress)
+    .toBeGreaterThan(0.28);
+  const middle = await readAnimation();
+
+  expect(middle.trackX).toBeLessThan(start.trackX - 20);
+  expect(middle.faqY).toBeCloseTo(start.faqY, 0);
+  expect(middle.viewportScrollLeft).toBe(0);
+  expect(middle.phase).toBe("projects");
+  expect(middle.willChange).toBe("transform");
+
+  await scrollToProgress(1);
+  await expect
+    .poll(async () => (await readAnimation()).progress)
+    .toBeGreaterThan(0.99);
+  await expect
+    .poll(async () => (await readAnimation()).willChange)
+    .toBe("auto");
+  const end = await readAnimation();
+
+  expect(end.trackX).toBeLessThan(middle.trackX - 20);
+  expect(Math.abs(end.faqY)).toBeLessThanOrEqual(1);
+  expect(end.viewportScrollLeft).toBe(0);
+  expect(end.phase).toBe("faq");
+  expect(end.willChange).toBe("auto");
+});
+
 test("production security headers are present", async ({ request }) => {
   const response = await request.get("/privacy");
   const headers = response.headers();
