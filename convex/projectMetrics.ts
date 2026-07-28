@@ -195,9 +195,7 @@ export const removeByProjectId = internalMutation({
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
       .collect();
 
-    for (const metric of metrics) {
-      await ctx.db.delete(metric._id);
-    }
+    await Promise.all(metrics.map((metric) => ctx.db.delete(metric._id)));
 
     return null;
   },
@@ -219,12 +217,14 @@ export const reorder = internalMutation({
   handler: async (ctx, args) => {
     const now = Date.now();
 
-    for (const { metricId, order } of args.metricOrders) {
-      await ctx.db.patch(metricId, {
-        order,
-        updatedAt: now,
-      });
-    }
+    await Promise.all(
+      args.metricOrders.map(({ metricId, order }) =>
+        ctx.db.patch(metricId, {
+          order,
+          updatedAt: now,
+        }),
+      ),
+    );
 
     return null;
   },
@@ -247,22 +247,18 @@ export const bulkCreate = internalMutation({
   returns: v.array(v.id("projectMetrics")),
   handler: async (ctx, args) => {
     const now = Date.now();
-    const ids = [];
-
-    for (let i = 0; i < args.metrics.length; i++) {
-      const metric = args.metrics[i];
-      const id = await ctx.db.insert("projectMetrics", {
-        projectId: args.projectId,
-        value: metric.value,
-        label: metric.label,
-        icon: metric.icon,
-        order: i,
-        createdAt: now,
-        updatedAt: now,
-      });
-      ids.push(id);
-    }
-
-    return ids;
+    return await Promise.all(
+      args.metrics.map((metric, order) =>
+        ctx.db.insert("projectMetrics", {
+          projectId: args.projectId,
+          value: metric.value,
+          label: metric.label,
+          icon: metric.icon,
+          order,
+          createdAt: now,
+          updatedAt: now,
+        }),
+      ),
+    );
   },
 });

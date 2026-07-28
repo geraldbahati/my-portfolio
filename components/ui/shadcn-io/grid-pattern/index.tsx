@@ -1,12 +1,6 @@
 "use client";
 
-import React, {
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-} from "react";
+import React, { useEffect, useId, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 interface HighlightSquare {
@@ -45,7 +39,11 @@ const TRAIL_DURATION = 800;
  * - SVG rect pool: reuses elements instead of destroy/recreate every frame
  * - Avoids document.elementFromPoint() (layout thrash) — uses CSS pointer-events instead
  */
-export default function GridPattern({
+export default function GridPattern(props: GridPatternProps) {
+  return useGridPatternElement(props);
+}
+
+function useGridPatternElement({
   width = 40,
   height = 40,
   x = -1,
@@ -75,98 +73,48 @@ export default function GridPattern({
   const activeRectCountRef = useRef(0);
 
   // Memoize static squares
-  const staticSquares = useMemo(() => squares || [], [squares]);
+  const staticSquares = squares || [];
 
   // Generate surrounding cells - memoized
-  const generateSurroundingCells = useCallback(
-    (centerX: number, centerY: number): Array<{ x: number; y: number }> => {
-      const cells: Array<{ x: number; y: number }> = [];
-      const usedPositions = new Set<string>();
-      usedPositions.add(`${centerX}-${centerY}`);
+  const generateSurroundingCells = (
+    centerX: number,
+    centerY: number,
+  ): Array<{ x: number; y: number }> => {
+    const cells: Array<{ x: number; y: number }> = [];
+    const usedPositions = new Set<string>();
+    usedPositions.add(`${centerX}-${centerY}`);
 
-      let attempts = 0;
-      while (
-        cells.length < surroundingCells &&
-        attempts < surroundingCells * 3
-      ) {
-        const offsetX =
-          Math.floor(Math.random() * (surroundingRadius * 2 + 1)) -
-          surroundingRadius;
-        const offsetY =
-          Math.floor(Math.random() * (surroundingRadius * 2 + 1)) -
-          surroundingRadius;
+    let attempts = 0;
+    while (cells.length < surroundingCells && attempts < surroundingCells * 3) {
+      const offsetX =
+        Math.floor(Math.random() * (surroundingRadius * 2 + 1)) -
+        surroundingRadius;
+      const offsetY =
+        Math.floor(Math.random() * (surroundingRadius * 2 + 1)) -
+        surroundingRadius;
 
-        if (offsetX === 0 && offsetY === 0) {
-          attempts++;
-          continue;
-        }
-
-        const newX = centerX + offsetX;
-        const newY = centerY + offsetY;
-        const key = `${newX}-${newY}`;
-
-        if (!usedPositions.has(key)) {
-          cells.push({ x: newX, y: newY });
-          usedPositions.add(key);
-        }
-
+      if (offsetX === 0 && offsetY === 0) {
         attempts++;
+        continue;
       }
 
-      return cells;
-    },
-    [surroundingCells, surroundingRadius],
-  );
+      const newX = centerX + offsetX;
+      const newY = centerY + offsetY;
+      const key = `${newX}-${newY}`;
+
+      if (!usedPositions.has(key)) {
+        cells.push({ x: newX, y: newY });
+        usedPositions.add(key);
+      }
+
+      attempts++;
+    }
+
+    return cells;
+  };
 
   // Cache the primary color to avoid repeated DOM queries
   const primaryColorRef = useRef<string | null>(null);
-
-  const getPrimaryColor = useCallback(() => {
-    if (primaryColorRef.current) return primaryColorRef.current;
-    if (typeof window === "undefined") return "rgb(249, 115, 22)";
-
-    const tempEl = document.createElement("div");
-    tempEl.style.color = "var(--primary)";
-    tempEl.style.display = "none";
-    document.body.appendChild(tempEl);
-    const computedColor = getComputedStyle(tempEl).color;
-    document.body.removeChild(tempEl);
-
-    primaryColorRef.current = computedColor || "rgb(249, 115, 22)";
-    return primaryColorRef.current;
-  }, []);
-
-  // =========================================================================
-  // Rect pool helpers — grow pool on demand, hide unused rects
-  // =========================================================================
-  const getPooledRect = useCallback(
-    (index: number): SVGRectElement => {
-      const pool = rectPoolRef.current;
-      const group = interactiveGroupRef.current!;
-
-      if (index < pool.length) {
-        const rect = pool[index];
-        // Unhide if it was hidden
-        rect.removeAttribute("display");
-        return rect;
-      }
-
-      // Grow pool
-      const rect = document.createElementNS(SVG_NS, "rect");
-      rect.setAttribute("fill", "none");
-      group.appendChild(rect);
-      pool.push(rect);
-      return rect;
-    },
-    [],
-  );
-
-  const hideUnusedRects = useCallback((usedCount: number) => {
-    const pool = rectPoolRef.current;
-    for (let i = usedCount; i < pool.length; i++) {
-      pool[i].setAttribute("display", "none");
-    }
-  }, []);
 
   // =========================================================================
   // Demand-driven animation — only runs when there's work to do
@@ -175,6 +123,43 @@ export default function GridPattern({
   const animationTickRef = useRef<() => void>(() => {});
 
   useEffect(() => {
+    const getPrimaryColor = () => {
+      if (primaryColorRef.current) return primaryColorRef.current;
+
+      const tempEl = document.createElement("div");
+      tempEl.style.color = "var(--primary)";
+      tempEl.style.display = "none";
+      document.body.appendChild(tempEl);
+      const computedColor = getComputedStyle(tempEl).color;
+      document.body.removeChild(tempEl);
+
+      primaryColorRef.current = computedColor || "rgb(249, 115, 22)";
+      return primaryColorRef.current;
+    };
+
+    const getPooledRect = (index: number): SVGRectElement => {
+      const pool = rectPoolRef.current;
+      const group = interactiveGroupRef.current!;
+      if (index < pool.length) {
+        const rect = pool[index];
+        rect.removeAttribute("display");
+        return rect;
+      }
+
+      const rect = document.createElementNS(SVG_NS, "rect");
+      rect.setAttribute("fill", "none");
+      group.appendChild(rect);
+      pool.push(rect);
+      return rect;
+    };
+
+    const hideUnusedRects = (usedCount: number) => {
+      const pool = rectPoolRef.current;
+      for (let index = usedCount; index < pool.length; index += 1) {
+        pool[index].setAttribute("display", "none");
+      }
+    };
+
     animationTickRef.current = () => {
       if (disableInteraction || !interactiveGroupRef.current) {
         isAnimatingRef.current = false;
@@ -201,15 +186,27 @@ export default function GridPattern({
       // Add current active cells if moving
       if (currentCellRef.current && isMovingRef.current) {
         const { x: cx, y: cy } = currentCellRef.current;
-        squaresToRender.push({ x: cx, y: cy, opacity: 1, scale: 1, isCenter: true });
+        squaresToRender.push({
+          x: cx,
+          y: cy,
+          opacity: 1,
+          scale: 1,
+          isCenter: true,
+        });
         currentSurroundingRef.current.forEach((cell) => {
-          squaresToRender.push({ ...cell, opacity: 0.8, scale: 1, isCenter: false });
+          squaresToRender.push({
+            ...cell,
+            opacity: 0.8,
+            scale: 1,
+            isCenter: false,
+          });
         });
       }
 
       // Add trail highlights
       highlightSquaresRef.current.forEach((square) => {
-        if (squaresToRender.some((s) => s.x === square.x && s.y === square.y)) return;
+        if (squaresToRender.some((s) => s.x === square.x && s.y === square.y))
+          return;
 
         const age = Math.min(1, (now - square.timestamp) / TRAIL_DURATION);
         const opacity = Math.max(0, (square.isCenter ? 0.7 : 0.5) * (1 - age));
@@ -254,119 +251,111 @@ export default function GridPattern({
         isAnimatingRef.current = false;
       }
     };
-  }, [
-    disableInteraction,
-    getPrimaryColor,
-    getPooledRect,
-    hideUnusedRects,
-    height,
-    width,
-  ]);
+  }, [disableInteraction, height, width]);
 
-  const scheduleAnimation = useCallback(() => {
+  const scheduleAnimation = () => {
     if (isAnimatingRef.current || disableInteraction) return;
     isAnimatingRef.current = true;
     rafIdRef.current = requestAnimationFrame(() => {
       animationTickRef.current();
     });
-  }, [disableInteraction]);
+  };
 
   // =========================================================================
   // Mouse handlers
   // =========================================================================
-  const handleMouseMove = useCallback(
-    (e: MouseEvent) => {
-      if (!svgRef.current || disableInteraction) return;
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!svgRef.current || disableInteraction) return;
 
-      // Check if mouse is over a blocked area (uses event target — no layout thrash)
-      const target = e.target as Element | null;
-      if (target?.closest?.(".grid-interaction-blocked")) {
-        if (currentCellRef.current) {
-          currentCellRef.current = null;
-          currentSurroundingRef.current = [];
-          isMovingRef.current = false;
-          if (mouseMoveTimeoutRef.current) clearTimeout(mouseMoveTimeoutRef.current);
-          scheduleAnimation();
-        }
-        return;
-      }
-
-      const rect = svgRef.current.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-
-      // Out of bounds check
-      if (mouseX < 0 || mouseY < 0 || mouseX > rect.width || mouseY > rect.height) return;
-
-      const gridX = Math.floor(mouseX / width);
-      const gridY = Math.floor(mouseY / height);
-
-      if (gridX >= 0 && gridY >= 0) {
-        const isSameCell =
-          currentCellRef.current &&
-          currentCellRef.current.x === gridX &&
-          currentCellRef.current.y === gridY;
-
-        isMovingRef.current = true;
-
-        if (mouseMoveTimeoutRef.current) {
+    // Check if mouse is over a blocked area (uses event target — no layout thrash)
+    const target = e.target as Element | null;
+    if (target?.closest?.(".grid-interaction-blocked")) {
+      if (currentCellRef.current) {
+        currentCellRef.current = null;
+        currentSurroundingRef.current = [];
+        isMovingRef.current = false;
+        if (mouseMoveTimeoutRef.current)
           clearTimeout(mouseMoveTimeoutRef.current);
-        }
-
-        mouseMoveTimeoutRef.current = setTimeout(() => {
-          isMovingRef.current = false;
-          currentCellRef.current = null;
-          currentSurroundingRef.current = [];
-          // One last tick to clear visuals
-          scheduleAnimation();
-        }, 100);
-
-        if (!isSameCell) {
-          // Add old cell to trail
-          if (currentCellRef.current) {
-            const timestamp = Date.now();
-            const fadeSquares: HighlightSquare[] = [
-              {
-                x: currentCellRef.current.x,
-                y: currentCellRef.current.y,
-                timestamp,
-                isCenter: true,
-                opacity: 0.8,
-                scale: 0.8,
-              },
-            ];
-
-            currentSurroundingRef.current.forEach((pos) => {
-              fadeSquares.push({
-                x: pos.x,
-                y: pos.y,
-                timestamp,
-                isCenter: false,
-                opacity: 0.6,
-                scale: 0.8,
-              });
-            });
-
-            const now = Date.now();
-            highlightSquaresRef.current = [
-              ...highlightSquaresRef.current.filter(
-                (s) => now - s.timestamp < TRAIL_DURATION,
-              ),
-              ...fadeSquares,
-            ];
-          }
-
-          currentSurroundingRef.current = generateSurroundingCells(gridX, gridY);
-          currentCellRef.current = { x: gridX, y: gridY };
-        }
-
         scheduleAnimation();
       }
-    },
-    [width, height, generateSurroundingCells, disableInteraction, scheduleAnimation],
-  );
+      return;
+    }
 
-  const handleMouseLeave = useCallback(() => {
+    const rect = svgRef.current.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    // Out of bounds check
+    if (mouseX < 0 || mouseY < 0 || mouseX > rect.width || mouseY > rect.height)
+      return;
+
+    const gridX = Math.floor(mouseX / width);
+    const gridY = Math.floor(mouseY / height);
+
+    if (gridX >= 0 && gridY >= 0) {
+      const isSameCell =
+        currentCellRef.current &&
+        currentCellRef.current.x === gridX &&
+        currentCellRef.current.y === gridY;
+
+      isMovingRef.current = true;
+
+      if (mouseMoveTimeoutRef.current) {
+        clearTimeout(mouseMoveTimeoutRef.current);
+      }
+
+      mouseMoveTimeoutRef.current = setTimeout(() => {
+        isMovingRef.current = false;
+        currentCellRef.current = null;
+        currentSurroundingRef.current = [];
+        // One last tick to clear visuals
+        scheduleAnimation();
+      }, 100);
+
+      if (!isSameCell) {
+        // Add old cell to trail
+        if (currentCellRef.current) {
+          const timestamp = Date.now();
+          const fadeSquares: HighlightSquare[] = [
+            {
+              x: currentCellRef.current.x,
+              y: currentCellRef.current.y,
+              timestamp,
+              isCenter: true,
+              opacity: 0.8,
+              scale: 0.8,
+            },
+          ];
+
+          currentSurroundingRef.current.forEach((pos) => {
+            fadeSquares.push({
+              x: pos.x,
+              y: pos.y,
+              timestamp,
+              isCenter: false,
+              opacity: 0.6,
+              scale: 0.8,
+            });
+          });
+
+          const now = Date.now();
+          highlightSquaresRef.current = [
+            ...highlightSquaresRef.current.filter(
+              (s) => now - s.timestamp < TRAIL_DURATION,
+            ),
+            ...fadeSquares,
+          ];
+        }
+
+        currentSurroundingRef.current = generateSurroundingCells(gridX, gridY);
+        currentCellRef.current = { x: gridX, y: gridY };
+      }
+
+      scheduleAnimation();
+    }
+  };
+
+  const handleMouseLeave = () => {
     if (mouseMoveTimeoutRef.current) {
       clearTimeout(mouseMoveTimeoutRef.current);
     }
@@ -407,7 +396,10 @@ export default function GridPattern({
 
     // Keep animating to fade out trails
     scheduleAnimation();
-  }, [scheduleAnimation]);
+  };
+  const handleMouseMoveFromEffect = React.useEffectEvent(handleMouseMove);
+  const handleMouseLeaveFromEffect = React.useEffectEvent(handleMouseLeave);
+  const scheduleAnimationFromEffect = React.useEffectEvent(scheduleAnimation);
 
   // Handle mouse events — only attach when SVG is in viewport
   useEffect(() => {
@@ -417,25 +409,28 @@ export default function GridPattern({
     if (!svg) return;
 
     let mouseMoveAttached = false;
+    const onMouseMove = (event: MouseEvent) => handleMouseMoveFromEffect(event);
+    const onMouseLeave = () => handleMouseLeaveFromEffect();
 
     const attachListeners = () => {
       if (mouseMoveAttached) return;
       mouseMoveAttached = true;
-      window.addEventListener("mousemove", handleMouseMove, { passive: true });
-      svg.addEventListener("mouseleave", handleMouseLeave);
+      window.addEventListener("mousemove", onMouseMove, { passive: true });
+      svg.addEventListener("mouseleave", onMouseLeave);
     };
 
     const detachListeners = () => {
       if (!mouseMoveAttached) return;
       mouseMoveAttached = false;
-      window.removeEventListener("mousemove", handleMouseMove);
-      svg.removeEventListener("mouseleave", handleMouseLeave);
+      window.removeEventListener("mousemove", onMouseMove);
+      svg.removeEventListener("mouseleave", onMouseLeave);
       // Clear active state when leaving viewport
       currentCellRef.current = null;
       currentSurroundingRef.current = [];
       isMovingRef.current = false;
-      if (mouseMoveTimeoutRef.current) clearTimeout(mouseMoveTimeoutRef.current);
-      scheduleAnimation(); // one last tick to clear visuals
+      if (mouseMoveTimeoutRef.current)
+        clearTimeout(mouseMoveTimeoutRef.current);
+      scheduleAnimationFromEffect(); // one last tick to clear visuals
     };
 
     const observer = new IntersectionObserver(
@@ -460,7 +455,7 @@ export default function GridPattern({
       }
       isAnimatingRef.current = false;
     };
-  }, [handleMouseMove, handleMouseLeave, disableInteraction, scheduleAnimation]);
+  }, [disableInteraction]);
 
   return (
     <svg

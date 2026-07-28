@@ -21,13 +21,12 @@ export interface ProjectsGridProps {
   projects: Project[];
 }
 
-export const ProjectsGrid: React.FC<ProjectsGridProps> = ({ projects }) => {
-  // Animation variants for fade-in effect
-  const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 },
-  };
+const CARD_VARIANTS = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 },
+};
 
+export const ProjectsGrid: React.FC<ProjectsGridProps> = ({ projects }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
       {projects.map((project, index) => (
@@ -42,7 +41,7 @@ export const ProjectsGrid: React.FC<ProjectsGridProps> = ({ projects }) => {
             delay: index * 0.1,
             ease: "easeOut",
           }}
-          variants={cardVariants}
+          variants={CARD_VARIANTS}
         >
           {/* Project Title */}
           <h2 className="text-xl lg:text-2xl font-semibold mb-4 text-foreground">
@@ -63,9 +62,11 @@ export const ProjectsGrid: React.FC<ProjectsGridProps> = ({ projects }) => {
               src={project.src}
               type={project.type}
               poster={project.poster}
+              title={project.title}
               alt={project.alt || project.title}
               url={project.url}
               aspectRatio={project.aspectRatio}
+              surface="projects_index"
               className="shadow-lg hover:shadow-xl transition-shadow duration-300"
             />
           </div>

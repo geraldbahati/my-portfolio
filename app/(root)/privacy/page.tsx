@@ -78,8 +78,8 @@ function PrivacyContentSkeleton() {
 // Separate async component that handles dynamic data
 async function PrivacyContent() {
   await connection();
-  const content = await getPrivacyContent();
-  return <PrivacyPolicyWrapper content={content} />;
+  const { headings = [], ...content } = await getPrivacyContent();
+  return <PrivacyPolicyWrapper content={content} headings={headings} />;
 }
 
 const BASE_URL = "https://geraldbahati.dev";
@@ -105,7 +105,7 @@ export default function PrivacyPolicyPage() {
     <>
       {/* Analytics - streams in, returns null */}
       <Suspense fallback={null}>
-        <PageAnalytics trackPageView trackScroll trackTime />
+        <PageAnalytics />
       </Suspense>
 
       <JsonLdScript data={structuredData} />

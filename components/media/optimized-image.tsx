@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useState, useCallback } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { isR2Url, parseAspectRatio } from "@/lib/media-utils";
 import { cloudflareLoader } from "@/lib/cloudflare-loader";
@@ -46,10 +46,10 @@ function OptimizedImageComponent({
   const { ratio } = parseAspectRatio(aspectRatio);
   const isR2 = isR2Url(src);
 
-  const handleError = useCallback(() => {
+  const handleError = () => {
     setHasError(true);
     onError?.();
-  }, [onError]);
+  };
 
   if (hasError) {
     return (
@@ -83,4 +83,4 @@ function OptimizedImageComponent({
   );
 }
 
-export const OptimizedImage = memo(OptimizedImageComponent);
+export const OptimizedImage = OptimizedImageComponent;

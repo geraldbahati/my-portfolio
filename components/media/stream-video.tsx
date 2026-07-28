@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useState } from "react";
 import type Hls from "hls.js";
 import {
   extractStreamUid,
@@ -126,9 +126,12 @@ function StreamVideoComponent({
     autoPlayRef.current = autoPlay;
   });
 
-  useEffect(() => {
-    if (active) setHasActivated(true);
-  }, [active]);
+  // The latch only ever flips false -> true, so it can be set during render.
+  // An effect would commit the un-activated state first and re-render, which
+  // costs a frame on the very scroll where the player should already be warming.
+  if (active && !hasActivated) {
+    setHasActivated(true);
+  }
 
   const streamUid = extractStreamUid(src);
   const { ratio } = parseAspectRatio(aspectRatio);
@@ -196,10 +199,10 @@ function StreamVideoComponent({
     }
   }, [autoPlay, hasActivated]);
 
-  const handleError = useCallback(() => {
+  const handleError = () => {
     setHasError(true);
     onError?.();
-  }, [onError]);
+  };
 
   if (hasError) {
     return (
@@ -245,9 +248,17 @@ function StreamVideoComponent({
           setIsLoaded(true);
           onLoad?.();
         }}
-      />
+      >
+        <track
+          default
+          kind="captions"
+          src="/captions/project-preview.vtt"
+          srcLang="en"
+          label="English"
+        />
+      </video>
     </div>
   );
 }
 
-export const StreamVideo = memo(StreamVideoComponent);
+export const StreamVideo = StreamVideoComponent;

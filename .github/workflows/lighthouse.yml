@@ -10,11 +10,50 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # Vercel Deployment Protection redirects preview URLs to an SSO login
+      # page. Without a bypass secret Lighthouse audits that login page and
+      # reports the site as failing, which is a false negative. Skip instead of
+      # publishing a meaningless score.
+      - name: Check protection bypass
+        id: guard
+        env:
+          BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: |
+          if [ -z "$BYPASS_SECRET" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipping Lighthouse — VERCEL_AUTOMATION_BYPASS_SECRET is not configured, so the preview URL resolves to Vercel's SSO login rather than the site."
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # The secret is written into a runtime config rather than the URL or a
+      # step output, so it never lands in an artifact or a job output.
+      - name: Build Lighthouse config
+        if: steps.guard.outputs.enabled == 'true'
+        env:
+          BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: |
+          node -e '
+            const fs = require("fs");
+            const config = JSON.parse(fs.readFileSync(".lighthouserc.json", "utf8"));
+            config.ci = config.ci || {};
+            config.ci.collect = config.ci.collect || {};
+            config.ci.collect.settings = {
+              ...config.ci.collect.settings,
+              extraHeaders: JSON.stringify({
+                "x-vercel-protection-bypass": process.env.BYPASS_SECRET,
+              }),
+            };
+            fs.writeFileSync("lighthouserc.ci.json", JSON.stringify(config, null, 2));
+          '
+
       - name: Run Lighthouse
         id: lighthouse
+        if: steps.guard.outputs.enabled == 'true'
         uses: treosh/lighthouse-ci-action@v12
         with:
           urls: ${{ github.event.deployment_status.target_url }}
+          configPath: ./lighthouserc.ci.json
           uploadArtifacts: true
 
       - name: Format results

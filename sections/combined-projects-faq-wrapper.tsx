@@ -10,20 +10,18 @@
  */
 
 import { Suspense } from "react";
-import { cacheLife, cacheTag } from "next/cache";
+import { connection } from "next/server";
 import DeferredCombinedProjectsFaq from "./deferred-combined-projects-faq";
 import { getCachedProjects } from "@/lib/data/projects";
 
 /**
  * Projects Content - Fetches and passes data to client component
  *
- * Safe to cache because getCachedProjects() now throws on error
- * instead of returning []. Errors propagate and won't be cached.
+ * Convex access starts only after a request arrives, while getCachedProjects
+ * retains the shared data cache for fast subsequent responses.
  */
 async function ProjectsFaqContent() {
-  "use cache";
-  cacheLife("days");
-  cacheTag("projects");
+  await connection();
 
   const projects = await getCachedProjects();
   return <DeferredCombinedProjectsFaq projects={projects} />;

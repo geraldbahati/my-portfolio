@@ -2,6 +2,14 @@ import { Button } from "@/components/ui/button";
 
 type StatusFilter = "all" | "pending" | "sent" | "delivered" | "failed";
 
+const STATUSES: StatusFilter[] = [
+  "all",
+  "pending",
+  "sent",
+  "delivered",
+  "failed",
+];
+
 interface StatusFilterButtonsProps {
   statusFilter: StatusFilter;
   setStatusFilter: (status: StatusFilter) => void;
@@ -11,11 +19,9 @@ export default function StatusFilterButtons({
   statusFilter,
   setStatusFilter,
 }: StatusFilterButtonsProps) {
-  const statuses: StatusFilter[] = ["all", "pending", "sent", "delivered", "failed"];
-
   return (
     <div className="flex flex-wrap gap-2">
-      {statuses.map((status) => (
+      {STATUSES.map((status) => (
         <Button
           key={status}
           onClick={() => setStatusFilter(status)}

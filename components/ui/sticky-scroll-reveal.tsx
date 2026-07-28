@@ -1,13 +1,6 @@
 "use client";
 
-import React, {
-  useEffect,
-  useRef,
-  useState,
-  useMemo,
-  useCallback,
-  memo,
-} from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { m } from "motion/react";
 import { warmImages } from "@/lib/resource-warmup";
@@ -42,15 +35,13 @@ function useImagePreloader(
   useEffect(() => {
     if (!enabled) return;
 
-    const indicesToPreload = Array.from(
-      { length: preloadAhead + 1 },
-      (_, i) => currentIndex + i,
-    ).filter((i) => i < images.length);
-
-    const nextImages = indicesToPreload
-      .map((index) => images[index])
-      .filter((src): src is string => Boolean(src))
-      .filter((src) => !preloadedRef.current.has(src));
+    const nextImages: string[] = [];
+    for (let offset = 0; offset <= preloadAhead; offset += 1) {
+      const source = images[currentIndex + offset];
+      if (source && !preloadedRef.current.has(source)) {
+        nextImages.push(source);
+      }
+    }
 
     warmImages(nextImages, preloadAhead + 1, {
       quality: 80,
@@ -69,27 +60,35 @@ function useActiveSectionIndex(
   const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
-    const observers: IntersectionObserver[] = [];
+    // One observer for every section rather than one per section: the previous
+    // version built an array of observers inside a forEach, which made the
+    // single disconnect-all cleanup hard to verify (and easy to get wrong when
+    // editing). A lookup from element back to index keeps the same behaviour.
+    const indexByElement = new Map<Element, number>();
 
     sectionRefs.forEach((ref, index) => {
-      if (!ref.current) return;
-
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting && entry.intersectionRatio > 0.3) {
-              setActiveIndex(index);
-            }
-          });
-        },
-        { threshold: [0.3, 0.5, 0.7], rootMargin: "-20% 0px -20% 0px" },
-      );
-
-      observer.observe(ref.current);
-      observers.push(observer);
+      if (ref.current) {
+        indexByElement.set(ref.current, index);
+      }
     });
 
-    return () => observers.forEach((obs) => obs.disconnect());
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && entry.intersectionRatio > 0.3) {
+            const index = indexByElement.get(entry.target);
+            if (index !== undefined) {
+              setActiveIndex(index);
+            }
+          }
+        });
+      },
+      { threshold: [0.3, 0.5, 0.7], rootMargin: "-20% 0px -20% 0px" },
+    );
+
+    indexByElement.forEach((_index, element) => observer.observe(element));
+
+    return () => observer.disconnect();
   }, [sectionRefs]);
 
   return activeIndex;
@@ -159,168 +158,170 @@ interface TextSectionProps {
   registerScrollUpdater: (updater: () => void) => () => void;
 }
 
-const TextSection = memo(
-  ({ section, sectionRef, registerScrollUpdater }: TextSectionProps) => {
-    const wrapperRef = useRef<HTMLDivElement>(null);
-    const labelWrapperRef = useRef<HTMLDivElement>(null);
-    const labelUnderlineRef = useRef<HTMLDivElement>(null);
-    const titleRef = useRef<HTMLHeadingElement>(null);
-    const descriptionRef = useRef<HTMLParagraphElement>(null);
-    const bulletRefs = useRef<Map<number, HTMLLIElement>>(new Map());
-    const bulletSvgRefs = useRef<Map<number, SVGSVGElement>>(new Map());
-    const bulletSpanRefs = useRef<Map<number, HTMLSpanElement>>(new Map());
+const TextSection = ({
+  section,
+  sectionRef,
+  registerScrollUpdater,
+}: TextSectionProps) => {
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const labelWrapperRef = useRef<HTMLDivElement>(null);
+  const labelUnderlineRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const descriptionRef = useRef<HTMLParagraphElement>(null);
+  const bulletRefs = useRef<Map<number, HTMLLIElement>>(new Map());
+  const bulletSvgRefs = useRef<Map<number, SVGSVGElement>>(new Map());
+  const bulletSpanRefs = useRef<Map<number, HTMLSpanElement>>(new Map());
 
-    useEffect(() => {
-      const sectionEl = sectionRef.current;
-      if (!sectionEl) return;
+  useEffect(() => {
+    const sectionEl = sectionRef.current;
+    if (!sectionEl) return;
 
-      const updateScrollStyles = () => {
-        const rect = sectionEl.getBoundingClientRect();
-        const viewportHeight = window.innerHeight;
+    const updateScrollStyles = () => {
+      const rect = sectionEl.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
 
-        // Same offset as original: ["start center", "end center"]
-        const start = rect.top + rect.height;
-        const end = rect.top;
-        const center = viewportHeight / 2;
+      // Same offset as original: ["start center", "end center"]
+      const start = rect.top + rect.height;
+      const end = rect.top;
+      const center = viewportHeight / 2;
 
-        // progress 0→1 as section scrolls through viewport center
-        const rawProgress = (center - end) / (start - end);
-        const progress = Math.min(1, Math.max(0, rawProgress));
+      // progress 0→1 as section scrolls through viewport center
+      const rawProgress = (center - end) / (start - end);
+      const progress = Math.min(1, Math.max(0, rawProgress));
 
-        // Opacity: [0, 0.1, 0.9, 1] → [0.3, 1, 1, 0.3]
-        const opacity = interpolateOpacity(progress);
+      // Opacity: [0, 0.1, 0.9, 1] → [0.3, 1, 1, 0.3]
+      const opacity = interpolateOpacity(progress);
 
-        // Label underline: scaleX 0→1
-        if (labelUnderlineRef.current) {
-          labelUnderlineRef.current.style.transform = `scaleX(${progress})`;
-        }
+      // Label underline: scaleX 0→1
+      if (labelUnderlineRef.current) {
+        labelUnderlineRef.current.style.transform = `scaleX(${progress})`;
+      }
 
-        // Label wrapper opacity
-        if (labelWrapperRef.current) {
-          labelWrapperRef.current.style.opacity = String(opacity);
-        }
+      // Label wrapper opacity
+      if (labelWrapperRef.current) {
+        labelWrapperRef.current.style.opacity = String(opacity);
+      }
 
-        // Title color
-        if (titleRef.current) {
-          titleRef.current.style.color = interpolateColor(
-            progress,
-            GRAY_400,
-            TEXT_PRIMARY,
-          );
-        }
+      // Title color
+      if (titleRef.current) {
+        titleRef.current.style.color = interpolateColor(
+          progress,
+          GRAY_400,
+          TEXT_PRIMARY,
+        );
+      }
 
-        // Description color
-        if (descriptionRef.current) {
-          descriptionRef.current.style.color = interpolateColor(
-            progress,
-            GRAY_400,
-            GRAY_700,
-          );
-        }
+      // Description color
+      if (descriptionRef.current) {
+        descriptionRef.current.style.color = interpolateColor(
+          progress,
+          GRAY_400,
+          GRAY_700,
+        );
+      }
 
-        // Bullet items: opacity + icon color + text color
-        bulletRefs.current.forEach((li) => {
-          li.style.opacity = String(opacity);
-        });
-        bulletSvgRefs.current.forEach((svg) => {
-          svg.style.color = interpolateColor(progress, GRAY_400, TEXT_PRIMARY);
-        });
-        bulletSpanRefs.current.forEach((span) => {
-          span.style.color = interpolateColor(progress, GRAY_400, GRAY_700);
-        });
-      };
+      // Bullet items: opacity + icon color + text color
+      bulletRefs.current.forEach((li) => {
+        li.style.opacity = String(opacity);
+      });
+      bulletSvgRefs.current.forEach((svg) => {
+        svg.style.color = interpolateColor(progress, GRAY_400, TEXT_PRIMARY);
+      });
+      bulletSpanRefs.current.forEach((span) => {
+        span.style.color = interpolateColor(progress, GRAY_400, GRAY_700);
+      });
+    };
 
-      return registerScrollUpdater(updateScrollStyles);
-    }, [registerScrollUpdater, sectionRef]);
+    return registerScrollUpdater(updateScrollStyles);
+  }, [registerScrollUpdater, sectionRef]);
 
-    return (
-      <div
-        ref={sectionRef}
-        className="min-h-screen flex items-center py-16 short:py-8"
-      >
-        <div ref={wrapperRef} className="w-full">
-          {section.label && (
-            <div
-              ref={labelWrapperRef}
-              className="mb-8 grid-interaction-blocked"
-              style={{ opacity: 0.3 }}
-            >
-              <span className="inline-block text-sm font-medium uppercase tracking-[0.2em] text-accent-orange">
-                {section.label}
-              </span>
-              <div
-                ref={labelUnderlineRef}
-                className="mt-3 h-px bg-accent-orange-muted"
-                style={{
-                  transform: "scaleX(0)",
-                  transformOrigin: "left",
-                  width: "100%",
-                }}
-              />
-            </div>
-          )}
-
-          <h2
-            ref={titleRef}
-            className="text-6xl lg:text-7xl short:text-5xl font-bold mb-12 short:mb-8 tracking-tight grid-interaction-blocked"
-            style={{ lineHeight: "0.9", color: COLOR_GRAY_400 }}
+  return (
+    <div
+      ref={sectionRef}
+      className="min-h-screen flex items-center py-16 short:py-8"
+    >
+      <div ref={wrapperRef} className="w-full">
+        {section.label && (
+          <div
+            ref={labelWrapperRef}
+            className="mb-8 grid-interaction-blocked"
+            style={{ opacity: 0.3 }}
           >
-            {section.title}
-          </h2>
+            <span className="inline-block text-sm font-medium uppercase tracking-[0.2em] text-accent-orange">
+              {section.label}
+            </span>
+            <div
+              ref={labelUnderlineRef}
+              className="mt-3 h-px bg-accent-orange-muted"
+              style={{
+                transform: "scaleX(0)",
+                transformOrigin: "left",
+                width: "100%",
+              }}
+            />
+          </div>
+        )}
 
-          {section.description && (
-            <p
-              ref={descriptionRef}
-              className="text-base mb-12 short:mb-8 max-w-lg leading-relaxed grid-interaction-blocked"
-              style={{ color: COLOR_GRAY_400 }}
-            >
-              {section.description}
-            </p>
-          )}
+        <h2
+          ref={titleRef}
+          className="text-6xl lg:text-7xl short:text-5xl font-bold mb-12 short:mb-8 tracking-tight grid-interaction-blocked"
+          style={{ lineHeight: "0.9", color: COLOR_GRAY_400 }}
+        >
+          {section.title}
+        </h2>
 
-          {section.bullets && (
-            <ul className="space-y-4 grid-interaction-blocked">
-              {section.bullets.map((bullet: string, bulletIndex: number) => (
-                <li
-                  key={`bullet-${section.title}-${bullet}`}
+        {section.description && (
+          <p
+            ref={descriptionRef}
+            className="text-base mb-12 short:mb-8 max-w-lg leading-relaxed grid-interaction-blocked"
+            style={{ color: COLOR_GRAY_400 }}
+          >
+            {section.description}
+          </p>
+        )}
+
+        {section.bullets && (
+          <ul className="space-y-4 grid-interaction-blocked">
+            {section.bullets.map((bullet: string, bulletIndex: number) => (
+              <li
+                key={`bullet-${section.title}-${bullet}`}
+                ref={(el) => {
+                  if (el) bulletRefs.current.set(bulletIndex, el);
+                  else bulletRefs.current.delete(bulletIndex);
+                }}
+                className="flex items-start"
+                style={{ opacity: 0.3 }}
+              >
+                <svg
                   ref={(el) => {
-                    if (el) bulletRefs.current.set(bulletIndex, el);
-                    else bulletRefs.current.delete(bulletIndex);
+                    if (el) bulletSvgRefs.current.set(bulletIndex, el);
+                    else bulletSvgRefs.current.delete(bulletIndex);
                   }}
-                  className="flex items-start"
-                  style={{ opacity: 0.3 }}
+                  className="w-4 h-4 mt-1.5 mr-4 shrink-0"
+                  style={{ color: COLOR_GRAY_400 }}
+                  fill="currentColor"
+                  viewBox="0 0 16 16"
                 >
-                  <svg
-                    ref={(el) => {
-                      if (el) bulletSvgRefs.current.set(bulletIndex, el);
-                      else bulletSvgRefs.current.delete(bulletIndex);
-                    }}
-                    className="w-4 h-4 mt-1.5 mr-4 shrink-0"
-                    style={{ color: COLOR_GRAY_400 }}
-                    fill="currentColor"
-                    viewBox="0 0 16 16"
-                  >
-                    <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
-                  </svg>
-                  <span
-                    ref={(el) => {
-                      if (el) bulletSpanRefs.current.set(bulletIndex, el);
-                      else bulletSpanRefs.current.delete(bulletIndex);
-                    }}
-                    className="text-base"
-                    style={{ color: COLOR_GRAY_400 }}
-                  >
-                    {bullet}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+                  <path d="M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z" />
+                </svg>
+                <span
+                  ref={(el) => {
+                    if (el) bulletSpanRefs.current.set(bulletIndex, el);
+                    else bulletSpanRefs.current.delete(bulletIndex);
+                  }}
+                  className="text-base"
+                  style={{ color: COLOR_GRAY_400 }}
+                >
+                  {bullet}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
-    );
-  },
-);
+    </div>
+  );
+};
 
 TextSection.displayName = "TextSection";
 
@@ -335,71 +336,74 @@ interface ImagePanelProps {
   registerRef: (index: number, el: HTMLDivElement | null) => void;
 }
 
-const ImagePanel = memo(
-  ({ section, index, contentClassName, registerRef }: ImagePanelProps) => {
-    return (
-      <div
-        ref={(el) => registerRef(index, el)}
-        className={`absolute inset-0 w-full h-full ${contentClassName || ""}`}
-        style={{
-          clipPath: index === 0 ? "inset(0 0 0 0)" : "inset(100% 0 0 0)",
-          zIndex: index + 1,
-          transform: "translateZ(0)",
-        }}
-      >
-        {section.content ? (
-          section.content
-        ) : section.image ? (
-          <div className="relative w-full h-full overflow-hidden">
-            {/* Single image serves as both background (via CSS blur overlay) and sharp center */}
-            <Image
-              src={section.image}
-              alt={`${section.title} background`}
-              fill
-              className="object-cover"
-              loading="lazy"
-              quality={80}
-              sizes="(max-width: 1024px) 500px, 600px"
-            />
-            {/* Blur + dim overlay using backdrop-filter (no second image request) */}
-            <div
-              className="absolute inset-0"
-              style={{
-                zIndex: 1,
-                backdropFilter: "blur(10px) brightness(0.95)",
-                WebkitBackdropFilter: "blur(10px) brightness(0.95)",
-              }}
-            />
+const ImagePanel = ({
+  section,
+  index,
+  contentClassName,
+  registerRef,
+}: ImagePanelProps) => {
+  return (
+    <div
+      ref={(el) => registerRef(index, el)}
+      className={`absolute inset-0 w-full h-full ${contentClassName || ""}`}
+      style={{
+        clipPath: index === 0 ? "inset(0 0 0 0)" : "inset(100% 0 0 0)",
+        zIndex: index + 1,
+        transform: "translateZ(0)",
+      }}
+    >
+      {section.content ? (
+        section.content
+      ) : section.image ? (
+        <div className="relative w-full h-full overflow-hidden">
+          {/* Single image serves as both background (via CSS blur overlay) and sharp center */}
+          <Image
+            src={section.image}
+            alt={`${section.title} background`}
+            fill
+            className="object-cover"
+            loading="lazy"
+            quality={80}
+            sizes="(max-width: 1024px) 500px, 600px"
+          />
+          {/* Blur + dim overlay using backdrop-filter (no second image request) */}
+          <div
+            className="absolute inset-0"
+            style={{
+              zIndex: 1,
+              backdropFilter: "blur(10px) brightness(0.95)",
+              WebkitBackdropFilter: "blur(10px) brightness(0.95)",
+            }}
+          />
 
-            {/* Centered sharp image — reuses cached image from above */}
-            <div
-              className="absolute inset-0 flex items-center justify-center p-8"
-              style={{ zIndex: 2 }}
-            >
-              <div className="relative w-full max-w-[450px] aspect-square rounded-lg overflow-hidden shadow-2xl bg-white">
-                <Image
-                  src={section.image}
-                  alt={section.title}
-                  fill
-                  className="object-cover"
-                  loading="lazy"
-                  quality={90}
-                  sizes="(max-width: 1024px) 320px, 450px"
-                />
-              </div>
+          {/* Centered sharp image — reuses cached image from above */}
+          <div
+            className="absolute inset-0 flex items-center justify-center p-8"
+            style={{ zIndex: 2 }}
+          >
+            <div className="relative w-full max-w-[450px] aspect-square rounded-lg overflow-hidden shadow-2xl bg-white">
+              <Image
+                src={section.image}
+                alt={section.title}
+                fill
+                className="object-cover"
+                loading="lazy"
+                quality={90}
+                sizes="(max-width: 1024px) 320px, 450px"
+              />
             </div>
           </div>
-        ) : (
-          <div className="w-full h-full bg-linear-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-            <span className="text-text-tertiary text-xl font-medium">
-              {section.title}
-            </span>
-          </div>
-        )}
-      </div>
-    );
-  },
-);
+        </div>
+      ) : (
+        <div className="w-full h-full bg-linear-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+          <span className="text-text-tertiary text-xl font-medium">
+            {section.title}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+};
 
 ImagePanel.displayName = "ImagePanel";
 
@@ -687,13 +691,10 @@ export const StickyScrollReveal = ({
   const stickyContainerRef = useRef<HTMLDivElement>(null);
 
   // Create refs for each section
-  const sectionRefs = useMemo(
-    () => sections.map(() => React.createRef<HTMLDivElement>()),
-    [sections],
-  );
+  const sectionRefs = sections.map(() => React.createRef<HTMLDivElement>());
 
   // Extract image URLs for preloading
-  const imageUrls = useMemo(() => sections.map((s) => s.image), [sections]);
+  const imageUrls = sections.map((s) => s.image);
 
   // Track active section for preloading
   const activeIndex = useActiveSectionIndex(sectionRefs);
@@ -702,25 +703,22 @@ export const StickyScrollReveal = ({
   useImagePreloader(imageUrls, activeIndex, 2, shouldStartPreloading);
 
   // Register/unregister image panel refs
-  const registerImagePanelRef = useCallback(
-    (index: number, el: HTMLDivElement | null) => {
-      if (el) {
-        imagePanelRefs.current.set(index, el);
-      } else {
-        imagePanelRefs.current.delete(index);
-      }
-    },
-    [],
-  );
+  const registerImagePanelRef = (index: number, el: HTMLDivElement | null) => {
+    if (el) {
+      imagePanelRefs.current.set(index, el);
+    } else {
+      imagePanelRefs.current.delete(index);
+    }
+  };
 
-  const registerScrollUpdater = useCallback((updater: () => void) => {
+  const registerScrollUpdater = (updater: () => void) => {
     textScrollUpdatersRef.current.add(updater);
     updater();
 
     return () => {
       textScrollUpdatersRef.current.delete(updater);
     };
-  }, []);
+  };
 
   // ============================================================================
   // SINGLE SCROLL SUBSCRIPTION for all desktop text and image mutations

@@ -1,26 +1,26 @@
 "use client";
 
-import { useAnalytics } from "@/lib/hooks/useAnalytics";
+import {
+  useScrollDepthTracking,
+  useSectionViewTracking,
+} from "@/lib/hooks/useAnalytics";
 
 interface PageAnalyticsRuntimeProps {
-  trackPageView?: boolean;
   trackScroll?: boolean;
-  trackTime?: boolean;
+  trackSections?: boolean;
   scrollThresholds?: number[];
 }
 
 export function PageAnalyticsRuntime({
-  trackPageView = true,
   trackScroll = true,
-  trackTime = true,
-  scrollThresholds = [25, 50, 75, 100],
+  trackSections = true,
+  scrollThresholds,
 }: PageAnalyticsRuntimeProps) {
-  useAnalytics({
-    trackPageView,
-    trackScroll,
-    trackTime,
-    scrollThresholds,
+  useScrollDepthTracking({
+    enabled: trackScroll,
+    thresholds: scrollThresholds,
   });
+  useSectionViewTracking({ enabled: trackSections });
 
   return null;
 }

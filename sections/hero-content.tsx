@@ -17,6 +17,7 @@ export default function HeroContent({
 }) {
   return (
     <section
+      data-section-id="hero"
       className="relative min-h-screen overflow-hidden bg-hero-bg"
       style={{
         contain: "layout style paint",
@@ -128,7 +129,7 @@ export default function HeroContent({
                     className="inline-block pointer-events-auto"
                     prefetch={false}
                   >
-                    <span className="shrink-0 cursor-pointer relative inline-block border-b border-muted-foreground/50 hover:border-primary transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]">
+                    <span className="shrink-0 cursor-pointer relative inline-block border-b border-muted-foreground/50 hover:border-primary transition-[color,background-color,border-color,opacity,transform,box-shadow,filter] duration-300 hover:scale-[1.02] active:scale-[0.98]">
                       <span className="text-white font-light text-sm sm:text-base uppercase tracking-[0.2em]">
                         Request a project
                       </span>

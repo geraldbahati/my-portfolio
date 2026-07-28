@@ -33,8 +33,10 @@ async function DynamicAdminLayout({ children }: AdminLayoutProps) {
     redirect("/");
   }
 
-  const { userId } = await auth.protect();
-  const client = await clerkClient();
+  const [{ userId }, client] = await Promise.all([
+    auth.protect(),
+    clerkClient(),
+  ]);
   const user = await client.users.getUser(userId);
 
   if (user.publicMetadata.role !== "admin") {

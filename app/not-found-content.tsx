@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { m } from "motion/react";
 import { TextScramble } from "@/components/ui/text-scramble";
@@ -10,7 +10,7 @@ import { ArrowLeft } from "lucide-react";
 export default function NotFoundContent() {
   const [isHovered, setIsHovered] = useState(false);
   const [shouldTriggerScramble, setShouldTriggerScramble] = useState(false);
-  const [hasTriggered, setHasTriggered] = useState(false);
+  const hasTriggeredRef = useRef(false);
   const scrambleTimeoutRef = useRef<NodeJS.Timeout>(null);
 
   // Message scramble state - runs once on mount
@@ -23,25 +23,25 @@ export default function NotFoundContent() {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleMouseEnter = useCallback(() => {
+  const handleMouseEnter = () => {
     setIsHovered(true);
-    if (!hasTriggered) {
-      setHasTriggered(true);
+    if (!hasTriggeredRef.current) {
+      hasTriggeredRef.current = true;
       setShouldTriggerScramble(true);
       scrambleTimeoutRef.current = setTimeout(() => {
         setShouldTriggerScramble(false);
       }, 600);
     }
-  }, [hasTriggered]);
+  };
 
-  const handleMouseLeave = useCallback(() => {
+  const handleMouseLeave = () => {
     if (scrambleTimeoutRef.current) {
       clearTimeout(scrambleTimeoutRef.current);
     }
     setIsHovered(false);
     setShouldTriggerScramble(false);
-    setHasTriggered(false);
-  }, []);
+    hasTriggeredRef.current = false;
+  };
 
   useEffect(() => {
     return () => {
@@ -131,6 +131,9 @@ export default function NotFoundContent() {
           <Link
             href="/"
             className="inline-flex items-center gap-3 group"
+            // The label lives inside TextScramble, which randomises its
+            // characters mid-animation, so it is stated explicitly here.
+            aria-label="Back to Home"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
           >

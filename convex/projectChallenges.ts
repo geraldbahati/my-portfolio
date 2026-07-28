@@ -192,9 +192,9 @@ export const removeByProjectId = internalMutation({
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
       .collect();
 
-    for (const challenge of challenges) {
-      await ctx.db.delete(challenge._id);
-    }
+    await Promise.all(
+      challenges.map((challenge) => ctx.db.delete(challenge._id)),
+    );
 
     return null;
   },
@@ -216,12 +216,14 @@ export const reorder = internalMutation({
   handler: async (ctx, args) => {
     const now = Date.now();
 
-    for (const { challengeId, order } of args.challengeOrders) {
-      await ctx.db.patch(challengeId, {
-        order,
-        updatedAt: now,
-      });
-    }
+    await Promise.all(
+      args.challengeOrders.map(({ challengeId, order }) =>
+        ctx.db.patch(challengeId, {
+          order,
+          updatedAt: now,
+        }),
+      ),
+    );
 
     return null;
   },
@@ -243,21 +245,17 @@ export const bulkCreate = internalMutation({
   returns: v.array(v.id("projectChallenges")),
   handler: async (ctx, args) => {
     const now = Date.now();
-    const ids = [];
-
-    for (let i = 0; i < args.challenges.length; i++) {
-      const challenge = args.challenges[i];
-      const id = await ctx.db.insert("projectChallenges", {
-        projectId: args.projectId,
-        title: challenge.title,
-        content: challenge.content,
-        order: i,
-        createdAt: now,
-        updatedAt: now,
-      });
-      ids.push(id);
-    }
-
-    return ids;
+    return await Promise.all(
+      args.challenges.map((challenge, order) =>
+        ctx.db.insert("projectChallenges", {
+          projectId: args.projectId,
+          title: challenge.title,
+          content: challenge.content,
+          order,
+          createdAt: now,
+          updatedAt: now,
+        }),
+      ),
+    );
   },
 });

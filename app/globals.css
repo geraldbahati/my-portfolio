@@ -103,8 +103,8 @@
   --color-shadow-color: var(--shadow-color);
 
   /* Typography */
-  --font-sans: Syne, ui-sans-serif, sans-serif, system-ui;
-  --font-mono: JetBrains Mono, monospace;
+  --font-sans: "Syne Variable", ui-sans-serif, sans-serif, system-ui;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
   --font-serif: serif;
 
   /* Radius */
@@ -239,9 +239,9 @@
   --focus: oklch(0.6716 0.1368 48.513);
 
   /* Typography */
-  --font-sans: Syne, ui-sans-serif, sans-serif, system-ui;
+  --font-sans: "Syne Variable", ui-sans-serif, sans-serif, system-ui;
   --font-serif: serif;
-  --font-mono: JetBrains Mono, monospace;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
 
   /* Shadow System */
   --shadow-color: oklch(0 0 0);
@@ -267,7 +267,6 @@
   --shadow-2xl: 0px 1px 4px 0px oklch(0 0 0 / 0.13);
   --tracking-normal: 0rem;
 }
-
 
 /* Lenis smooth scroll resets */
 html.lenis,
@@ -307,12 +306,12 @@ html.lenis body {
 
   /* Hero text reveal animation - slides up from below with clip */
   /* Uses expo-out easing: fast entry, smooth slow stop */
-  
+
   /* For title - comes from greater distance (150%) */
   .reveal-up-title {
     animation: reveal-up-title 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
-  
+
   /* For other content - comes from shorter distance (60%) */
   .reveal-up {
     animation: reveal-up 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -383,6 +382,29 @@ html.lenis body {
 
 .animate-nav-slide-down {
   animation: nav-slide-down 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Consent bar: rises from the bottom edge without covering the page.
+   Rendered outside MotionProvider, so this stays CSS rather than Motion. */
+@keyframes consent-slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-consent-slide-up {
+  animation: consent-slide-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.4s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-consent-slide-up {
+    animation: none;
+  }
 }
 
 /* Menu overlay: clipPath reveal from top */
@@ -543,25 +565,49 @@ html.lenis body {
 /* Scroll-driven animations - compositor thread, zero JS overhead */
 @supports (animation-timeline: scroll()) {
   @keyframes hero-scale-on-scroll {
-    from { transform: scale(1) translateZ(0); }
-    to { transform: scale(0.85) translateZ(0); }
+    from {
+      transform: scale(1) translateZ(0);
+    }
+    to {
+      transform: scale(0.85) translateZ(0);
+    }
   }
 
   @keyframes bio-image-entrance {
-    from { transform: translateY(100px) scale(0.6) translateZ(0); opacity: 0; }
-    40% { opacity: 1; }
-    to { transform: translateY(0) scale(1) translateZ(0); opacity: 1; }
+    from {
+      transform: translateY(100px) scale(0.6) translateZ(0);
+      opacity: 0;
+    }
+    40% {
+      opacity: 1;
+    }
+    to {
+      transform: translateY(0) scale(1) translateZ(0);
+      opacity: 1;
+    }
   }
 
   @keyframes bio-cta-entrance {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   @keyframes bio-bg-opacity {
-    from { opacity: 0.3; }
-    50% { opacity: 1; }
-    to { opacity: 1; }
+    from {
+      opacity: 0.3;
+    }
+    50% {
+      opacity: 1;
+    }
+    to {
+      opacity: 1;
+    }
   }
 
   /*
@@ -606,7 +652,6 @@ html.lenis body {
     animation-timeline: scroll(root block);
     animation-range: 0vh 50vh;
   }
-
 }
 
 @media print {
@@ -654,5 +699,91 @@ html.lenis body {
   a[href^="#"]:after,
   a[href^="/"]:after {
     content: "";
+  }
+}
+@keyframes project-reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(1.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes project-reveal-left {
+  from {
+    opacity: 0;
+    transform: translateX(-1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes project-reveal-right {
+  from {
+    opacity: 0;
+    transform: translateX(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes project-reveal-zoom {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes project-reveal-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .project-reveal-up-500 {
+    animation: project-reveal-up 500ms ease-out both;
+  }
+
+  .project-reveal-up-700 {
+    animation: project-reveal-up 700ms ease-out both;
+  }
+
+  .project-reveal-left-500 {
+    animation: project-reveal-left 500ms ease-out both;
+  }
+
+  .project-reveal-left-700 {
+    animation: project-reveal-left 700ms ease-out both;
+  }
+
+  .project-reveal-right-500 {
+    animation: project-reveal-right 500ms ease-out both;
+  }
+
+  .project-reveal-zoom-500 {
+    animation: project-reveal-zoom 500ms ease-out both;
+  }
+
+  .project-reveal-zoom-700 {
+    animation: project-reveal-zoom 700ms ease-out both;
+  }
+
+  .project-reveal-fade-1000 {
+    animation: project-reveal-fade 1000ms ease-out both;
   }
 }

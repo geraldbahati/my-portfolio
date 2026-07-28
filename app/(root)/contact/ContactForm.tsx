@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { useMutation } from "convex/react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -16,7 +16,10 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/convex/_generated/api";
-import { useTrackForm } from "@/lib/hooks/useAnalytics";
+import {
+  trackContactFormStarted,
+  trackContactFormSubmitted,
+} from "@/lib/analytics";
 import {
   type ContactFormData,
   contactSchema,
@@ -44,23 +47,6 @@ const INITIAL_FORM_DATA: ContactFormData = {
   privacyConsent: false,
   _honeypot: "",
 };
-
-async function fetchClientIp() {
-  try {
-    const response = await fetch("/api/get-ip", {
-      cache: "no-store",
-    });
-
-    if (!response.ok) {
-      return undefined;
-    }
-
-    const ipData = (await response.json()) as { ip?: string | null };
-    return ipData.ip ?? undefined;
-  } catch {
-    return undefined;
-  }
-}
 
 function ContactFormUnavailable() {
   return (
@@ -218,7 +204,9 @@ function ContactFormFields({
           checked={formData.privacyConsent}
           onCheckedChange={onPrivacyConsentChange}
           aria-invalid={fieldErrors.privacyConsent ? "true" : "false"}
-          aria-describedby={fieldErrors.privacyConsent ? "privacy-error" : undefined}
+          aria-describedby={
+            fieldErrors.privacyConsent ? "privacy-error" : undefined
+          }
           className={
             fieldErrors.privacyConsent ? "border-red-500" : "border-black"
           }
@@ -272,7 +260,10 @@ function ContactFormWithSubmission({ onSubmitSuccess }: ContactFormProps) {
     useState<SubmitStatus>(EMPTY_SUBMIT_STATUS);
 
   const submitContactForm = useMutation(api.contactForm.submitContactForm);
-  const trackForm = useTrackForm();
+
+  // Fires once per mount, so "started" counts people, not keystrokes.
+  const hasStartedRef = useRef(false);
+  const startedAtRef = useRef<number | null>(null);
 
   const clearSubmitStatus = () => {
     setSubmitStatus((current) =>
@@ -291,6 +282,12 @@ function ContactFormWithSubmission({ onSubmitSuccess }: ContactFormProps) {
   ) => {
     const { name, value } = event.target;
     const field = name as keyof ContactFormData;
+
+    if (!hasStartedRef.current && value.length > 0) {
+      hasStartedRef.current = true;
+      startedAtRef.current = Date.now();
+      trackContactFormStarted({ first_field: field });
+    }
 
     setFormData((current) => ({ ...current, [field]: value }));
     clearFieldError(field);
@@ -337,7 +334,9 @@ function ContactFormWithSubmission({ onSubmitSuccess }: ContactFormProps) {
 
     setIsSubmitting(true);
 
-    const clientIP = await fetchClientIp();
+    const elapsedMs = () =>
+      startedAtRef.current ? Date.now() - startedAtRef.current : undefined;
+
     const submission: {
       error: unknown | null;
       result: Awaited<ReturnType<typeof submitContactForm>> | null;
@@ -346,10 +345,11 @@ function ContactFormWithSubmission({ onSubmitSuccess }: ContactFormProps) {
       email: data.email,
       message: data.message,
       privacyConsent: data.privacyConsent,
-      clientIP,
+      honeypot: data._honeypot,
     })
       .then((result) => ({ error: null, result }))
-      .catch((error: unknown) => ({ error, result: null }));
+      .catch((error: unknown) => ({ error, result: null }))
+      .finally(() => setIsSubmitting(false));
 
     if (submission.error || !submission.result) {
       console.error("Form submission error:", submission.error);
@@ -359,8 +359,12 @@ function ContactFormWithSubmission({ onSubmitSuccess }: ContactFormProps) {
         type: "error",
         message: errorMessage,
       });
-      trackForm("Contact Form", false, "contact-page-form", errorMessage);
-      setIsSubmitting(false);
+      trackContactFormSubmitted({
+        outcome: "error",
+        error_reason: "network_or_mutation_failure",
+        message_length: data.message.length,
+        duration_ms: elapsedMs(),
+      });
       return;
     }
 
@@ -371,11 +375,14 @@ function ContactFormWithSubmission({ onSubmitSuccess }: ContactFormProps) {
           submission.result.message ||
           "Thanks. Your inquiry is in and I will review it soon.",
       });
-      trackForm("Contact Form", true, "contact-page-form");
+      trackContactFormSubmitted({
+        outcome: "success",
+        message_length: data.message.length,
+        duration_ms: elapsedMs(),
+      });
       setFormData(INITIAL_FORM_DATA);
       setFieldErrors({});
       onSubmitSuccess?.();
-      setIsSubmitting(false);
       return;
     }
 
@@ -385,13 +392,12 @@ function ContactFormWithSubmission({ onSubmitSuccess }: ContactFormProps) {
         submission.result.error ||
         `The form could not be sent. Please try again or email ${CONTACT_EMAIL}.`,
     });
-    trackForm(
-      "Contact Form",
-      false,
-      "contact-page-form",
-      submission.result.error,
-    );
-    setIsSubmitting(false);
+    trackContactFormSubmitted({
+      outcome: "error",
+      error_reason: submission.result.error ?? "rejected_by_backend",
+      message_length: data.message.length,
+      duration_ms: elapsedMs(),
+    });
   };
 
   return (

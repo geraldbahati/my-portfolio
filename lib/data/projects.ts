@@ -15,7 +15,7 @@
 import { cacheLife, cacheTag } from "next/cache";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
-import { getProjectCacheTag, PROJECTS_CACHE_TAG } from "./project-cache-tags";
+import { PROJECTS_CACHE_TAG } from "./project-cache-tags";
 
 /**
  * Project type matching Convex schema
@@ -63,40 +63,4 @@ export async function getCachedProjects(): Promise<Project[]> {
 
   const projects = await fetchQuery(api.projects.getPublishedProjects);
   return projects as Project[];
-}
-
-/**
- * Fetch a single project by ID with caching
- *
- * This function caches individual project lookups.
- * Use revalidateTag("projects") to invalidate all project caches.
- *
- * @param projectId - The unique project identifier
- * @returns The project if found, null otherwise
- */
-export async function getCachedProjectById(
-  projectId: string,
-): Promise<Project | null> {
-  "use cache";
-  cacheTag(PROJECTS_CACHE_TAG, getProjectCacheTag(projectId));
-  cacheLife("days");
-
-  const project = await fetchQuery(api.projects.getProjectById, {
-    projectId,
-  });
-  return project as Project | null;
-}
-
-/**
- * Get projects count (useful for analytics)
- *
- * Cached separately from the full project list for efficiency.
- */
-export async function getCachedProjectsCount(): Promise<number> {
-  "use cache";
-  cacheTag(PROJECTS_CACHE_TAG);
-  cacheLife("days");
-
-  const projects = await fetchQuery(api.projects.getPublishedProjects);
-  return projects.length;
 }

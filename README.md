@@ -14,12 +14,12 @@ A modern, high-performance portfolio showcasing my software engineering experien
 
 ## Tech Stack
 
-| Category | Technologies |
-|----------|-------------|
-| Framework | Next.js 16 (App Router), React 19, TypeScript |
-| Styling | Tailwind CSS v4, Framer Motion, shadcn/ui, Lenis |
-| Backend | Convex, Clerk (Auth) |
-| Analytics | Vercel Analytics, Vercel Speed Insights |
+| Category      | Technologies                                                      |
+| ------------- | ----------------------------------------------------------------- |
+| Framework     | Next.js 16 (App Router), React 19, TypeScript                     |
+| Styling       | Tailwind CSS v4, Framer Motion, shadcn/ui, Lenis                  |
+| Backend       | Convex, Clerk (admin auth only)                                   |
+| Observability | Sentry error monitoring, PostHog analytics, Vercel Speed Insights |
 
 ## Project Structure
 
@@ -38,37 +38,61 @@ public/        Static assets (images, fonts)
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
+- Node.js 22 (see `.nvmrc`)
 - npm or pnpm
 
 ### Installation
 
 1. **Clone the repository:**
 
-    ```bash
-    git clone https://github.com/geraldbahati/my-portfolio.git
-    cd my-portfolio
-    ```
+   ```bash
+   git clone https://github.com/geraldbahati/my-portfolio.git
+   cd my-portfolio
+   ```
 
 2. **Install dependencies:**
 
-    ```bash
-    npm install
-    ```
+   ```bash
+   npm install
+   ```
 
 3. **Set up environment variables:**
 
-    Create a `.env.local` file in the root directory. You can reference `.env.local.example` for the required keys:
-    - `CONVEX_DEPLOYMENT` and `NEXT_PUBLIC_CONVEX_URL` (Convex)
-    - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` (Clerk, optional)
+   Copy `.env.example` to `.env.local` and replace the placeholders:
+
+   ```bash
+   cp .env.example .env.local
+   ```
+
+   The required application keys are:
+   - `CONVEX_DEPLOYMENT` and `NEXT_PUBLIC_CONVEX_URL` (Convex)
+   - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` only when running the development admin dashboard
+   - `NEXT_PUBLIC_SENTRY_DSN` (optional error monitoring)
+
+   Convex-only secrets listed in `.env.example` must be configured in the
+   Convex dashboard rather than Vercel.
 
 4. **Run the development server:**
 
-    ```bash
-    npm run dev
-    ```
+   ```bash
+   npm run dev
+   ```
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## Quality Gates
+
+```bash
+npm run check       # TypeScript, ESLint, Vitest, and React Doctor
+npm run build       # Validated production build
+npm run test:e2e    # Desktop and mobile Chromium smoke tests
+```
+
+React Doctor runs with inline suppressions disabled. Preview deployments are
+also checked against Lighthouse performance and Core Web Vitals budgets.
+
+See [docs/production-readiness.md](docs/production-readiness.md) for deployment,
+monitoring, rollback, and incident procedures.
 
 ## Contributing
 

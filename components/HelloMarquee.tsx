@@ -19,7 +19,9 @@ const greetings = [
 ];
 
 export default function HelloMarquee() {
-  const prefersReducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
+  const prefersReducedMotion = useMediaQuery(
+    "(prefers-reduced-motion: reduce)",
+  );
 
   // If user prefers reduced motion, show static version
   if (prefersReducedMotion) {

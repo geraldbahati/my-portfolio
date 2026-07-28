@@ -15,6 +15,7 @@ import type * as adminProjectGallery from "../adminProjectGallery.js";
 import type * as adminProjectMetrics from "../adminProjectMetrics.js";
 import type * as adminProjectTestimonials from "../adminProjectTestimonials.js";
 import type * as adminProjects from "../adminProjects.js";
+import type * as analytics from "../analytics.js";
 import type * as auth from "../auth.js";
 import type * as contactForm from "../contactForm.js";
 import type * as faqs from "../faqs.js";
@@ -29,6 +30,7 @@ import type * as projects from "../projects.js";
 import type * as r2 from "../r2.js";
 import type * as revalidate from "../revalidate.js";
 import type * as seedWeblineProjects from "../seedWeblineProjects.js";
+import type * as seedWeblineTechnologies from "../seedWeblineTechnologies.js";
 import type * as stream from "../stream.js";
 
 import type {
@@ -45,6 +47,7 @@ declare const fullApi: ApiFromModules<{
   adminProjectMetrics: typeof adminProjectMetrics;
   adminProjectTestimonials: typeof adminProjectTestimonials;
   adminProjects: typeof adminProjects;
+  analytics: typeof analytics;
   auth: typeof auth;
   contactForm: typeof contactForm;
   faqs: typeof faqs;
@@ -59,6 +62,7 @@ declare const fullApi: ApiFromModules<{
   r2: typeof r2;
   revalidate: typeof revalidate;
   seedWeblineProjects: typeof seedWeblineProjects;
+  seedWeblineTechnologies: typeof seedWeblineTechnologies;
   stream: typeof stream;
 }>;
 

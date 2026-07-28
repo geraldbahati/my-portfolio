@@ -12,7 +12,7 @@ function TagList({ items }: { items: string[] | undefined }) {
           className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium 
                      bg-primary/10 text-primary border border-primary/20
                      hover:bg-primary/15 hover:border-primary/30 
-                     transition-all duration-200 cursor-default"
+                     transition-[color,background-color,border-color,opacity,transform,box-shadow,filter] duration-200 cursor-default"
         >
           {item}
         </span>
@@ -46,7 +46,7 @@ export function ProjectInfo({ details }: ProjectInfoProps) {
       <div className="container">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24">
           {/* Main Content (Left) */}
-          <div className="lg:col-span-7 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="lg:col-span-7 space-y-8 project-reveal-up-700">
             {/* Heading */}
             <h2 className="text-2xl md:text-3xl lg:text-4xl font-medium leading-tight tracking-tight text-foreground">
               {headline}
@@ -100,7 +100,7 @@ export function ProjectInfo({ details }: ProjectInfoProps) {
               colors.map((color, i) => (
                 <div
                   key={color.hex}
-                  className="group animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both"
+                  className="group project-reveal-up-500 fill-mode-both"
                   style={{ animationDelay: `${100 + i * 100}ms` }}
                 >
                   <div

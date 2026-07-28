@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useRef,
-  useSyncExternalStore,
-  type ReactNode,
-} from "react";
+import { useEffect, useRef, useSyncExternalStore, type ReactNode } from "react";
 import Lenis from "lenis";
 
 type LenisListener = () => void;
@@ -140,7 +135,11 @@ export function LenisProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    const passiveInteractionEvents = ["wheel", "touchstart", "pointerdown"] as const;
+    const passiveInteractionEvents = [
+      "wheel",
+      "touchstart",
+      "pointerdown",
+    ] as const;
 
     if (supportsIdleCallback) {
       idleId = window.requestIdleCallback(activateLenis, {

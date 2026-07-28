@@ -1,13 +1,24 @@
 "use client";
 
 import { Doc } from "@/convex/_generated/dataModel";
-import {
-  Label,
-  PolarRadiusAxis,
-  RadialBar,
-  RadialBarChart,
-} from "recharts";
+import dynamic from "next/dynamic";
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
+
+const Label = dynamic(() => import("recharts").then((module) => module.Label), {
+  ssr: false,
+});
+const PolarRadiusAxis = dynamic(
+  () => import("recharts").then((module) => module.PolarRadiusAxis),
+  { ssr: false },
+);
+const RadialBar = dynamic(
+  () => import("recharts").then((module) => module.RadialBar),
+  { ssr: false },
+);
+const RadialBarChart = dynamic(
+  () => import("recharts").then((module) => module.RadialBarChart),
+  { ssr: false },
+);
 
 interface ProjectMetricsProps {
   metrics: Doc<"projectMetrics">[];
@@ -111,7 +122,7 @@ export function ProjectMetrics({ metrics }: ProjectMetricsProps) {
             return (
               <div
                 key={metric._id}
-                className="flex flex-col items-center text-center animate-in fade-in zoom-in-95 duration-500 fill-mode-both"
+                className="flex flex-col items-center text-center project-reveal-zoom-500 fill-mode-both"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <MetricRadialChart

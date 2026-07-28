@@ -54,9 +54,20 @@ function composeRefs<T>(...refs: PossibleRef<T>[]): React.RefCallback<T> {
  * A custom hook that composes multiple refs
  * Accepts callback refs and RefObject(s)
  */
+/**
+ * Deliberately not memoised.
+ *
+ * `refs` is variadic, so any dependency list has to be built from a spread —
+ * which the React Compiler cannot analyse. It also never bought anything: every
+ * caller (see `components/ui/sortable.tsx`) passes an inline arrow, so the
+ * dependency identities changed on every render and the memo recomputed anyway.
+ *
+ * With `reactCompiler` enabled the compiler handles memoisation at the call
+ * site, and dropping the manual layer is behaviourally identical to what this
+ * already did.
+ */
 function useComposedRefs<T>(...refs: PossibleRef<T>[]): React.RefCallback<T> {
-  // biome-ignore lint/correctness/useExhaustiveDependencies: we want to memoize by all values
-  return React.useCallback(composeRefs(...refs), refs);
+  return composeRefs(...refs);
 }
 
 export { composeRefs, useComposedRefs };

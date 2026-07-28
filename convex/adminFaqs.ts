@@ -6,6 +6,7 @@
  */
 
 import { v } from "convex/values";
+import type { Doc } from "./_generated/dataModel";
 import { action, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { Id } from "./_generated/dataModel";
@@ -26,7 +27,7 @@ export const getAllFaqsQuery = query({
       isPublished: v.boolean(),
       createdAt: v.number(),
       updatedAt: v.number(),
-    })
+    }),
   ),
   handler: async (ctx) => {
     await requireAdmin(ctx);
@@ -57,9 +58,12 @@ export const getFaq = action({
       createdAt: v.number(),
       updatedAt: v.number(),
     }),
-    v.null()
+    v.null(),
   ),
-  handler: async (ctx, args): Promise<any> => {
+  // Annotated explicitly rather than inferred: an action calling back into a
+  // query it is declared alongside creates a circular inference. `any` broke
+  // the cycle at the cost of all type safety; the real type does the same job.
+  handler: async (ctx, args): Promise<Doc<"faqs"> | null> => {
     await requireAdmin(ctx);
     return await ctx.runQuery(internal.faqs.getFaq, args);
   },
@@ -123,7 +127,7 @@ export const reorderFaqs = action({
       v.object({
         faqId: v.id("faqs"),
         order: v.number(),
-      })
+      }),
     ),
   },
   returns: v.null(),

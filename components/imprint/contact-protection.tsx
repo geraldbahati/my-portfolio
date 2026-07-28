@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Copy, Check } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { AnimatePresence, LazyMotion, domAnimation, m } from "motion/react";
 import imprintData from "@/constants/imprint.json";
 
 interface ContactItemProps {
@@ -38,29 +38,30 @@ const ContactItem = ({ label, value, type }: ContactItemProps) => {
           {value}
         </a>
         <button
+          type="button"
           onClick={handleCopy}
-          className="p-2 text-gray-400 hover:text-primary hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-md transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+          className="p-2 text-gray-400 hover:text-primary hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-md transition-[color,background-color,opacity] opacity-0 group-hover:opacity-100 focus:opacity-100"
           aria-label="Copy to clipboard"
         >
           <AnimatePresence mode="wait">
             {copied ? (
-              <motion.div
+              <m.div
                 key="check"
                 initial={{ scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.5, opacity: 0 }}
               >
                 <Check size={16} />
-              </motion.div>
+              </m.div>
             ) : (
-              <motion.div
+              <m.div
                 key="copy"
                 initial={{ scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.5, opacity: 0 }}
               >
                 <Copy size={16} />
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
         </button>
@@ -71,17 +72,19 @@ const ContactItem = ({ label, value, type }: ContactItemProps) => {
 
 export function ContactProtection() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-      <ContactItem
-        label="Email Address"
-        value={imprintData.contact.email}
-        type="email"
-      />
-      <ContactItem
-        label="Phone Number"
-        value={imprintData.contact.phone}
-        type="phone"
-      />
-    </div>
+    <LazyMotion features={domAnimation}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+        <ContactItem
+          label="Email Address"
+          value={imprintData.contact.email}
+          type="email"
+        />
+        <ContactItem
+          label="Phone Number"
+          value={imprintData.contact.phone}
+          type="phone"
+        />
+      </div>
+    </LazyMotion>
   );
 }

@@ -1,9 +1,10 @@
 import { Metadata } from "next";
-import { cacheLife } from "next/cache";
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { ProjectsGrid } from "@/components/projects-grid";
 import { getCachedProjects } from "@/lib/data/projects";
 import { PageAnalytics } from "@/components/PageAnalytics";
+import { JsonLdScript } from "@/components/JsonLdScript";
 import { generateBreadcrumbSchema } from "@/lib/seo";
 
 // SEO Metadata
@@ -45,6 +46,11 @@ export const metadata: Metadata = {
  * and proper cache handling for the dynamic data.
  */
 async function ProjectsContent() {
+  // Keep the page shell statically generated while deferring Convex access to
+  // the incoming request. The cached query still makes subsequent responses
+  // effectively instant.
+  await connection();
+
   // Fetch projects with aggressive caching (7 days)
   const projects = await getCachedProjects();
 
@@ -76,10 +82,7 @@ async function ProjectsContent() {
   return (
     <>
       {/* JSON-LD Structured Data */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-      />
+      <JsonLdScript data={structuredData} />
 
       {/* Projects Grid */}
       <section className="max-w-7xl mx-auto px-6 lg:px-8 pb-20">
@@ -120,10 +123,7 @@ function ProjectsGridSkeleton() {
  * - Static shell (header) renders instantly
  * - Projects content streams in (usually instant from cache)
  */
-export default async function ProjectsPage() {
-  "use cache";
-  cacheLife("hours");
-
+export default function ProjectsPage() {
   const breadcrumbLd = generateBreadcrumbSchema([
     { name: "Home", url: "https://geraldbahati.dev" },
     { name: "Projects", url: "https://geraldbahati.dev/projects" },
@@ -131,11 +131,8 @@ export default async function ProjectsPage() {
 
   return (
     <main className="min-h-screen bg-background">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
-      />
-      <PageAnalytics trackPageView trackScroll trackTime />
+      <JsonLdScript data={breadcrumbLd} />
+      <PageAnalytics />
       {/* Page Header - Static, always pre-rendered */}
       <header className="max-w-7xl mx-auto px-6 lg:px-8 pt-20 md:pt-24 lg:pt-32 pb-12">
         <h1

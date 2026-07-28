@@ -6,6 +6,8 @@ import { cacheLife, cacheTag } from "next/cache";
 import dynamic from "next/dynamic";
 import { api } from "@/convex/_generated/api";
 import { generateBreadcrumbSchema } from "@/lib/seo";
+import { PageAnalytics } from "@/components/PageAnalytics";
+import { JsonLdScript } from "@/components/JsonLdScript";
 import { ProjectHero } from "./_components/project-hero";
 import { ProjectInfo } from "./_components/project-info";
 import { ProjectGallery } from "./_components/project-gallery";
@@ -55,9 +57,10 @@ export async function generateStaticParams() {
       }));
     }
   } catch (error) {
-    throw new Error("Could not fetch projects for static generation.", {
-      cause: error,
-    });
+    console.warn(
+      "Projects were unavailable during static generation; pages will render on demand.",
+      error,
+    );
   }
   // Next.js 16 with Cache Components requires at least one result;
   // return a placeholder slug that will be handled by notFound() at runtime
@@ -69,6 +72,13 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
+
+  if (slug === "_") {
+    return {
+      title: "Project Not Found",
+      robots: { index: false, follow: false },
+    };
+  }
 
   // Use the same cached function as the page component
   const data = await getProjectData(slug);
@@ -144,15 +154,28 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   const { slug } = await params;
 
   return (
-    <Suspense fallback={<ProjectDetailSkeleton />}>
-      <ProjectContent slug={slug} />
-    </Suspense>
+    <>
+      {/* Scroll depth on case studies is the signal for whether a project
+          actually holds attention. Sections aren't marked on this page, so
+          section tracking is off. */}
+      <Suspense fallback={null}>
+        <PageAnalytics trackSections={false} />
+      </Suspense>
+
+      <Suspense fallback={<ProjectDetailSkeleton />}>
+        <ProjectContent slug={slug} />
+      </Suspense>
+    </>
   );
 }
 
 const BASE_URL = "https://geraldbahati.dev";
 
 async function ProjectContent({ slug }: { slug: string }) {
+  if (slug === "_") {
+    notFound();
+  }
+
   const data = await getProjectData(slug);
 
   // Not Found State
@@ -192,14 +215,8 @@ async function ProjectContent({ slug }: { slug: string }) {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(projectLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
-      />
+      <JsonLdScript data={projectLd} />
+      <JsonLdScript data={breadcrumbLd} />
       <main className="min-h-screen bg-background">
         <ProjectHero project={project} details={details} />
 

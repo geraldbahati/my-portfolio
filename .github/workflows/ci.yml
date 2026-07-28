@@ -6,9 +6,29 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
-  lint-and-build:
+  verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # A real deployment URL, not a placeholder: /projects and the homepage
+      # server-render Convex data, so a non-resolving host made those pages
+      # throw and the browser tests saw an empty document.
+      #
+      # A variable rather than a secret. The value is NEXT_PUBLIC_ and ships in
+      # the client bundle, so it was never confidential — and holding it as a
+      # secret put it in scope of `npm ci`, whose lifecycle scripts run before
+      # any of our own code. That is the build-pipeline-secret-boundary risk:
+      # one malicious dependency could read anything in the job environment.
+      NEXT_PUBLIC_CONVEX_URL: ${{ vars.NEXT_PUBLIC_CONVEX_URL }}
+      REVALIDATE_SECRET: ci-only-placeholder-secret-32-chars
 
     steps:
       - uses: actions/checkout@v7
@@ -20,9 +40,25 @@ jobs:
 
       - run: npm ci
 
+      - run: npm run typecheck
+
       - run: npm run lint
 
+      - run: npm test
+
+      - run: npm run doctor
+
       - run: npm run build
-        env:
-          NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL || 'https://placeholder.convex.cloud' }}
-          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || 'pk_test_placeholder' }}
+
+      - run: npx playwright install --with-deps chromium
+
+      - run: npm run test:e2e
+
+      - name: Upload browser-test report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+          if-no-files-found: ignore

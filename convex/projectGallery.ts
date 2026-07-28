@@ -249,9 +249,7 @@ export const removeByProjectId = internalMutation({
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
       .collect();
 
-    for (const item of items) {
-      await ctx.db.delete(item._id);
-    }
+    await Promise.all(items.map((item) => ctx.db.delete(item._id)));
 
     return null;
   },
@@ -273,12 +271,14 @@ export const reorder = internalMutation({
   handler: async (ctx, args) => {
     const now = Date.now();
 
-    for (const { galleryId, order } of args.galleryOrders) {
-      await ctx.db.patch(galleryId, {
-        order,
-        updatedAt: now,
-      });
-    }
+    await Promise.all(
+      args.galleryOrders.map(({ galleryId, order }) =>
+        ctx.db.patch(galleryId, {
+          order,
+          updatedAt: now,
+        }),
+      ),
+    );
 
     return null;
   },
@@ -305,26 +305,22 @@ export const bulkCreate = internalMutation({
   returns: v.array(v.id("projectGallery")),
   handler: async (ctx, args) => {
     const now = Date.now();
-    const ids = [];
-
-    for (let i = 0; i < args.items.length; i++) {
-      const item = args.items[i];
-      const id = await ctx.db.insert("projectGallery", {
-        projectId: args.projectId,
-        src: item.src,
-        alt: item.alt,
-        caption: item.caption,
-        galleryType: item.galleryType,
-        width: item.width,
-        height: item.height,
-        deviceType: item.deviceType,
-        order: i,
-        createdAt: now,
-        updatedAt: now,
-      });
-      ids.push(id);
-    }
-
-    return ids;
+    return await Promise.all(
+      args.items.map((item, order) =>
+        ctx.db.insert("projectGallery", {
+          projectId: args.projectId,
+          src: item.src,
+          alt: item.alt,
+          caption: item.caption,
+          galleryType: item.galleryType,
+          width: item.width,
+          height: item.height,
+          deviceType: item.deviceType,
+          order,
+          createdAt: now,
+          updatedAt: now,
+        }),
+      ),
+    );
   },
 });

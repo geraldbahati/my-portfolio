@@ -1,12 +1,13 @@
 "use client";
 
-import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { m } from "motion/react";
+import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, m } from "motion/react";
 import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
 import { AdaptiveLink } from "@/components/AdaptiveLink";
 import GridPattern from "@/components/ui/shadcn-io/grid-pattern";
 import { TextScramble } from "@/components/ui/text-scramble";
+import { trackContactCtaClicked } from "@/lib/analytics";
 
 // Smooth easing curve
 const smoothEase: [number, number, number, number] = [0.22, 1, 0.36, 1];
@@ -25,11 +26,19 @@ const arrowVariants = {
   },
 };
 
+function handleCtaClick() {
+  trackContactCtaClicked({
+    surface: "contact_section",
+    label: "Let's work together",
+    destination: "/contact",
+  });
+}
+
 interface ContactSectionProps {
   className?: string;
 }
 
-const ContactSection = memo(function ContactSection({
+const ContactSection = function ContactSection({
   className = "",
 }: ContactSectionProps) {
   const [isHovered, setIsHovered] = useState(false);
@@ -37,7 +46,7 @@ const ContactSection = memo(function ContactSection({
   const [hasTriggered, setHasTriggered] = useState(false);
   const scrambleTimeoutRef = useRef<NodeJS.Timeout>(null);
 
-  const handleMouseEnter = useCallback(() => {
+  const handleMouseEnter = () => {
     setIsHovered(true);
 
     if (!hasTriggered) {
@@ -48,20 +57,20 @@ const ContactSection = memo(function ContactSection({
         setShouldTriggerScramble(false);
       }, 800);
     }
-  }, [hasTriggered]);
+  };
 
-  const handleMouseLeave = useCallback(() => {
+  const handleMouseLeave = () => {
     if (scrambleTimeoutRef.current) {
       clearTimeout(scrambleTimeoutRef.current);
     }
     setIsHovered(false);
     setShouldTriggerScramble(false);
     setHasTriggered(false);
-  }, []);
+  };
 
-  const handleScrambleComplete = useCallback(() => {
+  const handleScrambleComplete = () => {
     setShouldTriggerScramble(false);
-  }, []);
+  };
 
   useEffect(() => {
     return () => {
@@ -73,7 +82,7 @@ const ContactSection = memo(function ContactSection({
 
   return (
     <section
-      data-section-id="ContactSection"
+      data-section-id="contact"
       className={`h-[60vh] short:h-[50vh] relative flex items-center justify-center bg-black p-8 short:p-4 ${className}`}
       aria-label="Contact call-to-action section"
     >
@@ -96,6 +105,7 @@ const ContactSection = memo(function ContactSection({
             prefetchRootMargin="150px"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
+            onClick={handleCtaClick}
           >
             <m.span
               className={`inline border-b transition-colors duration-300 ${
@@ -113,33 +123,27 @@ const ContactSection = memo(function ContactSection({
               </TextScramble>
             </m.span>{" "}
             {/* Image deferred - only loads after first hover to save ~951KB for non-hovering users */}
-            <m.span
-              className="inline-block relative rounded-xl overflow-hidden align-middle"
-              initial={false}
-              animate={{
-                scale: isHovered ? 1 : 0,
-                opacity: isHovered ? 1 : 0,
-                width: isHovered ? "auto" : 0,
-                marginLeft: isHovered ? "0.25em" : 0,
-                marginRight: isHovered ? "0.25em" : 0,
-              }}
-              transition={{
-                duration: 0.8,
-                ease: smoothEase,
-              }}
-            >
-              {hasTriggered && (
-                <Image
-                  src="/cta-gif.gif"
-                  alt=""
-                  width={64}
-                  height={64}
-                  className="w-12 h-12 sm:w-16 sm:h-16 md:w-24 md:h-24 lg:w-32 lg:h-32 xl:w-40 xl:h-40 short:w-20 short:h-20 object-contain rounded-xl"
-                  priority={false}
-                  unoptimized
-                />
+            <AnimatePresence>
+              {isHovered && hasTriggered && (
+                <m.span
+                  className="mx-[0.25em] inline-block overflow-hidden rounded-xl align-middle"
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.95, opacity: 0 }}
+                  transition={{ duration: 0.8, ease: smoothEase }}
+                >
+                  <Image
+                    src="/cta-gif.gif"
+                    alt=""
+                    width={64}
+                    height={64}
+                    className="w-12 h-12 sm:w-16 sm:h-16 md:w-24 md:h-24 lg:w-32 lg:h-32 xl:w-40 xl:h-40 short:w-20 short:h-20 object-contain rounded-xl"
+                    priority={false}
+                    unoptimized
+                  />
+                </m.span>
               )}
-            </m.span>
+            </AnimatePresence>
             <m.span
               className={`inline border-b transition-colors duration-300 ${
                 isHovered ? "border-primary" : "border-transparent"
@@ -168,7 +172,7 @@ const ContactSection = memo(function ContactSection({
       </div>
     </section>
   );
-});
+};
 
 ContactSection.displayName = "ContactSection";
 

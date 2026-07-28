@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback, memo } from "react";
+import { useState, useRef, useEffect } from "react";
 import { TextScramble } from "@/components/ui/text-scramble";
 
 export type SectionDividerProps = {
@@ -21,7 +21,7 @@ export type SectionDividerProps = {
  * 2. During line animation: text is blurred and scrambling
  * 3. When line finishes: text stops scrambling and blur clears gracefully
  */
-export const SectionDivider = memo(function SectionDivider({
+export const SectionDivider = function SectionDivider({
   label,
   counter,
   duration = 2,
@@ -65,10 +65,10 @@ export const SectionDivider = memo(function SectionDivider({
     return () => clearTimeout(timer);
   }, [isInView, animationDone, duration]);
 
-  const handleScrambleComplete = useCallback(() => {
+  const handleScrambleComplete = () => {
     setAnimationDone(true);
     onAnimationComplete?.();
-  }, [onAnimationComplete]);
+  };
 
   return (
     <div ref={ref} className={`w-full ${className}`}>
@@ -119,6 +119,6 @@ export const SectionDivider = memo(function SectionDivider({
       </div>
     </div>
   );
-});
+};
 
 SectionDivider.displayName = "SectionDivider";

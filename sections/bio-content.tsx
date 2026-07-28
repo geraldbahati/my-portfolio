@@ -42,6 +42,7 @@ export default function BioContent({
 
   return (
     <section
+      data-section-id="bio"
       className="relative h-screen flex items-center justify-center bg-linear-to-br from-gray-50 via-white to-gray-50 rounded-t-xl sm:rounded-t-2xl lg:rounded-t-4xl overflow-y-auto"
       style={{ contain: "layout style paint" }}
       data-bio-section
@@ -202,7 +203,7 @@ export default function BioContent({
               >
                 <span className="relative">
                   View Selected Work
-                  <span className="absolute bottom-0 left-0 w-full h-px bg-gray-900 origin-left transition-transform duration-300 scale-x-100 group-hover:scale-x-0" />
+                  <span className="absolute bottom-0 left-0 w-full h-px bg-gray-900 origin-left transition-transform duration-300 scale-x-100 group-hover:scale-x-[0.01]" />
                 </span>
                 <svg
                   className="w-4 h-4 transition-transform group-hover:translate-x-1"

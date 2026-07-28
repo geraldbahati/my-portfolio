@@ -18,6 +18,29 @@ import StatusFilterButtons from "./status-filter-buttons";
 
 type StatusFilter = "all" | "pending" | "sent" | "delivered" | "failed";
 
+function formatDate(isoString: string) {
+  return new Date(isoString).toLocaleString("en-KE", {
+    timeZone: "Africa/Nairobi",
+  });
+}
+
+function getStatusVariant(
+  status: "pending" | "sent" | "delivered" | "failed",
+): "default" | "secondary" | "destructive" | "outline" {
+  switch (status) {
+    case "pending":
+      return "outline";
+    case "sent":
+      return "secondary";
+    case "delivered":
+      return "default";
+    case "failed":
+      return "destructive";
+    default:
+      return "outline";
+  }
+}
+
 export default function ContactsTable() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const allSubmissions = useQuery(api.contactForm.getContactSubmissions, {});
@@ -29,27 +52,6 @@ export default function ContactsTable() {
     allSubmissions && statusFilter !== "all"
       ? allSubmissions.filter((s) => s.status === statusFilter)
       : (allSubmissions ?? []);
-
-  const formatDate = (isoString: string) => {
-    return new Date(isoString).toLocaleString();
-  };
-
-  const getStatusVariant = (
-    status: "pending" | "sent" | "delivered" | "failed",
-  ): "default" | "secondary" | "destructive" | "outline" => {
-    switch (status) {
-      case "pending":
-        return "outline";
-      case "sent":
-        return "secondary";
-      case "delivered":
-        return "default";
-      case "failed":
-        return "destructive";
-      default:
-        return "outline";
-    }
-  };
 
   return (
     <div className="space-y-6">

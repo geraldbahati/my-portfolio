@@ -18,12 +18,12 @@ export function ProjectHero({ project, details }: ProjectHeroProps) {
         {/* Header Content */}
         <div className="max-w-4xl mb-8 md:mb-12">
           {/* Title - Uses CSS animation for fade-in slide-up */}
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-medium tracking-tight mb-4 text-foreground animate-in fade-in slide-in-from-bottom-2 duration-700 ease-out">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-medium tracking-tight mb-4 text-foreground project-reveal-up-700 ease-out">
             {title}
           </h1>
 
           {/* Breadcrumbs - Delayed animation */}
-          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground animate-in fade-in slide-in-from-left-2 duration-700 delay-200 ease-out">
+          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground project-reveal-left-700 delay-200 ease-out">
             <AdaptiveLink
               href="/projects"
               className="hover:text-foreground transition-colors"
@@ -38,7 +38,7 @@ export function ProjectHero({ project, details }: ProjectHeroProps) {
 
         {/* Boxed Hero Image - Uses CSS animation for scale-up fade-in */}
         {heroImageSrc && (
-          <div className="w-full relative rounded-2xl overflow-hidden aspect-[21/9] md:aspect-[2.35/1] animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-700 delay-300 ease-out">
+          <div className="w-full relative rounded-2xl overflow-hidden aspect-[21/9] md:aspect-[2.35/1] project-reveal-zoom-700 delay-300 ease-out">
             <Image
               src={heroImageSrc}
               alt={title}

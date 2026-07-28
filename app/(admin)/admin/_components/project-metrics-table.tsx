@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -56,17 +56,18 @@ export default function ProjectMetricsTable({
 
   const [optimisticMetrics, setOptimisticMetrics] =
     useState<typeof serverMetrics>(undefined);
+  const [syncedMetrics, setSyncedMetrics] =
+    useState<typeof serverMetrics>(undefined);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMetric, setEditingMetric] =
     useState<Id<"projectMetrics"> | null>(null);
   const [formData, setFormData] = useState<MetricFormData>(emptyForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (serverMetrics) {
-      setOptimisticMetrics(serverMetrics);
-    }
-  }, [serverMetrics]);
+  if (serverMetrics !== syncedMetrics) {
+    setSyncedMetrics(serverMetrics);
+    setOptimisticMetrics(serverMetrics);
+  }
 
   const metrics = optimisticMetrics ?? serverMetrics;
   const isLoading = metrics === undefined;
@@ -98,30 +99,32 @@ export default function ProjectMetricsTable({
     }
 
     setIsSubmitting(true);
-    try {
-      if (editingMetric) {
-        await updateMetric({
+    const save = editingMetric
+      ? updateMetric({
           metricId: editingMetric,
           value: formData.value,
           label: formData.label,
           icon: formData.icon || undefined,
-        });
-      } else {
-        await createMetric({
+        })
+      : createMetric({
           projectId,
           value: formData.value,
           label: formData.label,
           icon: formData.icon || undefined,
           order: metrics?.length ?? 0,
         });
-      }
-      setIsDialogOpen(false);
-      setFormData(emptyForm);
-    } catch (error) {
+
+    const error = await save
+      .then(() => null)
+      .catch((cause: unknown) => cause)
+      .finally(() => setIsSubmitting(false));
+
+    if (error) {
       console.error("Failed to save metric:", error);
       alert("Failed to save metric");
-    } finally {
-      setIsSubmitting(false);
+    } else {
+      setIsDialogOpen(false);
+      setFormData(emptyForm);
     }
   };
 

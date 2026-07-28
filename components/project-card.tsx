@@ -1,15 +1,24 @@
 "use client";
 
-import { memo, useRef, useState, useCallback, useEffect } from "react";
-import { m, AnimatePresence } from "motion/react";
-import { EyeIcon, ExternalLinkIcon } from "lucide-react";
+import { useRef, useState, useEffect } from "react";
+import { m } from "motion/react";
 import { Cursor } from "@/components/ui/cursor";
 import { MediaRenderer } from "@/components/media";
 import { parseAspectRatio } from "@/lib/media-utils";
-import Analytics from "@/lib/analytics";
+import {
+  trackProjectCardViewed,
+  trackProjectOpened,
+  type Surface,
+} from "@/lib/analytics";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { AdaptiveLink } from "@/components/AdaptiveLink";
 import { warmImages } from "@/lib/resource-warmup";
+import {
+  ProjectCardBadge,
+  ProjectCardHoverCursor,
+  ProjectCardLiveLink,
+  ProjectCardTitleOverlay,
+} from "@/components/project-card-overlays";
 
 // ============================================================================
 // Types
@@ -34,6 +43,8 @@ export interface ProjectCardProps {
   freezeFrameOnPause?: boolean;
   onVisible?: (visible: boolean) => void;
   onClick?: () => void;
+  /** Where this card is rendered, so card views and opens can be compared. */
+  surface?: Surface;
 }
 
 const EMPTY_BADGES: NonNullable<ProjectCardProps["badges"]> = [];
@@ -93,141 +104,6 @@ function useVisibility(
 }
 
 // ============================================================================
-// Sub-components
-// ============================================================================
-
-interface HoverCursorProps {
-  isHovering: boolean;
-}
-
-const HoverCursor = memo(function HoverCursor({
-  isHovering,
-}: HoverCursorProps) {
-  return (
-    <m.div
-      animate={{
-        scaleX: isHovering ? 1 : 0.2,
-        scaleY: isHovering ? 1 : 0.5,
-      }}
-      className="flex h-8 w-20 origin-center items-center justify-center rounded-[24px] bg-black/90 backdrop-blur-md"
-    >
-      <AnimatePresence>
-        {isHovering && (
-          <m.div
-            initial={{ opacity: 0, scale: 0.6 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.6 }}
-            className="inline-flex w-full items-center justify-center"
-          >
-            <div className="inline-flex items-center text-sm text-white font-medium">
-              View <EyeIcon className="ml-1 h-4 w-4" />
-            </div>
-          </m.div>
-        )}
-      </AnimatePresence>
-    </m.div>
-  );
-});
-
-interface BadgeProps {
-  text: string;
-  position: "bottom-left" | "bottom-right";
-  isHovered: boolean;
-  index: number;
-}
-
-const Badge = memo(function Badge({
-  text,
-  position,
-  isHovered,
-  index,
-}: BadgeProps) {
-  const positionClasses =
-    position === "bottom-right" ? "bottom-4 right-4" : "bottom-4 left-4";
-
-  return (
-    <m.div
-      className={`absolute ${positionClasses} z-10`}
-      initial={{ y: 10, opacity: 0.7, scale: 0.95 }}
-      animate={{
-        y: isHovered ? 0 : 10,
-        opacity: isHovered ? 1 : 0.7,
-        scale: isHovered ? 1 : 0.95,
-      }}
-      transition={{
-        duration: 0.3,
-        ease: "easeOut",
-        delay: index * 0.05,
-      }}
-    >
-      <span className="inline-block bg-black/70 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-full">
-        {text}
-      </span>
-    </m.div>
-  );
-});
-
-interface TitleOverlayProps {
-  title: string;
-  isHovered: boolean;
-}
-
-const TitleOverlay = memo(function TitleOverlay({
-  title,
-  isHovered,
-}: TitleOverlayProps) {
-  return (
-    <m.div
-      className="absolute top-4 left-4 z-10"
-      initial={{ y: -10, opacity: 0.8 }}
-      animate={{
-        y: isHovered ? 0 : -10,
-        opacity: isHovered ? 1 : 0.8,
-      }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-    >
-      <h2 className="text-white text-lg font-semibold px-3 py-1.5 rounded-lg bg-black/60 backdrop-blur-sm">
-        {title}
-      </h2>
-    </m.div>
-  );
-});
-
-interface LiveLinkProps {
-  url: string;
-  isHovered: boolean;
-}
-
-const LiveLink = memo(function LiveLink({ url, isHovered }: LiveLinkProps) {
-  return (
-    <m.div
-      className="absolute top-4 right-4 z-20"
-      initial={{ y: -10, opacity: 0 }}
-      animate={{
-        y: isHovered ? 0 : -10,
-        opacity: isHovered ? 1 : 0,
-      }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-    >
-      <a
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={(e) => e.stopPropagation()}
-        className="inline-flex items-center gap-1.5 bg-primary/90 backdrop-blur-sm text-primary-foreground text-sm font-medium px-3.5 py-1.5 rounded-full hover:bg-primary transition-colors shadow-lg shadow-primary/25"
-      >
-        <span className="relative flex h-2 w-2">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
-          <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
-        </span>
-        Live
-        <ExternalLinkIcon className="h-3.5 w-3.5" />
-      </a>
-    </m.div>
-  );
-});
-
-// ============================================================================
 // Main Component
 // ============================================================================
 
@@ -247,6 +123,7 @@ function ProjectCardComponent({
   freezeFrameOnPause = false,
   onVisible,
   onClick,
+  surface,
 }: ProjectCardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const hasTrackedView = useRef(false);
@@ -262,21 +139,18 @@ function ProjectCardComponent({
   const isVisible = useVisibility(containerRef, {
     threshold: 0.2,
     rootMargin: "50px",
-    onVisible: useCallback(
-      (visible: boolean) => {
-        onVisible?.(visible);
+    onVisible: (visible: boolean) => {
+      onVisible?.(visible);
 
-        if (visible && !hasTrackedView.current) {
-          hasTrackedView.current = true;
-          Analytics.trackMediaInteraction({
-            mediaType: type === "video" ? "video" : "image",
-            action: "view",
-            mediaId: id,
-          });
-        }
-      },
-      [id, type, onVisible],
-    ),
+      if (visible && !hasTrackedView.current) {
+        hasTrackedView.current = true;
+        trackProjectCardViewed({
+          project_slug: id,
+          project_title: title,
+          surface,
+        });
+      }
+    },
   });
 
   // Calculate aspect ratio style
@@ -284,22 +158,26 @@ function ProjectCardComponent({
   const aspectRatioStyle = { aspectRatio: `${ratio}` };
 
   // Handle cursor position for hover state
-  const handlePositionChange = useCallback((x: number, y: number) => {
+  const handlePositionChange = (x: number, y: number) => {
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       const isInside =
         x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
       setIsHovering(isInside);
     }
-  }, []);
+  };
 
   const projectPath = `/projects/${id}`;
   const previewImage = poster || (type === "gif" ? src : undefined);
 
-  const handleCardClick = useCallback(() => {
-    Analytics.trackLinkClick(title || `Project ${id}`, projectPath, "internal");
+  const handleCardClick = () => {
+    trackProjectOpened({
+      project_slug: id,
+      project_title: title,
+      surface,
+    });
     onClick?.();
-  }, [id, onClick, projectPath, title]);
+  };
 
   useEffect(() => {
     if (!isVisible) {
@@ -343,7 +221,7 @@ function ProjectCardComponent({
         transition={{ ease: "easeInOut", duration: 0.15 }}
         onPositionChange={handlePositionChange}
       >
-        <HoverCursor isHovering={isHovering} />
+        <ProjectCardHoverCursor isHovering={isHovering} />
       </Cursor>
 
       <AdaptiveLink
@@ -407,14 +285,16 @@ function ProjectCardComponent({
         />
 
         {/* Title */}
-        {title && <TitleOverlay title={title} isHovered={isHovered} />}
+        {title && (
+          <ProjectCardTitleOverlay title={title} isHovered={isHovered} />
+        )}
 
         {/* Live link */}
-        {url && <LiveLink url={url} isHovered={isHovered} />}
+        {url && <ProjectCardLiveLink url={url} isHovered={isHovered} />}
 
         {/* Badges */}
         {badges.map((badge, index) => (
-          <Badge
+          <ProjectCardBadge
             key={`${id}-badge-${badge.text}`}
             text={badge.text}
             position={badge.position || "bottom-left"}
@@ -427,5 +307,5 @@ function ProjectCardComponent({
   );
 }
 
-export const ProjectCard = memo(ProjectCardComponent);
+export const ProjectCard = ProjectCardComponent;
 export default ProjectCard;

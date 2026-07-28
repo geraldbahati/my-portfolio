@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback } from "react";
+import "react";
 import { StreamVideo } from "./stream-video";
 import { OptimizedImage } from "./optimized-image";
 import { detectMediaSource, isStreamUrl } from "@/lib/media-utils";
@@ -50,13 +50,13 @@ function MediaRendererComponent({
   const source = detectMediaSource(src);
   const isVideo = type === "video" || isStreamUrl(src);
 
-  const handleError = useCallback(() => {
+  const handleError = () => {
     onError?.();
-  }, [onError]);
+  };
 
-  const handleLoad = useCallback(() => {
+  const handleLoad = () => {
     onLoad?.();
-  }, [onLoad]);
+  };
 
   // Render video for Stream URLs or video type
   if (isVideo && (source === "stream" || type === "video")) {
@@ -92,4 +92,4 @@ function MediaRendererComponent({
   );
 }
 
-export const MediaRenderer = memo(MediaRendererComponent);
+export const MediaRenderer = MediaRendererComponent;

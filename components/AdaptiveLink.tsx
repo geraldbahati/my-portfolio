@@ -9,8 +9,10 @@ import {
 import Link from "next/link";
 import { useAdaptivePrefetch } from "@/hooks/use-adaptive-prefetch";
 
-interface AdaptiveLinkProps
-  extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {
+interface AdaptiveLinkProps extends Omit<
+  AnchorHTMLAttributes<HTMLAnchorElement>,
+  "href"
+> {
   href: string;
   prefetchOnViewport?: boolean;
   prefetchRootMargin?: string;

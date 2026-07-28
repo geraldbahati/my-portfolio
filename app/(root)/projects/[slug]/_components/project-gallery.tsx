@@ -23,13 +23,16 @@ export function ProjectGallery({ gallery }: ProjectGalleryProps) {
       <ImageWarmupSentinel
         images={galleryImages}
         limit={2}
-        warmOptions={{ loader: "next", sizes: "(max-width: 768px) 100vw, 50vw" }}
+        warmOptions={{
+          loader: "next",
+          sizes: "(max-width: 768px) 100vw, 50vw",
+        }}
       />
       <div className="container overflow-hidden max-w-6xl mx-auto px-4 md:px-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           {/* Left Column: Long Scrolling Screenshot */}
           {featureImage && (
-            <div className="lg:col-span-6 relative w-full rounded-sm overflow-hidden shadow-sm border border-border/50 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="lg:col-span-6 relative w-full rounded-sm overflow-hidden shadow-sm border border-border/50 project-reveal-up-700">
               <Image
                 src={featureImage.src}
                 alt={featureImage.alt || "Project feature image"}
@@ -48,7 +51,7 @@ export function ProjectGallery({ gallery }: ProjectGalleryProps) {
               {stackImages.map((item, index) => (
                 <div
                   key={item._id}
-                  className="relative w-full rounded-sm overflow-hidden shadow-sm group animate-in fade-in slide-in-from-bottom-6 duration-700 fill-mode-both"
+                  className="relative w-full rounded-sm overflow-hidden shadow-sm group project-reveal-up-700 fill-mode-both"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                   <Image

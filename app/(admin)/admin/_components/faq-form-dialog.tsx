@@ -1,11 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -37,6 +42,18 @@ const emptyForm: FaqFormData = {
   isPublished: true,
 };
 
+function getInitialFormData(
+  editingFaq: FaqFormDialogProps["editingFaq"],
+): FaqFormData {
+  return editingFaq
+    ? {
+        question: editingFaq.question,
+        answer: editingFaq.answer,
+        isPublished: editingFaq.isPublished,
+      }
+    : emptyForm;
+}
+
 export default function FaqFormDialog({
   isOpen,
   onClose,
@@ -47,49 +64,43 @@ export default function FaqFormDialog({
   const createFaqAction = useAction(api.adminFaqs.createFaq);
   const updateFaqAction = useAction(api.adminFaqs.updateFaq);
 
-  const [formData, setFormData] = useState<FaqFormData>(emptyForm);
+  const [formData, setFormData] = useState<FaqFormData>(() =>
+    getInitialFormData(editingFaq),
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Update form data when editingFaq changes
-  useEffect(() => {
-    if (editingFaq) {
-      setFormData({
-        question: editingFaq.question,
-        answer: editingFaq.answer,
-        isPublished: editingFaq.isPublished,
-      });
-    } else {
-      setFormData(emptyForm);
-    }
-  }, [editingFaq]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    try {
-      if (editingFaq) {
-        await updateFaqAction({
+    // Promise-based rather than try/catch: the React Compiler bails out of any
+    // component containing try/catch, leaving the whole dialog unmemoised. Same
+    // idiom as the contact form.
+    const save = editingFaq
+      ? updateFaqAction({
           faqId: editingFaq._id,
           question: formData.question,
           answer: formData.answer,
           isPublished: formData.isPublished,
-        });
-      } else {
-        await createFaqAction({
+        })
+      : createFaqAction({
           question: formData.question,
           answer: formData.answer,
           order: nextOrder,
           isPublished: formData.isPublished,
         });
-      }
-      onSuccess();
-      setFormData(emptyForm);
-    } catch (error) {
+
+    const error = await save
+      .then(() => null)
+      .catch((err: unknown) => err)
+      .finally(() => setIsSubmitting(false));
+
+    if (error) {
       console.error("Failed to save FAQ:", error);
       alert("Failed to save FAQ");
-    } finally {
-      setIsSubmitting(false);
+    } else {
+      onSuccess();
+      setFormData(emptyForm);
     }
   };
 

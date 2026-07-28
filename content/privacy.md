@@ -1,13 +1,13 @@
 ---
 title: Privacy Policy
-lastUpdated: 2025-12-08
-version: 2.2
+lastUpdated: 2026-07-26
+version: 2.3
 ---
 
 # Privacy Policy
 
-**Effective Date:** December 8, 2025
-**Version:** 2.2
+**Effective Date:** July 26, 2026
+**Version:** 2.3
 
 ## 1. Introduction
 
@@ -49,9 +49,14 @@ When you interact with my Services, you may provide:
 I automatically collect information when you visit or use the Services:
 
 - **Device and browser information:** IP address, browser type/version, operating system, user agent.
-- **Usage data:** Pages visited, time spent, clickstream, referring URL (via Vercel Analytics).
-- **Location data:** Approximate location based on IP address.
-- **Cookies and similar tracking technologies** (see Section 7).
+- **Location data:** Approximate country and region derived from your IP address. I do not collect precise GPS location.
+- **Cookies and similar tracking technologies** (see Section 6).
+
+**Only after you accept analytics** (see Section 6), I additionally collect:
+
+- **Usage data:** Pages viewed, time on page, scroll depth, which projects you open, clicks on contact links and navigation, and whether a contact form submission succeeded or failed.
+- **Session recordings:** A replay of your visit — pointer movement, clicks and scrolling — used to find confusing or broken parts of the site. **All form inputs are masked at the point of capture**, so anything you type into the contact form is never recorded.
+- **Performance and error data:** Core Web Vitals measurements and unhandled JavaScript errors, used to diagnose faults.
 
 ## 5. How I Use Your Information (Purposes & Legal Bases)
 
@@ -69,13 +74,22 @@ If I rely on your consent to process certain categories of personal information 
 
 ## 6. Cookies & Tracking Technologies
 
-I use cookies, web beacons, local storage, and similar technologies to operate and improve the Services.
+### Analytics require your consent
 
-- **Essential cookies:** Required for core functionality (e.g., form submissions, security).
-- **Performance & analytics cookies:** Vercel Analytics and Speed Insights help me understand usage and improve the Services.
-- **Functional cookies:** Remember preferences (language, region, theme).
+**No analytics cookies or browser storage are used until you accept them.** When you first visit, a banner asks whether you consent to analytics. Until you choose, the analytics SDK holds nothing on your device — it keeps state in memory only and sends no events. Both choices are presented with equal prominence; declining is as easy as accepting.
 
-You can control cookies through your browser settings. Blocking some cookies may affect functionality.
+- **If you accept:** analytics cookies and local storage are set, and the data described in Section 4.2 is collected.
+- **If you decline:** no analytics cookies or storage are written and no events are sent.
+
+### Categories of cookies
+
+- **Essential:** Required for core functionality such as form submission and security. These do not require consent.
+- **Analytics (consent required):** Set by PostHog to measure how the site is used. See Section 7.
+- **Functional:** Remember your preferences, including your analytics choice itself.
+
+### Changing your mind
+
+You can withdraw or grant consent at any time using the analytics controls at the bottom of this page. You can also clear this site's data in your browser, which resets the choice and shows the banner again on your next visit. Browser-level cookie controls work as well, though blocking essential cookies may affect functionality.
 
 ## 7. Sharing & Disclosure
 
@@ -90,17 +104,21 @@ I may share personal information in the following circumstances:
 
 I use reputable third-party processors, including:
 
-- **Backend & Database:** Convex (for contact form submissions and data storage)
-- **Email Service:** Resend (for sending contact form notifications)
-- **Hosting & Infrastructure:** Vercel (for website hosting)
-- **Analytics:** Vercel Analytics and Speed Insights (for usage analytics)
-- **Authentication:** Clerk (for admin authentication - development only)
+- **Backend & Database:** Convex (contact form submissions and data storage)
+- **Email Service:** Resend (sending contact form notifications)
+- **Hosting & Infrastructure:** Vercel (website hosting)
+- **Product Analytics:** PostHog, hosted in the **European Union** (usage analytics and session recordings — only with your consent)
+- **Performance Monitoring:** Vercel Speed Insights (aggregate Core Web Vitals)
+- **Media Delivery:** Cloudflare (Stream, Images and R2 storage for project videos and images); Cloudinary where legacy media is still hosted there
+- **Authentication:** Clerk (admin authentication — development only)
 
 These services have their own privacy policies and data protection measures.
 
 ## 8. International Transfers
 
-Your personal information may be transferred to and processed in countries other than Kenya, including the United States where some of my service providers are located. I ensure that appropriate safeguards are in place to protect your data when it is transferred internationally, such as:
+Your personal information may be transferred to and processed in countries other than Kenya, including the United States where some of my service providers are located. Analytics data is a deliberate exception: PostHog is configured to use its **EU Cloud**, so analytics events and session recordings are stored on servers in the European Union rather than transferred to the United States.
+
+I ensure that appropriate safeguards are in place to protect your data when it is transferred internationally, such as:
 
 - Standard Contractual Clauses (SCCs)
 - Adequacy decisions where applicable
@@ -114,7 +132,7 @@ I retain personal information only as long as necessary for the purposes describ
 
 - **Contact form submissions:** Retained for 2-3 years or until you request deletion.
 - **Email communications:** Retained for 2 years for business purposes.
-- **Analytics data:** Aggregated data retained indefinitely; individual session data retained per Vercel's policies.
+- **Analytics data:** Retained according to PostHog's project retention settings. Session recordings are kept for a limited window and expire automatically; aggregate usage statistics may be kept indefinitely.
 - **Server logs:** Retained for up to 30 days.
 
 Retention periods depend on the nature of the data and legal/regulatory requirements.
@@ -147,8 +165,8 @@ If you are in the EU/EEA/UK, GDPR provides rights similar to those described in 
 
 - Performance of a contract (responding to your inquiries)
 - Compliance with legal obligations
-- Legitimate interests (improving my Services, preventing fraud)
-- Consent where required (e.g., for certain cookies)
+- Legitimate interests (operating the site, preventing fraud and abuse)
+- **Consent** — the sole basis for all analytics and session recording. Nothing is collected for those purposes until you accept, and withdrawing consent is as easy as giving it (Section 6).
 
 For concerns about automated decision-making or profiling, or to request records of processing activities, contact [contact@geraldbahati.dev](mailto:contact@geraldbahati.dev).
 
@@ -189,4 +207,4 @@ Based in Nairobi, Kenya
 
 ---
 
-*This policy was last updated on December 8, 2025.*
+*This policy was last updated on July 26, 2026.*

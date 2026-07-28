@@ -1,4 +1,4 @@
-export default {
+const authConfig = {
   providers: [
     {
       // Replace with your Clerk JWT Issuer Domain from your "convex" JWT template
@@ -10,3 +10,5 @@ export default {
     },
   ],
 };
+
+export default authConfig;
