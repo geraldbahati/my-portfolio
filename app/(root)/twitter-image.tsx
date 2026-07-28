@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { readFile } from "node:fs/promises";
 
 // Reuse metadata from OG image
-export const alt = "Gerald Bahati - Product Software Engineer";
+export const alt = "Gerald Bahati - Full-Stack Software Engineer";
 export const size = {
   width: 1200,
   height: 630,

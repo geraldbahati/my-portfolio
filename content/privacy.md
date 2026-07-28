@@ -11,7 +11,7 @@ version: 2.3
 
 ## 1. Introduction
 
-Welcome to **Gerald Bahati's Portfolio** ("I", "me", "my", or "us"). I am committed to protecting your personal information and respecting your privacy. This Privacy Policy explains how I collect, use, disclose, and safeguard personal information when you visit or use my website at [geraldbahati.dev](https://geraldbahati.dev) and related services (collectively, the "Services").
+Welcome to **Gerald Bahati's Portfolio** ("I", "me", "my", or "us"). I am committed to protecting your personal information and respecting your privacy. This Privacy Policy explains how I collect, use, disclose, and safeguard personal information when you visit or use my website at [geraldbahati.dev](https://www.geraldbahati.dev) and related services (collectively, the "Services").
 
 Please read this Privacy Policy carefully. By using my Services, you agree to the collection and use of information in accordance with this policy. If you do not agree, please do not use the Services.
 

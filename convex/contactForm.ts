@@ -239,7 +239,7 @@ export const submitContactForm = mutation({
 
                     <!-- Logo -->
                     <tr><td align="center" style="padding-bottom: 32px;">
-                      <img src="https://geraldbahati.dev/logo.webp" alt="GB" width="48" height="48" style="display: block; filter: invert(1);">
+                      <img src="https://www.geraldbahati.dev/logo.webp" alt="GB" width="48" height="48" style="display: block; filter: invert(1);">
                     </td></tr>
 
                     <!-- Header -->
@@ -324,7 +324,7 @@ export const submitContactForm = mutation({
 
                     <!-- Logo -->
                     <tr><td align="center" style="padding-bottom: 32px;">
-                      <img src="https://geraldbahati.dev/logo.webp" alt="GB" width="48" height="48" style="display: block; filter: invert(1);">
+                      <img src="https://www.geraldbahati.dev/logo.webp" alt="GB" width="48" height="48" style="display: block; filter: invert(1);">
                     </td></tr>
 
                     <!-- Main Card -->
@@ -353,7 +353,7 @@ export const submitContactForm = mutation({
                     <!-- Footer -->
                     <tr><td align="center" style="padding: 24px 32px;">
                       <p style="margin: 0 0 8px;">
-                        <a href="https://geraldbahati.dev" style="font-size: 13px; color: #d97706; text-decoration: none; font-weight: 500;">geraldbahati.dev</a>
+                        <a href="https://www.geraldbahati.dev" style="font-size: 13px; color: #d97706; text-decoration: none; font-weight: 500;">geraldbahati.dev</a>
                       </p>
                       <p style="margin: 0; font-size: 11px; color: #404040; line-height: 1.5;">
                         You received this email because you submitted a message through my portfolio.

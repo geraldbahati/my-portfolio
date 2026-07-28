@@ -7,10 +7,17 @@ import GridPattern from "@/components/ui/shadcn-io/grid-pattern";
 import { ContactLinks } from "@/components/ContactLinks";
 import { PageAnalytics } from "@/components/PageAnalytics";
 import PublicConvexProvider from "@/components/PublicConvexProvider";
-import { generateBreadcrumbSchema } from "@/lib/seo";
+import {
+  generateBreadcrumbSchema,
+  PERSON_ID,
+  SITE_NAME,
+  SITE_URL,
+} from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "Contact Gerald - Request a Project | Product Software Engineer",
+  title: {
+    absolute: "Contact Gerald Bahati | Software Engineer in Nairobi",
+  },
   description:
     "Get in touch with Gerald Bahati about a project, consulting work, or a technical question. Reach out by form, phone, or WhatsApp.",
   keywords: [
@@ -24,7 +31,8 @@ export const metadata: Metadata = {
     "kenya software engineer",
   ],
   openGraph: {
-    title: "Contact Gerald - Request a Project | Product Software Engineer",
+    siteName: SITE_NAME,
+    title: "Contact Gerald Bahati | Software Engineer in Nairobi",
     description:
       "Get in touch with Gerald Bahati about a project, consulting work, or a technical question. Reach out by form, phone, or WhatsApp.",
     type: "website",
@@ -33,7 +41,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Contact Gerald - Request a Project | Product Software Engineer",
+    title: "Contact Gerald Bahati | Software Engineer in Nairobi",
     description:
       "Get in touch with Gerald Bahati about a project, consulting work, or a technical question. Reach out by form, phone, or WhatsApp.",
   },
@@ -129,21 +137,22 @@ function ContactFormUnavailable() {
   );
 }
 
-const BASE_URL = "https://geraldbahati.dev";
 const CONTACT_BREADCRUMB_LD = generateBreadcrumbSchema([
-  { name: "Home", url: BASE_URL },
-  { name: "Contact", url: `${BASE_URL}/contact` },
+  { name: "Home", url: SITE_URL },
+  { name: "Contact", url: `${SITE_URL}/contact` },
 ]);
 const CONTACT_JSON_LD = {
   "@context": "https://schema.org",
   "@type": "ContactPage",
   name: "Contact Gerald Bahati",
   description: "Get in touch with Gerald for your next digital project",
-  url: "https://geraldbahati.dev/contact",
+  url: `${SITE_URL}/contact`,
   mainEntity: {
     "@type": "Person",
+    "@id": PERSON_ID,
     name: "Gerald Bahati",
-    jobTitle: "Product Software Engineer",
+    url: SITE_URL,
+    jobTitle: "Full-Stack Software Engineer",
     address: {
       "@type": "PostalAddress",
       addressLocality: "Nairobi",

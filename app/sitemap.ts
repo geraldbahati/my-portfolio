@@ -1,43 +1,34 @@
 import type { MetadataRoute } from "next";
 import { fetchQuery } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
+import { SITE_URL } from "@/lib/seo";
 import { projects as fallbackProjects } from "./(root)/projects/data";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = "https://geraldbahati.dev";
-
   const staticPages: MetadataRoute.Sitemap = [
     {
-      url: baseUrl,
+      url: SITE_URL,
       changeFrequency: "weekly",
       priority: 1.0,
+      images: [`${SITE_URL}/hero-image.webp`],
     },
     {
-      url: `${baseUrl}/projects`,
+      url: `${SITE_URL}/projects`,
       changeFrequency: "weekly",
       priority: 0.9,
     },
     {
-      url: `${baseUrl}/contact`,
+      url: `${SITE_URL}/contact`,
       changeFrequency: "monthly",
       priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/privacy`,
-      changeFrequency: "yearly",
-      priority: 0.3,
-    },
-    {
-      url: `${baseUrl}/imprint`,
-      changeFrequency: "yearly",
-      priority: 0.3,
     },
   ];
 
   let projectPages: MetadataRoute.Sitemap = fallbackProjects.map((project) => ({
-    url: `${baseUrl}/projects/${project.id}`,
+    url: `${SITE_URL}/projects/${project.id}`,
     changeFrequency: "monthly",
     priority: 0.7,
+    images: project.poster ? [project.poster] : undefined,
   }));
 
   if (!process.env.NEXT_PUBLIC_CONVEX_URL) {
@@ -47,10 +38,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const projects = await fetchQuery(api.projects.getPublishedProjects, {});
     projectPages = projects.map((project) => ({
-      url: `${baseUrl}/projects/${project.id}`,
+      url: `${SITE_URL}/projects/${project.id}`,
       lastModified: new Date(project.updatedAt || project.createdAt),
       changeFrequency: "monthly" as const,
       priority: 0.7,
+      images: project.poster ? [project.poster] : undefined,
     }));
   } catch (error) {
     console.error("Could not fetch projects for sitemap:", error);

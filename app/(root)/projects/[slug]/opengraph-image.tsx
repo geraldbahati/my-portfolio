@@ -51,7 +51,7 @@ export default async function Image({
       base64Image = `data:image/jpeg;base64,${imageBuffer.toString("base64")}`;
     } catch {
       // Emergency fallback if file read fails (unlikely)
-      base64Image = "https://geraldbahati.dev/man-sitting.jpg";
+      base64Image = "https://www.geraldbahati.dev/man-sitting.jpg";
     }
   }
 

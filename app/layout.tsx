@@ -6,6 +6,13 @@ import { MotionProvider } from "@/components/MotionProvider";
 import { LenisProvider } from "@/components/LenisProvider";
 import { AnalyticsProvider } from "@/components/analytics-provider";
 import DeferredProviders from "@/components/DeferredProviders";
+import {
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_TITLE,
+  SITE_URL,
+  SOCIAL_PROFILES,
+} from "@/lib/seo";
 
 /**
  * Ported from a stray `app/(root)/contact/head.tsx`, which used the legacy
@@ -26,14 +33,13 @@ function getConvexOrigin() {
 }
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://geraldbahati.dev"),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "Gerald Bahati - Product Software Engineer | 2+ Years Experience",
+    default: SITE_TITLE,
     template: "%s | Gerald Bahati",
   },
-  description:
-    "Product Software Engineer with 2+ years shipping production e-commerce and fintech experiences. Specializing in React, Next.js, Spring Boot, Go, and real-time systems with measurable business impact.",
-  applicationName: "Gerald Bahati Portfolio",
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
   keywords: [
     "Gerald Bahati",
     "product engineer",
@@ -52,9 +58,10 @@ export const metadata: Metadata = {
     "Kenya software engineer",
     "Nairobi developer",
   ],
-  authors: [{ name: "Gerald Bahati", url: "https://geraldbahati.dev" }],
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
   creator: "Gerald Bahati",
   publisher: "Gerald Bahati",
+  manifest: "/manifest.webmanifest",
   formatDetection: {
     email: false,
     address: false,
@@ -63,18 +70,16 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_KE",
-    url: "https://geraldbahati.dev",
-    siteName: "Gerald Bahati Portfolio",
-    title: "Gerald Bahati - Product Software Engineer | 2+ Years Experience",
-    description:
-      "Product Software Engineer with 2+ years shipping production e-commerce and fintech experiences. Specializing in React, Next.js, Spring Boot, Go, and real-time systems with measurable business impact.",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
   },
   twitter: {
     card: "summary_large_image",
-    title: "Gerald Bahati - Product Software Engineer | 2+ Years Experience",
-    description:
-      "Product Software Engineer with 2+ years shipping production e-commerce and fintech experiences. Specializing in React, Next.js, Spring Boot, Go, and real-time systems.",
-    creator: "@geraldbahati",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    creator: "@gerald_baha",
   },
   robots: {
     index: true,
@@ -90,7 +95,10 @@ export const metadata: Metadata = {
     },
   },
   alternates: {
-    canonical: "https://geraldbahati.dev",
+    canonical: SITE_URL,
+  },
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION,
   },
   category: "technology",
   other: {
@@ -106,8 +114,11 @@ export default function RootLayout({
   const convexOrigin = getConvexOrigin();
 
   return (
-    <html lang="en">
+    <html lang="en-KE">
       <head>
+        {SOCIAL_PROFILES.map((profile) => (
+          <link key={profile} rel="me" href={profile} />
+        ))}
         {convexOrigin && (
           <>
             <link rel="preconnect" href={convexOrigin} crossOrigin="" />

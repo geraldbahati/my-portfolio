@@ -215,22 +215,25 @@ export default function HeroEnhancements() {
       {/* TextScramble name → portaled into [data-hero-name-portal] */}
       {namePortal &&
         createPortal(
-          <span
+          <h1
+            aria-label="Gerald Bahati"
             className={`transition-[filter] duration-700 ease-out ${
               shouldScrambleName ? "blur-[1px]" : "blur-0"
             }`}
           >
-            <TextScramble
-              key={shouldScrambleName ? "scrambling" : "stopped"}
-              className="text-xs sm:text-sm lg:text-base font-light text-primary tracking-[0.2em] sm:tracking-[0.3em] uppercase"
-              trigger={shouldScrambleName}
-              duration={ANIMATION_DURATIONS.NAME_SCRAMBLE}
-              speed={ANIMATION_DURATIONS.NAME_SCRAMBLE_SPEED}
-              as="span"
-            >
-              Gerald Bahati
-            </TextScramble>
-          </span>,
+            <span aria-hidden="true">
+              <TextScramble
+                key={shouldScrambleName ? "scrambling" : "stopped"}
+                className="text-xs sm:text-sm lg:text-base font-light text-primary tracking-[0.2em] sm:tracking-[0.3em] uppercase"
+                trigger={shouldScrambleName}
+                duration={ANIMATION_DURATIONS.NAME_SCRAMBLE}
+                speed={ANIMATION_DURATIONS.NAME_SCRAMBLE_SPEED}
+                as="span"
+              >
+                Gerald Bahati
+              </TextScramble>
+            </span>
+          </h1>,
           namePortal,
         )}
 

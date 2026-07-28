@@ -5,13 +5,19 @@ import { ProjectsGrid } from "@/components/projects-grid";
 import { getCachedProjects } from "@/lib/data/projects";
 import { PageAnalytics } from "@/components/PageAnalytics";
 import { JsonLdScript } from "@/components/JsonLdScript";
-import { generateBreadcrumbSchema } from "@/lib/seo";
+import {
+  generateBreadcrumbSchema,
+  SITE_NAME,
+  SITE_URL,
+} from "@/lib/seo";
 
 // SEO Metadata
 export const metadata: Metadata = {
-  title: "Projects - Creative Digital Solutions & Web Development",
+  title: {
+    absolute: "Software Engineering Projects | Gerald Bahati",
+  },
   description:
-    "Explore my portfolio of creative digital projects including web development, UI/UX design, and innovative digital solutions. Each project showcases quality craftsmanship and sustainable results.",
+    "Explore Gerald Bahati's software engineering projects across e-commerce, real-time systems, dashboards, AI integrations, React, Next.js, TypeScript, Go, and Java.",
   keywords: [
     "portfolio",
     "projects",
@@ -22,7 +28,8 @@ export const metadata: Metadata = {
     "creative development",
   ],
   openGraph: {
-    title: "Projects - Creative Digital Solutions & Web Development",
+    siteName: SITE_NAME,
+    title: "Software Engineering Projects | Gerald Bahati",
     description:
       "Explore my portfolio of creative digital projects including web development, UI/UX design, and innovative digital solutions with sustainable results.",
     type: "website",
@@ -30,7 +37,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Projects - Creative Digital Solutions & Web Development",
+    title: "Software Engineering Projects | Gerald Bahati",
     description:
       "Explore my portfolio of creative digital projects including web development, UI/UX design, and innovative digital solutions with sustainable results.",
   },
@@ -55,25 +62,24 @@ async function ProjectsContent() {
   const projects = await getCachedProjects();
 
   // Generate JSON-LD structured data for SEO
-  const baseUrl = "https://geraldbahati.dev";
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "ItemList",
     name: "Portfolio Projects",
     description:
       "A curated selection of projects showcasing creative digital solutions",
-    url: `${baseUrl}/projects`,
+    url: `${SITE_URL}/projects`,
     numberOfItems: projects.length,
     itemListElement: projects.map((project, index) => ({
       "@type": "ListItem",
       position: index + 1,
       item: {
         "@type": "CreativeWork",
-        "@id": `${baseUrl}/projects/${project.id}`,
+        "@id": `${SITE_URL}/projects/${project.id}`,
         name: project.title,
         description: project.description || project.alt,
         image: project.poster || project.src,
-        url: `${baseUrl}/projects/${project.id}`,
+        url: `${SITE_URL}/projects/${project.id}`,
         keywords: project.badges?.map((b) => b.text).join(", "),
       },
     })),
@@ -125,8 +131,8 @@ function ProjectsGridSkeleton() {
  */
 export default function ProjectsPage() {
   const breadcrumbLd = generateBreadcrumbSchema([
-    { name: "Home", url: "https://geraldbahati.dev" },
-    { name: "Projects", url: "https://geraldbahati.dev/projects" },
+    { name: "Home", url: SITE_URL },
+    { name: "Projects", url: `${SITE_URL}/projects` },
   ]);
 
   return (
