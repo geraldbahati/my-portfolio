@@ -26,8 +26,10 @@ const MEDIA = "https://media.geraldbahati.dev/webline";
 
 const LANDING_UID = "5874f6a9938431958ee99e5c9354c9b5";
 const STORE_UID = "462887d50ef66397070188e779015139";
+const THERAPY_UID = "0cebe7045b8e2bd0e613923c157287d8";
 
 const img = (name: string) => `${MEDIA}/${name}.webp`;
+const timg = (name: string) => `https://media.geraldbahati.dev/therapy/${name}.webp`;
 const hls = (uid: string) => `${STREAM}/${uid}/manifest/video.m3u8`;
 const thumb = (uid: string) => `${STREAM}/${uid}/thumbnails/thumbnail.jpg`;
 
@@ -434,19 +436,157 @@ Anonymous shoppers get a real server-side cart tied to an HTTP-only session — 
 };
 
 // =============================================================================
+// 3 — Therapy in Kenya (counselling practice platform)
+// =============================================================================
+
+const THERAPY = {
+  project: {
+    id: "therapy-in-kenya",
+    title: "Therapy in Kenya",
+    description:
+      "Booking and practice platform for a Nairobi counsellor — guest booking without accounts, M-Pesa payments, SMS reminders and a realtime dashboard on Cloudflare Workers.",
+    src: hls(THERAPY_UID),
+    type: "video" as const,
+    poster: thumb(THERAPY_UID),
+    alt: "Therapy in Kenya — counselling booking platform",
+    url: "https://therapy-moffat-demo.vercel.app",
+    badges: [
+      { text: "Healthcare", position: "bottom-left" as const },
+      { text: "Payments & SMS", position: "bottom-right" as const },
+    ],
+    aspectRatio: "16/9",
+    order: 2,
+    isPublished: true,
+  },
+
+  details: {
+    heroImage: timg("therapy-home"),
+    heroAlt: "Therapy in Kenya homepage — 'A safe space to talk and heal'",
+    tagline: "Booking a first session should be the easy part",
+    videoUrl: hls(THERAPY_UID),
+    videoPoster: thumb(THERAPY_UID),
+    videoAlt: "Walkthrough of the Therapy in Kenya booking site",
+    client: "Private counselling practice, Nairobi",
+    industry: "Healthcare / Mental Health",
+    period: "2026",
+    year: 2026,
+    services: [
+      "Product & Booking Flow Design",
+      "Full-Stack Engineering",
+      "Payments Integration (M-Pesa)",
+      "SMS & Email Automation",
+      "Multi-Tenant Architecture",
+      "Realtime Systems",
+    ],
+    features: [
+      "Four-step guest booking — no account required",
+      "M-Pesa STK push with idempotent callbacks",
+      "Automated SMS and email reminders",
+      "Google Calendar sync per practice",
+      "Realtime dashboard over WebSockets",
+      "Multi-tenant with enforced isolation",
+    ],
+    colorPalette: [
+      { hex: "#2C3E50", name: "Deep Slate" },
+      { hex: "#EDE8E0", name: "Warm Sand" },
+      { hex: "#E8552A", name: "Accent Coral" },
+      { hex: "#FFFFFF", name: "Paper" },
+    ],
+    relatedProjectIds: ["webline-store", "webline-technologies"],
+    fullDescription: `## Overview
+
+A booking and practice-management platform for a Nairobi counsellor. Someone looking for help is rarely in the mood to create an account — so the whole flow is built around booking as a guest in four short steps, then paying with the phone already in their hand.
+
+Behind the public site sits a private dashboard for the practitioner and a Cloudflare Worker API shared by both.
+
+## Architecture
+
+| Layer | Technology |
+|-------|------------|
+| **Public site** | Next.js — booking, services, articles |
+| **Dashboard** | Next.js — schedule, clients, payments |
+| **API** | tRPC on Cloudflare Workers |
+| **Database** | D1 (SQLite) + Drizzle |
+| **Realtime** | Durable Object per practice, WebSocket Hibernation |
+| **Payments** | M-Pesa Daraja (STK push) |
+| **Messaging** | Africa's Talking SMS, Resend email |
+
+## Booking without accounts
+
+Choose a session type, pick a time, leave contact details, pay. Guests get a signed access link instead of a password, so they can manage the appointment later without ever registering.
+
+## Paid for by phone
+
+M-Pesa STK push prompts the client's handset directly. Daraja callbacks arrive more than once and out of order, so payment state is keyed on the checkout request and applied idempotently — a duplicate callback is a no-op, not a double charge.
+
+## Reminders that don't double-send
+
+A scheduled job sweeps upcoming appointments and sends SMS and email reminders. Overlapping runs are explicitly covered by tests, because a reminder job that fires twice is a message the client reads twice.`,
+  },
+
+  metrics: [
+    { value: "4 steps", label: "From landing page to booked", icon: "calendar-check" },
+    { value: "No account", label: "Required to book or pay", icon: "user-x" },
+    { value: "M-Pesa", label: "Paid on the phone in hand", icon: "smartphone" },
+  ],
+
+  challenges: [
+    {
+      title: "Two people, one slot",
+      content: `Two guests can hit the same 10:00 slot in the same second. A "is this taken?" check before writing is a race, not a guard — it just narrows the window.
+
+The application still does that check, because it produces a friendly message. Correctness comes from a **partial unique index** on organisation, date and time, scoped to active statuses only. The database refuses the second booking outright, and because the constraint ignores cancelled rows, a freed slot becomes bookable again with no cleanup job.`,
+      order: 0,
+    },
+    {
+      title: "Payment callbacks you don't control",
+      content: `M-Pesa's Daraja API delivers callbacks more than once, sometimes out of order, occasionally long after the client has closed the tab.
+
+Payment state is therefore keyed on the checkout request rather than assembled from the sequence of callbacks, and every transition is idempotent — replaying a callback changes nothing. Duplicate callbacks and out-of-order state changes are both covered by integration tests running against an isolated D1 instance.`,
+      order: 1,
+    },
+    {
+      title: "A live dashboard without polling",
+      content: `The practitioner's dashboard should show a new booking the moment it lands, without hammering the database on an interval.
+
+Each practice gets its own Durable Object acting as a notification hub. Producers send a lightweight poke, connected dashboards refetch authoritatively. It uses the **WebSocket Hibernation API**, so idle connections stay open without holding the object in memory — you pay for events, not for how long someone leaves the tab open.`,
+      order: 2,
+    },
+    {
+      title: "One codebase, separate practices",
+      content: `The platform is multi-tenant, and in a mental-health context a leak between tenants is not a bug you get to explain away.
+
+Every table carries an organisation, every query is scoped to it, and tenant isolation is asserted in the integration suite alongside the payment and booking cases rather than left to code review.`,
+      order: 3,
+    },
+  ],
+
+  gallery: [
+    { src: timg("therapy-homepage-full"), alt: "Full Therapy in Kenya homepage, header to footer", caption: "The complete homepage, top to bottom", galleryType: "feature" as const, width: 1400, height: 5924, deviceType: "full-width" as const, order: 0 },
+    { src: timg("therapy-home"), alt: "Homepage hero — 'A safe space to talk and heal'", caption: "A deliberately calm first impression", galleryType: "stack" as const, width: 2400, height: 1350, deviceType: "desktop" as const, order: 1 },
+    { src: timg("therapy-booking"), alt: "Four-step booking wizard with session types and pricing", caption: "Step one of four — session type, format and price up front", galleryType: "stack" as const, width: 2400, height: 1350, deviceType: "desktop" as const, order: 2 },
+    { src: timg("therapy-services"), alt: "Counselling services page", caption: "Services, explained without clinical jargon", galleryType: "stack" as const, width: 2400, height: 1350, deviceType: "desktop" as const, order: 3 },
+    { src: timg("therapy-find-help"), alt: "Find help for — routing by concern", caption: "Routing visitors by what they're facing", galleryType: "stack" as const, width: 2400, height: 1350, deviceType: "desktop" as const, order: 4 },
+    { src: timg("therapy-articles"), alt: "Articles and reflections listing", caption: "Long-form reflections build trust before the first session", galleryType: "stack" as const, width: 2400, height: 1350, deviceType: "desktop" as const, order: 5 },
+  ],
+};
+
+// =============================================================================
 // Mutation
 // =============================================================================
 
 type SeedProject = typeof WEBLINE_TECHNOLOGIES | typeof WEBLINE_STORE;
 
+// Collects *every* project sharing the slug, not just the first. An earlier
+// version used `.first()`, which left an orphaned duplicate behind whenever a
+// bad run had inserted the same slug twice.
 async function purgeProject(ctx: MutationCtx, slug: string) {
   const existing = await ctx.db
     .query("projects")
     .withIndex("by_project_id", (q) => q.eq("id", slug))
-    .first();
-  if (!existing) return 0;
+    .collect();
+  if (existing.length === 0) return 0;
 
-  const pid = existing._id as Id<"projects">;
   const tables = [
     "projectDetails",
     "projectMetrics",
@@ -454,18 +594,24 @@ async function purgeProject(ctx: MutationCtx, slug: string) {
     "projectGallery",
     "projectTestimonials",
   ] as const;
-  const rowsByTable = await Promise.all(
-    tables.map((table) =>
-      ctx.db
-        .query(table)
-        .withIndex("by_project", (q) => q.eq("projectId", pid))
-        .collect(),
-    ),
-  );
-  const rows = rowsByTable.flat();
-  await Promise.all(rows.map((row) => ctx.db.delete(row._id)));
-  await ctx.db.delete(pid);
-  return rows.length + 1;
+
+  let removed = 0;
+  for (const project of existing) {
+    const pid = project._id as Id<"projects">;
+    const rowsByTable = await Promise.all(
+      tables.map((table) =>
+        ctx.db
+          .query(table)
+          .withIndex("by_project", (q) => q.eq("projectId", pid))
+          .collect(),
+      ),
+    );
+    const rows = rowsByTable.flat();
+    await Promise.all(rows.map((row) => ctx.db.delete(row._id)));
+    await ctx.db.delete(pid);
+    removed += rows.length + 1;
+  }
+  return removed;
 }
 
 async function insertProject(ctx: MutationCtx, data: SeedProject, now: number) {
@@ -519,7 +665,11 @@ export const seedWeblineTechnologies = internalMutation({
     const log: string[] = [];
 
     if (args.dryRun) {
-      const slugs = ["webline-store", "webline-technologies"] as const;
+      const slugs = [
+        "webline-store",
+        "webline-technologies",
+        "therapy-in-kenya",
+      ] as const;
       const projects = await Promise.all(
         slugs.map((slug) =>
           ctx.db
@@ -537,13 +687,15 @@ export const seedWeblineTechnologies = internalMutation({
       return { dryRun: true, log };
     }
 
-    // Replace any previous versions of both slugs.
-    log.push(
-      `purged webline-store: ${await purgeProject(ctx, "webline-store")} docs`,
-    );
-    log.push(
-      `purged webline-technologies: ${await purgeProject(ctx, "webline-technologies")} docs`,
-    );
+    // Replace any previous versions of all three slugs. This must cover every
+    // seeded slug or a re-run leaves an orphaned duplicate behind.
+    for (const slug of [
+      "webline-store",
+      "webline-technologies",
+      "therapy-in-kenya",
+    ]) {
+      log.push(`purged ${slug}: ${await purgeProject(ctx, slug)} docs`);
+    }
 
     await insertProject(ctx, WEBLINE_TECHNOLOGIES, now);
     log.push("inserted webline-technologies (order 0)");
@@ -551,17 +703,23 @@ export const seedWeblineTechnologies = internalMutation({
     await insertProject(ctx, WEBLINE_STORE, now);
     log.push("inserted webline-store (order 1)");
 
-    // Renumber every remaining project sequentially after the two new entries.
-    // A relative bump (order + 2) collided whenever two projects already
-    // shared a slot, so assign absolute positions instead.
+    await insertProject(ctx, THERAPY, now);
+    log.push("inserted therapy-in-kenya (order 2)");
+
+    // Renumber every remaining project sequentially after the three seeded
+    // entries. A relative bump (order + n) collided whenever two projects
+    // already shared a slot, so assign absolute positions instead.
+    const SEEDED = new Set([
+      "webline-technologies",
+      "webline-store",
+      "therapy-in-kenya",
+    ]);
     const others = (await ctx.db.query("projects").collect())
-      .filter(
-        (p) => p.id !== "webline-technologies" && p.id !== "webline-store",
-      )
+      .filter((p) => !SEEDED.has(p.id))
       .sort((a, b) => a.order - b.order || a.createdAt - b.createdAt);
 
     const reorderings = others.flatMap((project, index) => {
-      const nextOrder = index + 2;
+      const nextOrder = index + SEEDED.size;
       return project.order === nextOrder ? [] : [{ project, nextOrder }];
     });
     await Promise.all(
