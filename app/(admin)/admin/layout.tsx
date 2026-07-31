@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { auth, clerkClient } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { ReactNode, Suspense } from "react";
@@ -32,6 +31,16 @@ async function DynamicAdminLayout({ children }: AdminLayoutProps) {
   if (process.env.NODE_ENV === "production") {
     redirect("/");
   }
+
+  // Imported dynamically, and deliberately *after* the production redirect.
+  //
+  // `@clerk/nextjs/server` throws `Missing publishableKey` on module
+  // initialisation rather than on first use. As a static import it landed in a
+  // shared server chunk, so a Clerk misconfiguration 500'd the entire public
+  // site — homepage, project pages, even /robots.txt — for an admin route that
+  // production can never reach anyway. Loading it here means the module only
+  // initialises when the admin panel actually renders, which is dev only.
+  const { auth, clerkClient } = await import("@clerk/nextjs/server");
 
   const [{ userId }, client] = await Promise.all([
     auth.protect(),
