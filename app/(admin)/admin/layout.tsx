@@ -28,18 +28,21 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 async function DynamicAdminLayout({ children }: AdminLayoutProps) {
   await connection();
 
-  if (process.env.NODE_ENV === "production") {
+  // Closed unless explicitly opened, matching the same gate in proxy.ts. Both
+  // must agree: the proxy decides whether Clerk runs at all, this decides
+  // whether the dashboard renders.
+  if (process.env.NEXT_PUBLIC_ENABLE_ADMIN !== "true") {
     redirect("/");
   }
 
-  // Imported dynamically, and deliberately *after* the production redirect.
+  // Imported dynamically, and deliberately *after* the gate above.
   //
   // `@clerk/nextjs/server` throws `Missing publishableKey` on module
   // initialisation rather than on first use. As a static import it landed in a
   // shared server chunk, so a Clerk misconfiguration 500'd the entire public
-  // site — homepage, project pages, even /robots.txt — for an admin route that
-  // production can never reach anyway. Loading it here means the module only
-  // initialises when the admin panel actually renders, which is dev only.
+  // site — homepage, project pages, even /robots.txt. Loading it here means
+  // the module only initialises when the dashboard is actually enabled and
+  // rendering, so the public site stays independent of Clerk configuration.
   const { auth, clerkClient } = await import("@clerk/nextjs/server");
 
   const [{ userId }, client] = await Promise.all([
