@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { isAllowedAdminEmail } from "@/convex/adminAllowlist";
 import { connection } from "next/server";
 import { ReactNode, Suspense } from "react";
 import { Button } from "@/components/ui/button";
@@ -51,7 +52,15 @@ async function DynamicAdminLayout({ children }: AdminLayoutProps) {
   ]);
   const user = await client.users.getUser(userId);
 
-  if (user.publicMetadata.role !== "admin") {
+  // Must be one of the allowlisted accounts AND carry the admin role. The same
+  // allowlist guards every Convex admin function, so a signed-in non-admin
+  // could not mutate anything even if this check were bypassed — but stopping
+  // them here avoids rendering a dashboard where every action fails.
+  const email =
+    user.primaryEmailAddress?.emailAddress ??
+    user.emailAddresses[0]?.emailAddress;
+
+  if (!isAllowedAdminEmail(email) || user.publicMetadata.role !== "admin") {
     redirect("/");
   }
 

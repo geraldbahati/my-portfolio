@@ -1,6 +1,7 @@
 import { QueryCtx, MutationCtx, ActionCtx } from "./_generated/server";
 import { query } from "./_generated/server";
 import { v } from "convex/values";
+import { isAllowedAdminEmail } from "./adminAllowlist";
 
 // Type for user metadata with role
 type UserMetadata = {
@@ -39,12 +40,19 @@ function isDevelopment(): boolean {
  * Admin access only works in development environment
  */
 export async function requireAdmin(ctx: AnyCtx) {
-  // First check if we're in development
+  // First check that admin access is enabled at all
   if (!isDevelopment()) {
-    throw new Error("Admin access is only available in development");
+    throw new Error("Admin access is not enabled on this deployment");
   }
 
   const identity = await requireAuth(ctx);
+
+  // The account must be on the allowlist. This is the authoritative check:
+  // role metadata can be granted from the Clerk dashboard, but the allowlist
+  // only changes through a reviewed commit.
+  if (!isAllowedAdminEmail(identity.email)) {
+    throw new Error("Unauthorized: Admin access required");
+  }
 
   // Check if user has admin role in their public metadata
   const publicMetadata = identity.publicMetadata as UserMetadata | undefined;
@@ -67,6 +75,7 @@ export async function isAdmin(ctx: AnyCtx): Promise<boolean> {
 
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) return false;
+  if (!isAllowedAdminEmail(identity.email)) return false;
 
   const publicMetadata = identity.publicMetadata as UserMetadata | undefined;
   return publicMetadata?.role === "admin";
