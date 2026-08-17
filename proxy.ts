@@ -1,15 +1,21 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Production does not expose the development-only admin dashboard, so it can
-// reject the route without initializing Clerk or requiring Clerk credentials.
-// In development, Clerk runs only for /admin so auth() is available to the
-// resource-level checks in the admin layout.
-const adminProxy =
-  process.env.NODE_ENV === "production"
-    ? (request: NextRequest) =>
-        NextResponse.redirect(new URL("/", request.url))
-    : clerkMiddleware();
+// The admin dashboard is closed unless NEXT_PUBLIC_ENABLE_ADMIN is explicitly
+// "true", so the safe default survives a missing or misspelled variable. When
+// it is closed the route is rejected here, without initializing Clerk or
+// requiring Clerk credentials — which is what keeps a Clerk misconfiguration
+// from being able to affect the public site.
+//
+// When open, Clerk runs for /admin only, so auth() is available to the
+// resource-level checks in the admin layout. Authorization is still enforced
+// again in the layout (admin role) and at every Convex admin function through
+// requireAdmin().
+const adminEnabled = process.env.NEXT_PUBLIC_ENABLE_ADMIN === "true";
+
+const adminProxy = adminEnabled
+  ? clerkMiddleware()
+  : (request: NextRequest) => NextResponse.redirect(new URL("/", request.url));
 
 export default adminProxy;
 

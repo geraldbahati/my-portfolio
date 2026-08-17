@@ -4,19 +4,35 @@ import { withSentryConfig } from "@sentry/nextjs";
 const isDevelopment = process.env.NODE_ENV === "development";
 
 /**
+ * Clerk origins that must be allowed through the CSP.
+ *
+ * `*.clerk.accounts.dev` and `*.clerk.com` cover development instances. A
+ * production instance on a custom domain serves clerk-js from its own
+ * Frontend API host instead — `clerk.geraldbahati.dev` — which those wildcards
+ * do NOT match. Omitting it blocks clerk.browser.js outright, so ClerkProvider
+ * never initialises and the admin dashboard hangs on "Verifying admin session".
+ */
+const clerkOrigins = [
+  "https://*.clerk.accounts.dev",
+  "https://*.clerk.com",
+  "https://clerk.geraldbahati.dev", // production Frontend API
+  "https://accounts.geraldbahati.dev", // production account portal
+].join(" ");
+
+/**
  * A static CSP preserves Next.js static rendering and edge caching. A
  * nonce-based policy would force every page to render dynamically, which is
  * the wrong performance trade-off for a public portfolio.
  */
 const contentSecurityPolicy = `
   default-src 'self';
-  script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ""} https://*.clerk.accounts.dev https://*.clerk.com;
+  script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ""} ${clerkOrigins};
   style-src 'self' 'unsafe-inline';
   img-src 'self' blob: data: https:;
   font-src 'self' data:;
   media-src 'self' blob: https://media.geraldbahati.dev https://customer-pdxnd9di8ybc2kur.cloudflarestream.com;
-  connect-src 'self' https://*.convex.cloud wss://*.convex.cloud https://*.clerk.accounts.dev https://*.clerk.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.ingest.de.sentry.io https://eu.i.posthog.com https://eu-assets.i.posthog.com https://media.geraldbahati.dev https://customer-pdxnd9di8ybc2kur.cloudflarestream.com;
-  frame-src 'self' https://*.clerk.accounts.dev https://*.clerk.com https://customer-pdxnd9di8ybc2kur.cloudflarestream.com;
+  connect-src 'self' https://*.convex.cloud wss://*.convex.cloud ${clerkOrigins} https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.ingest.de.sentry.io https://eu.i.posthog.com https://eu-assets.i.posthog.com https://media.geraldbahati.dev https://customer-pdxnd9di8ybc2kur.cloudflarestream.com;
+  frame-src 'self' ${clerkOrigins} https://customer-pdxnd9di8ybc2kur.cloudflarestream.com;
   worker-src 'self' blob:;
   object-src 'none';
   base-uri 'self';

@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { auth, clerkClient } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { isAllowedAdminEmail } from "@/convex/adminAllowlist";
 import { connection } from "next/server";
 import { ReactNode, Suspense } from "react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,23 @@ interface AdminLayoutProps {
   children: ReactNode;
 }
 
+/**
+ * `@clerk/nextjs/server` throws `Missing publishableKey` on module
+ * initialisation rather than on first use. As a static import it landed in a
+ * shared server chunk, so a Clerk misconfiguration 500'd the entire public site
+ * — homepage, project pages, even /robots.txt. Deferring it to a call means the
+ * module only initialises when the dashboard is actually enabled and rendering,
+ * so the public site stays independent of Clerk configuration.
+ *
+ * Kept in a plain function rather than inline in the layout because React
+ * Compiler cannot lower `import()` inside a component body — see
+ * `react-hooks/todo`, "(BuildHIR::lowerExpression) Handle Import expressions".
+ * Calling out to a non-component keeps the same laziness and compiles.
+ */
+function loadClerkServer() {
+  return import("@clerk/nextjs/server");
+}
+
 export default function AdminLayout({ children }: AdminLayoutProps) {
   return (
     <Suspense fallback={null}>
@@ -29,9 +46,16 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 async function DynamicAdminLayout({ children }: AdminLayoutProps) {
   await connection();
 
-  if (process.env.NODE_ENV === "production") {
+  // Closed unless explicitly opened, matching the same gate in proxy.ts. Both
+  // must agree: the proxy decides whether Clerk runs at all, this decides
+  // whether the dashboard renders.
+  if (process.env.NEXT_PUBLIC_ENABLE_ADMIN !== "true") {
     redirect("/");
   }
+
+  // Loaded deliberately *after* the gate above, so a Clerk misconfiguration
+  // cannot take down the public site. See `loadClerkServer`.
+  const { auth, clerkClient } = await loadClerkServer();
 
   const [{ userId }, client] = await Promise.all([
     auth.protect(),
@@ -39,7 +63,15 @@ async function DynamicAdminLayout({ children }: AdminLayoutProps) {
   ]);
   const user = await client.users.getUser(userId);
 
-  if (user.publicMetadata.role !== "admin") {
+  // Must be one of the allowlisted accounts AND carry the admin role. The same
+  // allowlist guards every Convex admin function, so a signed-in non-admin
+  // could not mutate anything even if this check were bypassed — but stopping
+  // them here avoids rendering a dashboard where every action fails.
+  const email =
+    user.primaryEmailAddress?.emailAddress ??
+    user.emailAddresses[0]?.emailAddress;
+
+  if (!isAllowedAdminEmail(email) || user.publicMetadata.role !== "admin") {
     redirect("/");
   }
 
