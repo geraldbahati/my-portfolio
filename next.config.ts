@@ -112,6 +112,22 @@ const nextConfig: NextConfig = {
   skipTrailingSlashRedirect: true,
 
   /**
+   * `/privacy-policy` never existed as a route — an early version of the contact
+   * form linked there instead of `/privacy` (shipped in 0f9fcc8, corrected in
+   * d76b19b). Google crawled the broken link and still reports the URL as a 404
+   * in Search Console, so keep it redirecting permanently to the real page.
+   */
+  async redirects() {
+    return [
+      {
+        source: "/privacy-policy",
+        destination: "/privacy",
+        permanent: true,
+      },
+    ];
+  },
+
+  /**
    * First-party reverse proxy for PostHog.
    *
    * Tracker blockers drop requests to `*.i.posthog.com`, which silently kills
