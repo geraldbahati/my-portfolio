@@ -688,14 +688,20 @@ export const seedWeblineTechnologies = internalMutation({
     }
 
     // Replace any previous versions of all three slugs. This must cover every
-    // seeded slug or a re-run leaves an orphaned duplicate behind.
-    for (const slug of [
+    // seeded slug or a re-run leaves an orphaned duplicate behind. The slugs are
+    // distinct, so the purges are independent and run together; the log is built
+    // afterwards to keep its order stable regardless of completion order.
+    const purgeSlugs = [
       "webline-store",
       "webline-technologies",
       "therapy-in-kenya",
-    ]) {
-      log.push(`purged ${slug}: ${await purgeProject(ctx, slug)} docs`);
-    }
+    ] as const;
+    const purgedCounts = await Promise.all(
+      purgeSlugs.map((slug) => purgeProject(ctx, slug)),
+    );
+    purgeSlugs.forEach((slug, index) => {
+      log.push(`purged ${slug}: ${purgedCounts[index]} docs`);
+    });
 
     await insertProject(ctx, WEBLINE_TECHNOLOGIES, now);
     log.push("inserted webline-technologies (order 0)");

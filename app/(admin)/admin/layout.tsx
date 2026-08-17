@@ -18,6 +18,23 @@ interface AdminLayoutProps {
   children: ReactNode;
 }
 
+/**
+ * `@clerk/nextjs/server` throws `Missing publishableKey` on module
+ * initialisation rather than on first use. As a static import it landed in a
+ * shared server chunk, so a Clerk misconfiguration 500'd the entire public site
+ * — homepage, project pages, even /robots.txt. Deferring it to a call means the
+ * module only initialises when the dashboard is actually enabled and rendering,
+ * so the public site stays independent of Clerk configuration.
+ *
+ * Kept in a plain function rather than inline in the layout because React
+ * Compiler cannot lower `import()` inside a component body — see
+ * `react-hooks/todo`, "(BuildHIR::lowerExpression) Handle Import expressions".
+ * Calling out to a non-component keeps the same laziness and compiles.
+ */
+function loadClerkServer() {
+  return import("@clerk/nextjs/server");
+}
+
 export default function AdminLayout({ children }: AdminLayoutProps) {
   return (
     <Suspense fallback={null}>
@@ -36,15 +53,9 @@ async function DynamicAdminLayout({ children }: AdminLayoutProps) {
     redirect("/");
   }
 
-  // Imported dynamically, and deliberately *after* the gate above.
-  //
-  // `@clerk/nextjs/server` throws `Missing publishableKey` on module
-  // initialisation rather than on first use. As a static import it landed in a
-  // shared server chunk, so a Clerk misconfiguration 500'd the entire public
-  // site — homepage, project pages, even /robots.txt. Loading it here means
-  // the module only initialises when the dashboard is actually enabled and
-  // rendering, so the public site stays independent of Clerk configuration.
-  const { auth, clerkClient } = await import("@clerk/nextjs/server");
+  // Loaded deliberately *after* the gate above, so a Clerk misconfiguration
+  // cannot take down the public site. See `loadClerkServer`.
+  const { auth, clerkClient } = await loadClerkServer();
 
   const [{ userId }, client] = await Promise.all([
     auth.protect(),
