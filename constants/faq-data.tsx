@@ -5,7 +5,7 @@ function textFaq(question: string, answer: string): FaqItem {
 }
 
 const PROCESS_ANSWER =
-  "I start by understanding the business context, user needs, and technical constraints before writing any code. I design the system upfront — data models, API contracts, caching layers — so the team has a clear technical direction. I ship in small, testable increments with regular code reviews and feedback loops. I take features from spec to production and stick around for monitoring, performance tuning, and iteration.";
+  "Understanding the Problem: I start by understanding the business context, user needs, and technical constraints before writing any code. Architecture & Planning: I design the system upfront — data models, API contracts, caching layers — so the team has a clear technical direction. Iterative Delivery: I ship in small, testable increments with regular code reviews and feedback loops. Ownership & Follow-through: I take features from spec to production and stick around for monitoring, performance tuning, and iteration.";
 
 export const FAQ_DATA: FaqItem[] = [
   {

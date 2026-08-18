@@ -3,9 +3,6 @@ import { api } from "@/convex/_generated/api";
 import { renderLlmsTxt } from "@/lib/seo";
 import { projects as fallbackProjects } from "@/app/(root)/projects/data";
 
-export const dynamic = "force-static";
-export const revalidate = 86400;
-
 async function getLlmsTxtProjects() {
   if (!process.env.NEXT_PUBLIC_CONVEX_URL) {
     return fallbackProjects.map((project) => ({
