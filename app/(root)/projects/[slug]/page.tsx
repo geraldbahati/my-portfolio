@@ -7,7 +7,8 @@ import dynamic from "next/dynamic";
 import { api } from "@/convex/_generated/api";
 import {
   generateBreadcrumbSchema,
-  PERSON_ID,
+  pageMetadata,
+  projectWorkNode,
   SITE_NAME,
   SITE_URL,
 } from "@/lib/seo";
@@ -98,51 +99,35 @@ export async function generateMetadata({
   const { project, details } = data;
   const projectTitle = project.title ?? "Project";
 
-  // Build description ensuring at least 100 characters for social media
   const baseDescription =
-    details?.tagline ?? project.description ?? `Explore ${projectTitle}`;
+    details?.tagline ?? project.description ?? `What I shipped for ${projectTitle}`;
   const projectDescription =
     baseDescription.length >= 100
       ? baseDescription
-      : `${baseDescription}. A project by Gerald Bahati showcasing modern web development, creative design, and digital solutions.`;
+      : `${baseDescription}. A case study of production work I shipped — architecture, constraints, and the result.`;
 
   const projectPath = `/projects/${slug}`;
 
-  // Build keywords from project data
   const keywords = [
     projectTitle,
     details?.industry,
     ...(details?.services ?? []),
     "Gerald Bahati",
-    "portfolio project",
     "case study",
+    "what I shipped",
   ].filter((k): k is string => Boolean(k));
 
-  return {
-    title: projectTitle,
+  return pageMetadata({
+    title: `${projectTitle}: What I Shipped`,
     description: projectDescription,
+    path: projectPath,
     keywords,
-    openGraph: {
-      type: "article",
-      siteName: SITE_NAME,
-      title: projectTitle,
-      description: projectDescription,
-      url: projectPath,
-      publishedTime: project._creationTime
-        ? new Date(project._creationTime).toISOString()
-        : undefined,
-      authors: ["Gerald Bahati"],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: projectTitle,
-      description: projectDescription,
-      creator: "@gerald_baha",
-    },
-    alternates: {
-      canonical: projectPath,
-    },
-  };
+    ogType: "article",
+    publishedTime: project._creationTime
+      ? new Date(project._creationTime).toISOString()
+      : undefined,
+    authors: [SITE_NAME],
+  });
 }
 
 // Cached data fetching function
@@ -198,31 +183,32 @@ async function ProjectContent({ slug }: { slug: string }) {
     { name: projectTitle, url: projectUrl },
   ]);
 
-  const projectLd = {
-    "@context": "https://schema.org",
-    "@type": "CreativeWork",
+  const projectLd = projectWorkNode({
+    slug,
     name: projectTitle,
     description: details?.tagline ?? project?.description ?? project?.alt,
-    url: projectUrl,
-    author: {
-      "@type": "Person",
-      "@id": PERSON_ID,
-      name: "Gerald Bahati",
-      url: SITE_URL,
-    },
-    ...(project?.poster && { image: project.poster }),
-    ...(details?.industry && { genre: details.industry }),
-    ...(details?.services && { keywords: details.services.join(", ") }),
-    ...(project?._creationTime && {
-      dateCreated: new Date(project._creationTime).toISOString(),
-    }),
-  };
+    image: project?.poster,
+    dateCreated: project?._creationTime,
+    dateModified: project?.updatedAt,
+    keywords: details?.services,
+    genre: details?.industry,
+    videoUrl: project?.type === "video" ? project.src : undefined,
+    videoPoster: project?.poster ?? details?.videoPoster,
+    testimonial: testimonial
+      ? {
+          quote: testimonial.quote,
+          authorName: testimonial.authorName,
+          authorRole: testimonial.authorRole,
+          authorCompany: testimonial.authorCompany,
+        }
+      : null,
+  });
 
   return (
     <>
       <JsonLdScript data={projectLd} />
       <JsonLdScript data={breadcrumbLd} />
-      <main className="min-h-screen bg-background">
+      <main id="main-content" className="min-h-screen bg-background">
         <ProjectHero project={project} details={details} />
 
         <ProjectInfo details={details} />

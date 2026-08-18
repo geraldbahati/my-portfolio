@@ -1,10 +1,10 @@
 import { PrivacyPolicy } from "@/components/PrivacyPolicy";
 import { getPrivacyContent } from "@/lib/content";
 import {
-  generateStructuredData,
   generateBreadcrumbSchema,
+  generateStructuredData,
   PERSON_ID,
-  SITE_NAME,
+  privacyMetadata,
   SITE_URL,
 } from "@/lib/seo";
 import type { Metadata } from "next";
@@ -13,44 +13,7 @@ import { connection } from "next/server";
 import { PageAnalytics } from "@/components/PageAnalytics";
 import { JsonLdScript } from "@/components/JsonLdScript";
 
-export const metadata: Metadata = {
-  title: "Privacy Policy - Data Protection & Security",
-  description:
-    "Learn how we collect, use, and protect your personal information. Our privacy policy outlines our commitment to data security, GDPR compliance, and transparent data handling practices.",
-  keywords: [
-    "privacy policy",
-    "data protection",
-    "GDPR",
-    "personal information",
-    "data security",
-  ],
-  robots: {
-    index: false,
-    follow: true,
-    googleBot: {
-      index: false,
-      follow: true,
-    },
-  },
-  alternates: {
-    canonical: "/privacy",
-  },
-  openGraph: {
-    siteName: SITE_NAME,
-    title: "Privacy Policy - Data Protection & Security | Gerald Bahati",
-    description:
-      "Learn how we collect, use, and protect your personal information. Our privacy policy outlines our commitment to data security and GDPR compliance.",
-    url: "/privacy",
-    locale: "en_KE",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Privacy Policy - Data Protection & Security | Gerald Bahati",
-    description:
-      "Learn how we collect, use, and protect your personal information. Our privacy policy outlines our commitment to data security and GDPR compliance.",
-  },
-};
+export const metadata: Metadata = privacyMetadata;
 
 // Skeleton component for inline Suspense fallback
 function PrivacyContentSkeleton() {

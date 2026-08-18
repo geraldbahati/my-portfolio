@@ -107,10 +107,13 @@ export function PrivacyPolicy({
 
       {/* Main Content - Add top padding to account for fixed navbar */}
       <main
-        id="privacy-content"
+        id="main-content"
         className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pt-32 relative print:py-8 print:pt-8"
       >
-        <article className="bg-card rounded-3xl shadow-xl border border-border p-8 sm:p-12 prose prose-lg max-w-none dark:prose-invert print:rounded-none print:shadow-none print:border-none print:bg-white print:p-8">
+        <article
+          id="privacy-content"
+          className="bg-card rounded-3xl shadow-xl border border-border p-8 sm:p-12 prose prose-lg max-w-none dark:prose-invert print:rounded-none print:shadow-none print:border-none print:bg-white print:p-8"
+        >
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             rehypePlugins={[

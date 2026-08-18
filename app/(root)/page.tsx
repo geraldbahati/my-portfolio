@@ -14,16 +14,8 @@ import { SectionDivider } from "@/components/section-divider";
 import CombinedProjectsFaqWrapper from "@/sections/combined-projects-faq-wrapper";
 import { PageAnalytics } from "@/components/PageAnalytics";
 import { JsonLdScript } from "@/components/JsonLdScript";
-import {
-  PERSON_ID,
-  PROFILE_PAGE_ID,
-  SITE_DESCRIPTION,
-  SITE_NAME,
-  SITE_TITLE,
-  SITE_URL,
-  SOCIAL_PROFILES,
-  WEBSITE_ID,
-} from "@/lib/seo";
+import { FAQ_ENTRIES } from "@/constants/faq-data";
+import { homeMetadata, homepageGraph } from "@/lib/seo";
 
 // Below-fold: lazy-loaded client components for code-splitting
 const InfoSection = dynamic(() => import("@/sections/info"), {
@@ -33,115 +25,9 @@ const ContactSection = dynamic(() => import("@/sections/contact"), {
   loading: () => <div className="h-[60vh] bg-gray-950" />,
 });
 
-// SEO Metadata
-export const metadata: Metadata = {
-  title: {
-    absolute: SITE_TITLE,
-  },
-  description: SITE_DESCRIPTION,
-  keywords: [
-    "Gerald Bahati",
-    "Gerald Bahati software engineer",
-    "Gerald Bahati portfolio",
-    "Nairobi software engineer",
-    "Kenya software engineer",
-    "product software engineer",
-    "full-stack software engineer",
-    "software engineer",
-    "portfolio",
-    "Next.js",
-    "React",
-    "TypeScript",
-    "Spring Boot",
-    "Go",
-    "e-commerce",
-    "fintech",
-  ],
-  alternates: {
-    canonical: "/",
-  },
-  openGraph: {
-    siteName: SITE_NAME,
-    title: SITE_TITLE,
-    description: SITE_DESCRIPTION,
-    type: "website",
-    locale: "en_KE",
-    url: "/",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: SITE_TITLE,
-    description: SITE_DESCRIPTION,
-    creator: "@gerald_baha",
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
-  },
-};
+export const metadata: Metadata = homeMetadata;
 
-const homepageLd = {
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "WebSite",
-      "@id": WEBSITE_ID,
-      name: SITE_NAME,
-      alternateName: "Gerald Bahati Portfolio",
-      url: SITE_URL,
-      description: SITE_DESCRIPTION,
-      inLanguage: "en-KE",
-      publisher: { "@id": PERSON_ID },
-    },
-    {
-      "@type": "ProfilePage",
-      "@id": PROFILE_PAGE_ID,
-      url: SITE_URL,
-      name: SITE_TITLE,
-      description: SITE_DESCRIPTION,
-      inLanguage: "en-KE",
-      isPartOf: { "@id": WEBSITE_ID },
-      mainEntity: { "@id": PERSON_ID },
-    },
-    {
-      "@type": "Person",
-      "@id": PERSON_ID,
-      name: SITE_NAME,
-      url: SITE_URL,
-      image: {
-        "@type": "ImageObject",
-        url: `${SITE_URL}/hero-image.webp`,
-      },
-      jobTitle: "Full-Stack Software Engineer",
-      description: SITE_DESCRIPTION,
-      email: "contact@geraldbahati.dev",
-      address: {
-        "@type": "PostalAddress",
-        addressLocality: "Nairobi",
-        addressCountry: "KE",
-      },
-      knowsAbout: [
-        "Full-stack software engineering",
-        "React",
-        "Next.js",
-        "TypeScript",
-        "Go",
-        "Java",
-        "E-commerce platforms",
-        "Real-time systems",
-      ],
-      sameAs: SOCIAL_PROFILES,
-      mainEntityOfPage: { "@id": PROFILE_PAGE_ID },
-    },
-  ],
-};
+const homepageLd = homepageGraph(FAQ_ENTRIES);
 
 /** Static homepage shell; below-fold sections retain their own fallbacks. */
 export default function Home() {

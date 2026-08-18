@@ -52,7 +52,10 @@ export default function NotFoundContent() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-hero-bg flex items-center justify-center px-6 relative overflow-hidden">
+    <main
+      id="main-content"
+      className="min-h-screen bg-hero-bg flex items-center justify-center px-6 relative overflow-hidden"
+    >
       {/* Grid Pattern Background */}
       <GridPattern
         className="absolute inset-0 z-0"

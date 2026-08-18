@@ -7,48 +7,11 @@ import { JsonLdScript } from "@/components/JsonLdScript";
 import imprintData from "@/constants/imprint.json";
 import {
   generateBreadcrumbSchema,
-  SITE_NAME,
+  imprintMetadata,
   SITE_URL,
 } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Imprint - Legal Notice & Business Information",
-  description:
-    "Legal notice and imprint information for Gerald Bahati's portfolio. Find business contact details, responsible parties, and regulatory compliance information as required by law.",
-  keywords: [
-    "imprint",
-    "legal notice",
-    "Gerald Bahati",
-    "business information",
-    "contact details",
-  ],
-  robots: {
-    index: false,
-    follow: true,
-    googleBot: {
-      index: false,
-      follow: true,
-    },
-  },
-  alternates: {
-    canonical: "/imprint",
-  },
-  openGraph: {
-    siteName: SITE_NAME,
-    title: "Imprint - Legal Notice & Business Information | Gerald Bahati",
-    description:
-      "Legal notice and imprint information for Gerald Bahati's portfolio. Find business contact details, responsible parties, and regulatory compliance information.",
-    type: "website",
-    url: "/imprint",
-    locale: "en_KE",
-  },
-  twitter: {
-    title: "Imprint - Legal Notice & Business Information | Gerald Bahati",
-    description:
-      "Legal notice and imprint information for Gerald Bahati's portfolio. Find business contact details, responsible parties, and regulatory compliance information.",
-    card: "summary_large_image",
-  },
-};
+export const metadata: Metadata = imprintMetadata;
 
 export default function ImprintPage() {
   const breadcrumbLd = generateBreadcrumbSchema([
@@ -59,7 +22,10 @@ export default function ImprintPage() {
   return (
     <>
       <JsonLdScript data={breadcrumbLd} />
-      <main className="min-h-screen pt-32 pb-20 px-6 lg:px-12 bg-background">
+      <main
+        id="main-content"
+        className="min-h-screen pt-32 pb-20 px-6 lg:px-12 bg-background"
+      >
         <div className="max-w-3xl mx-auto">
           {/* Header - Static content */}
           <header className="mb-16">

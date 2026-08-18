@@ -7,44 +7,13 @@ import { PageAnalytics } from "@/components/PageAnalytics";
 import { JsonLdScript } from "@/components/JsonLdScript";
 import {
   generateBreadcrumbSchema,
-  SITE_NAME,
+  PAGE_COPY,
+  projectListNode,
+  projectsIndexMetadata,
   SITE_URL,
 } from "@/lib/seo";
 
-// SEO Metadata
-export const metadata: Metadata = {
-  title: {
-    absolute: "Software Engineering Projects | Gerald Bahati",
-  },
-  description:
-    "Explore Gerald Bahati's software engineering projects across e-commerce, real-time systems, dashboards, AI integrations, React, Next.js, TypeScript, Go, and Java.",
-  keywords: [
-    "portfolio",
-    "projects",
-    "web development",
-    "interactive design",
-    "UI/UX",
-    "digital solutions",
-    "creative development",
-  ],
-  openGraph: {
-    siteName: SITE_NAME,
-    title: "Software Engineering Projects | Gerald Bahati",
-    description:
-      "Explore my portfolio of creative digital projects including web development, UI/UX design, and innovative digital solutions with sustainable results.",
-    type: "website",
-    url: "/projects",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Software Engineering Projects | Gerald Bahati",
-    description:
-      "Explore my portfolio of creative digital projects including web development, UI/UX design, and innovative digital solutions with sustainable results.",
-  },
-  alternates: {
-    canonical: "/projects",
-  },
-};
+export const metadata: Metadata = projectsIndexMetadata;
 
 /**
  * Projects Grid Component - Displays the grid of projects
@@ -62,28 +31,7 @@ async function ProjectsContent() {
   const projects = await getCachedProjects();
 
   // Generate JSON-LD structured data for SEO
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
-    name: "Portfolio Projects",
-    description:
-      "A curated selection of projects showcasing creative digital solutions",
-    url: `${SITE_URL}/projects`,
-    numberOfItems: projects.length,
-    itemListElement: projects.map((project, index) => ({
-      "@type": "ListItem",
-      position: index + 1,
-      item: {
-        "@type": "CreativeWork",
-        "@id": `${SITE_URL}/projects/${project.id}`,
-        name: project.title,
-        description: project.description || project.alt,
-        image: project.poster || project.src,
-        url: `${SITE_URL}/projects/${project.id}`,
-        keywords: project.badges?.map((b) => b.text).join(", "),
-      },
-    })),
-  };
+  const structuredData = projectListNode(projects);
 
   return (
     <>
@@ -136,7 +84,7 @@ export default function ProjectsPage() {
   ]);
 
   return (
-    <main className="min-h-screen bg-background">
+    <main id="main-content" className="min-h-screen bg-background">
       <JsonLdScript data={breadcrumbLd} />
       <PageAnalytics />
       {/* Page Header - Static, always pre-rendered */}
@@ -145,16 +93,11 @@ export default function ProjectsPage() {
           className="text-4xl lg:text-6xl font-bold mb-6 text-foreground"
           style={{ fontSize: "2.25rem" }}
         >
-          Projects
+          Projects I shipped
         </h1>
         <p className="text-base text-muted-foreground max-w-3xl leading-relaxed">
-          Creative digital advancement – get to know my approach and style
-          through a selection of my projects. Each project represents{" "}
-          <strong className="font-semibold text-foreground">
-            quality, well-thought-out structures, and sustainable digital
-            solutions
-          </strong>{" "}
-          that deliver measurable results.
+          {PAGE_COPY.projects.description} Each case study covers the problem,
+          the architecture, and the result.
         </p>
       </header>
 
