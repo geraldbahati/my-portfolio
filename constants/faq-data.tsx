@@ -1,8 +1,16 @@
 import { FaqItem } from "@/components/faq-accordion";
 
+function textFaq(question: string, answer: string): FaqItem {
+  return { question, answer, answerText: answer };
+}
+
+const PROCESS_ANSWER =
+  "I start by understanding the business context, user needs, and technical constraints before writing any code. I design the system upfront — data models, API contracts, caching layers — so the team has a clear technical direction. I ship in small, testable increments with regular code reviews and feedback loops. I take features from spec to production and stick around for monitoring, performance tuning, and iteration.";
+
 export const FAQ_DATA: FaqItem[] = [
   {
     question: "HOW DOES WORKING WITH YOU LOOK LIKE?",
+    answerText: PROCESS_ANSWER,
     answer: (
       <div className="space-y-3 text-foreground-muted">
         <ul className="space-y-3">
@@ -56,24 +64,25 @@ export const FAQ_DATA: FaqItem[] = [
       </div>
     ),
   },
-  {
-    question: "WHY SHOULD COMPANIES HIRE YOU?",
-    answer:
-      "I bring a product-first engineering mindset with production experience across e-commerce, real-time systems, and AI integrations. I don't just write code — I build scalable systems that solve business problems. From edge-first e-commerce platforms with multi-layer caching to M-Pesa payment integrations, I deliver software that drives measurable outcomes.",
-  },
-  {
-    question: "WHAT IS YOUR TECH STACK?",
-    answer:
-      "I specialize in TypeScript/React/Next.js for frontend, with backend expertise in Node.js, Spring Boot, Go, and Django. I architect real-time systems using WebSockets and Redis Pub/Sub, and leverage Cloud infrastructure (AWS, Cloudflare) with modern databases (PostgreSQL, MongoDB, Convex). I also integrate AI/LLM capabilities for intelligent product features.",
-  },
-  {
-    question: "WHAT TYPES OF PROJECTS HAVE YOU DELIVERED?",
-    answer:
-      "I've shipped production e-commerce platforms with Stripe and M-Pesa payments, fintech applications with secure transaction handling, AI-native collaboration platforms with Generative UI, distributed real-time chat systems supporting 10,000+ concurrent connections with sub-50ms latency, and digital transformation solutions for electoral processes serving 500+ users.",
-  },
-  {
-    question: "ARE YOU OPEN TO REMOTE OR HYBRID ROLES?",
-    answer:
-      "Yes. I'm based in Nairobi, Kenya, and I'm open to fully remote positions or hybrid arrangements. I've worked effectively across time zones and async workflows, and I'm comfortable with tools like Slack, Linear, GitHub, and Notion for team collaboration.",
-  },
+  textFaq(
+    "WHY SHOULD COMPANIES HIRE YOU?",
+    "I bring a product-first engineering mindset with production experience across e-commerce, real-time systems, and AI integrations. I don't just write code — I build scalable systems that solve business problems. From edge-first e-commerce platforms with multi-layer caching to M-Pesa payment integrations, I deliver software that drives measurable outcomes.",
+  ),
+  textFaq(
+    "WHAT IS YOUR TECH STACK?",
+    "I specialize in TypeScript/React/Next.js for frontend, with backend expertise in Node.js, Spring Boot, Go, and Django. I architect real-time systems using WebSockets and Redis Pub/Sub, and leverage Cloud infrastructure (AWS, Cloudflare) with modern databases (PostgreSQL, MongoDB, Convex). I also integrate AI/LLM capabilities for intelligent product features.",
+  ),
+  textFaq(
+    "WHAT TYPES OF PROJECTS HAVE YOU DELIVERED?",
+    "I've shipped production e-commerce platforms with Stripe and M-Pesa payments, fintech applications with secure transaction handling, AI-native collaboration platforms with Generative UI, distributed real-time chat systems supporting 10,000+ concurrent connections with sub-50ms latency, and digital transformation solutions for electoral processes serving 500+ users.",
+  ),
+  textFaq(
+    "ARE YOU OPEN TO REMOTE OR HYBRID ROLES?",
+    "Yes. I'm based in Nairobi, Kenya, and I'm open to fully remote positions or hybrid arrangements. I've worked effectively across time zones and async workflows, and I'm comfortable with tools like Slack, Linear, GitHub, and Notion for team collaboration.",
+  ),
 ];
+
+export const FAQ_ENTRIES = FAQ_DATA.map(({ question, answerText }) => ({
+  question,
+  answer: answerText,
+}));

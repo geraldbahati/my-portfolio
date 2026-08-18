@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, LazyMotion, domAnimation, m } from "motion/react";
+import { LazyMotion, domAnimation, m } from "motion/react";
 import { useState } from "react";
 import { trackFaqOpened } from "@/lib/analytics";
 
@@ -8,6 +8,8 @@ import { trackFaqOpened } from "@/lib/analytics";
 export interface FaqItem {
   question: string;
   answer: string | React.ReactNode;
+  /** Plain-text answer used by JSON-LD. Must match the visible answer. */
+  answerText: string;
 }
 
 export interface FaqAccordionProps {
@@ -89,6 +91,7 @@ export function FaqAccordion({
             >
               <button
                 type="button"
+                id={`faq-question-${index}`}
                 onClick={() => toggleAccordion(index)}
                 className="flex w-full items-center justify-between py-6 text-left transition-colors hover:text-gray-300"
                 aria-expanded={openIndex === index}
@@ -119,34 +122,29 @@ export function FaqAccordion({
                 </m.div>
               </button>
 
-              <AnimatePresence>
-                {openIndex === index && (
-                  <m.div
-                    id={`faq-answer-${index}`}
-                    initial={{ opacity: 0, scaleY: 0.95 }}
-                    animate={{ opacity: 1, scaleY: 1 }}
-                    exit={{ opacity: 0, scaleY: 0.95 }}
-                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className="origin-top overflow-hidden"
-                  >
-                    <m.div
-                      initial={{ y: -10 }}
-                      animate={{ y: 0 }}
-                      exit={{ y: -10 }}
-                      transition={{ duration: 0.3, delay: 0.05 }}
-                      className="pb-6"
-                    >
-                      <div className={`max-w-3xl ${answerClassName}`}>
-                        {typeof faq.answer === "string" ? (
-                          <p>{faq.answer}</p>
-                        ) : (
-                          faq.answer
-                        )}
-                      </div>
-                    </m.div>
-                  </m.div>
-                )}
-              </AnimatePresence>
+              {/* Answers stay in the HTML so crawlers can read them without
+                  executing the accordion. CSS grid-rows collapse the visual. */}
+              <div
+                id={`faq-answer-${index}`}
+                role="region"
+                aria-labelledby={`faq-question-${index}`}
+                aria-hidden={openIndex !== index}
+                className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${
+                  openIndex === index
+                    ? "grid-rows-[1fr] opacity-100"
+                    : "grid-rows-[0fr] opacity-0"
+                }`}
+              >
+                <div className="overflow-hidden">
+                  <div className={`max-w-3xl pb-6 ${answerClassName}`}>
+                    {typeof faq.answer === "string" ? (
+                      <p>{faq.answer}</p>
+                    ) : (
+                      faq.answer
+                    )}
+                  </div>
+                </div>
+              </div>
             </ItemWrapper>
           );
         })}

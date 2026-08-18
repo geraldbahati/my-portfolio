@@ -296,6 +296,25 @@ html.lenis body {
 }
 
 @layer utilities {
+  .skip-to-content {
+    position: absolute;
+    left: 1rem;
+    top: -100%;
+    z-index: 100;
+    padding: 0.5rem 1rem;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .skip-to-content:focus {
+    top: 1rem;
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;

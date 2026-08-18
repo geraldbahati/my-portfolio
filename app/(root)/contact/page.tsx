@@ -8,58 +8,13 @@ import { ContactLinks } from "@/components/ContactLinks";
 import { PageAnalytics } from "@/components/PageAnalytics";
 import PublicConvexProvider from "@/components/PublicConvexProvider";
 import {
+  contactMetadata,
+  contactPageNode,
   generateBreadcrumbSchema,
-  PERSON_ID,
-  SITE_NAME,
   SITE_URL,
 } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: {
-    absolute: "Contact Gerald Bahati | Software Engineer in Nairobi",
-  },
-  description:
-    "Get in touch with Gerald Bahati about a project, consulting work, or a technical question. Reach out by form, phone, or WhatsApp.",
-  keywords: [
-    "contact gerald",
-    "request project",
-    "software engineer contact",
-    "web developer contact",
-    "project inquiry",
-    "freelancer contact",
-    "nairobi developer",
-    "kenya software engineer",
-  ],
-  openGraph: {
-    siteName: SITE_NAME,
-    title: "Contact Gerald Bahati | Software Engineer in Nairobi",
-    description:
-      "Get in touch with Gerald Bahati about a project, consulting work, or a technical question. Reach out by form, phone, or WhatsApp.",
-    type: "website",
-    url: "/contact",
-    locale: "en_KE",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Contact Gerald Bahati | Software Engineer in Nairobi",
-    description:
-      "Get in touch with Gerald Bahati about a project, consulting work, or a technical question. Reach out by form, phone, or WhatsApp.",
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
-  },
-  alternates: {
-    canonical: "/contact",
-  },
-};
+export const metadata: Metadata = contactMetadata;
 
 // Skeleton components for Suspense fallbacks
 function HelloMarqueeSkeleton() {
@@ -141,39 +96,7 @@ const CONTACT_BREADCRUMB_LD = generateBreadcrumbSchema([
   { name: "Home", url: SITE_URL },
   { name: "Contact", url: `${SITE_URL}/contact` },
 ]);
-const CONTACT_JSON_LD = {
-  "@context": "https://schema.org",
-  "@type": "ContactPage",
-  name: "Contact Gerald Bahati",
-  description: "Get in touch with Gerald for your next digital project",
-  url: `${SITE_URL}/contact`,
-  mainEntity: {
-    "@type": "Person",
-    "@id": PERSON_ID,
-    name: "Gerald Bahati",
-    url: SITE_URL,
-    jobTitle: "Full-Stack Software Engineer",
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: "Nairobi",
-      addressCountry: "KE",
-    },
-    email: "contact@geraldbahati.dev",
-    contactPoint: {
-      "@type": "ContactPoint",
-      telephone: "+254-704-713-070",
-      email: "contact@geraldbahati.dev",
-      contactType: "customer service",
-      availableLanguage: ["English", "Swahili"],
-      hoursAvailable: {
-        "@type": "OpeningHoursSpecification",
-        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-        opens: "08:00",
-        closes: "18:00",
-      },
-    },
-  },
-};
+const CONTACT_JSON_LD = contactPageNode();
 
 export default function ContactPage() {
   return (
@@ -186,7 +109,10 @@ export default function ContactPage() {
       <JsonLdScript data={CONTACT_JSON_LD} />
       <JsonLdScript data={CONTACT_BREADCRUMB_LD} />
 
-      <main className="bg-white pt-[96px] sm:pt-[104px] md:pt-[104px] lg:pt-[112px] xl:pt-[128px]">
+      <main
+        id="main-content"
+        className="bg-white pt-[96px] sm:pt-[104px] md:pt-[104px] lg:pt-[112px] xl:pt-[128px]"
+      >
         {/* Hello Marquee - with Suspense for animation */}
         <Suspense fallback={<HelloMarqueeSkeleton />}>
           <HelloMarquee />

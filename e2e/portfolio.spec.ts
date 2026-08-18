@@ -8,6 +8,10 @@ test("homepage renders its primary content", async ({ page }) => {
     page.getByRole("heading", { level: 1, name: "Gerald Bahati" }),
   ).toBeVisible();
   await expect(page.locator("main")).toBeVisible();
+  await expect(page.locator("a.skip-to-content")).toHaveAttribute(
+    "href",
+    "#main-content",
+  );
   await expect(page.locator("body")).not.toHaveCSS("overflow-x", "scroll");
 });
 
@@ -15,7 +19,7 @@ test("homepage exposes a consistent branded SEO identity", async ({ page }) => {
   await page.goto("/", { waitUntil: "domcontentloaded" });
 
   await expect(page).toHaveTitle(
-    "Gerald Bahati | Full-Stack Software Engineer in Nairobi",
+    "I Build Fast E-Commerce With M-Pesa | Gerald Bahati",
   );
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     "href",
@@ -34,37 +38,48 @@ test("homepage exposes a consistent branded SEO identity", async ({ page }) => {
   expect(structuredData).toContain('"@type":"WebSite"');
   expect(structuredData).toContain('"@type":"ProfilePage"');
   expect(structuredData).toContain('"@type":"Person"');
+  expect(structuredData).toContain('"@type":"FAQPage"');
   expect(structuredData).toContain('"name":"Gerald Bahati"');
   expect(structuredData).toContain(
     '"@id":"https://www.geraldbahati.dev/#gerald-bahati"',
   );
+  expect(structuredData).toContain("M-Pesa");
 });
 
 test("crawl directives only advertise canonical indexable URLs", async ({
   request,
 }) => {
-  const [robotsResponse, sitemapResponse, privacyResponse] = await Promise.all([
-    request.get("/robots.txt"),
-    request.get("/sitemap.xml"),
-    request.get("/privacy"),
-  ]);
+  const [robotsResponse, sitemapResponse, privacyResponse, llmsResponse] =
+    await Promise.all([
+      request.get("/robots.txt"),
+      request.get("/sitemap.xml"),
+      request.get("/privacy"),
+      request.get("/llms.txt"),
+    ]);
 
   expect(robotsResponse.ok()).toBeTruthy();
   expect(sitemapResponse.ok()).toBeTruthy();
   expect(privacyResponse.ok()).toBeTruthy();
+  expect(llmsResponse.ok()).toBeTruthy();
 
   const robots = await robotsResponse.text();
   const sitemap = await sitemapResponse.text();
   const privacy = await privacyResponse.text();
+  const llms = await llmsResponse.text();
 
   expect(robots).toContain(
     "Sitemap: https://www.geraldbahati.dev/sitemap.xml",
   );
+  expect(robots).toMatch(/GPTBot/);
+  expect(robots).toMatch(/Google-Extended/);
   expect(sitemap).toContain("<loc>https://www.geraldbahati.dev</loc>");
   expect(sitemap).not.toContain("<loc>https://geraldbahati.dev");
   expect(sitemap).not.toContain("/privacy</loc>");
   expect(sitemap).not.toContain("/imprint</loc>");
   expect(privacy).toContain('name="robots" content="noindex, follow"');
+  expect(llms).toContain("# Gerald Bahati");
+  expect(llms).toContain("https://www.geraldbahati.dev/contact");
+  expect(llms).not.toContain("/admin");
 });
 
 test("project and contact routes remain navigable", async ({ page }) => {
